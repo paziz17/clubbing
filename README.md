@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Clubbing — Join the Party
 
-## Getting Started
+אפליקציה לגילוי אירועים, מסיבות ומועדונים בהתאם לטעם האישי. גרסה 1.0
 
-First, run the development server:
+## הרצה
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run db:seed   # יצירת אירועי דמו
+npm run dev       # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## התחברות אמיתית (OAuth)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+כדי להפעיל התחברות עם Facebook, Google או Instagram, הוסף ל-`.env`:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+AUTH_FACEBOOK_ID=...
+AUTH_FACEBOOK_SECRET=...
+AUTH_GOOGLE_ID=...
+AUTH_GOOGLE_SECRET=...
+AUTH_INSTAGRAM_ID=...
+AUTH_INSTAGRAM_SECRET=...
+```
 
-## Learn More
+- **Facebook:** [developers.facebook.com](https://developers.facebook.com/apps/) → אפליקציה → Facebook Login → הוסף `https://YOUR_DOMAIN/api/auth/callback/facebook`
+- **Google:** [console.cloud.google.com](https://console.cloud.google.com/) → APIs & Services → Credentials → OAuth 2.0 → הוסף redirect URI
+- **Instagram:** דורש אפליקציית Meta (אותו תהליך כמו Facebook)
 
-To learn more about Next.js, take a look at the following resources:
+## זרימה
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Splash** — לוגו CLUBBING, 2 שניות, מעבר אוטומטי
+2. **התחברות** — Facebook / Instagram / Google / כניסה כאורח
+3. **בחירת תחומי עניין** — מוזיקה, סוג אירוע, גיל, אזור (כפתורים עגולים)
+4. **תוצאות** — רשימת אירועים מותאמת
+5. **עמוד אירוע** — פרטים, רכישת כרטיסים, ניווט, שיתוף
+6. **Be The Party** — יצירת אירוע (משתמשים רשומים)
+7. **פרופיל** — מועדפים, אירועים שיצרתי
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## מיון לפי מרחק
 
-## Deploy on Vercel
+האירועים ממוינים תמיד **מהכי קרוב להכי רחוק** — לפי האזור שנבחר (תל אביב, חיפה וכו') או ברירת מחדל תל אביב.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## סנכרון Facebook
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+כדי להביא אירועים מדפי Facebook:
+
+1. צור אפליקציה ב-[Facebook Developers](https://developers.facebook.com/)
+2. קבל Page Access Token מ-Graph API Explorer
+3. הוסף ל-`.env`:
+```
+FACEBOOK_ACCESS_TOKEN=your_token
+FACEBOOK_PAGE_IDS=123456789,987654321
+```
+4. לחיצה על "רענן נתונים" תסנכרן גם מ-Facebook
+
+**Instagram:** אין API ציבורי לאירועים — לא נתמך.
+
+## טכנולוגיות
+
+- Next.js 16, TypeScript, Tailwind
+- Prisma + SQLite
+- פונט Montserrat

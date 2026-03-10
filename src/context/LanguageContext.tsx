@@ -19,10 +19,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as Locale | null;
-    if (stored && LOCALES.some((l) => l.code === stored)) {
-      setLocaleState(stored);
-    }
+    // עברית בלבד - לא קורא מ-localStorage
+    setLocaleState("he");
     setMounted(true);
   }, []);
 

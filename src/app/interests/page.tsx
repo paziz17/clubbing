@@ -5,23 +5,18 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { useLanguage } from "@/context/LanguageContext";
 
-const MUSIC_KEYS = ["house", "techno", "mizrachi", "hiphop", "rock", "trance", "jazz", "pop"];
-const EVENT_KEYS = ["bar", "party", "rooftop", "concert", "festival", "intimate"];
+const MUSIC = ["האוס", "טכנו", "מזרחית", "היפ-הופ", "רוק", "טראנס", "ג'אז", "פופ"];
+const EVENT_TYPES = ["בר", "מסיבה", "Rooftop", "הופעה", "פסטיבל", "אינטימי"];
 const AGE_RANGES = ["18-21", "21-25", "25-30", "30+"];
 const REGIONS = ["תל אביב", "חיפה", "ירושלים", "אילת", "הרצליה", "רמת גן"];
 
-const MUSIC_TO_TAG: Record<string, string> = { house: "House", techno: "Techno", mizrachi: "מזרחית", hiphop: "Hip-Hop", rock: "רוק", trance: "Trance", jazz: "ג'אז", pop: "פופ" };
-const EVENT_TO_TAG: Record<string, string> = { bar: "בר", party: "מסיבה", rooftop: "Rooftop", concert: "הופעה", festival: "פסטיבל", intimate: "אינטימי" };
-
-const MUSIC_LABELS: Record<string, string> = { house: "House", techno: "Techno", mizrachi: "מזרחית", hiphop: "Hip-Hop", rock: "Rock", trance: "Trance", jazz: "Jazz", pop: "Pop" };
-const EVENT_LABELS: Record<string, string> = { bar: "Bar", party: "Party", rooftop: "Rooftop", concert: "Concert", festival: "Festival", intimate: "Intimate" };
+const MUSIC_TO_TAG: Record<string, string> = { "האוס": "House", "טכנו": "Techno", "מזרחית": "מזרחית", "היפ-הופ": "Hip-Hop", "רוק": "רוק", "טראנס": "Trance", "ג'אז": "ג'אז", "פופ": "פופ" };
+const EVENT_TO_TAG: Record<string, string> = { "בר": "בר", "מסיבה": "מסיבה", "Rooftop": "Rooftop", "הופעה": "הופעה", "פסטיבל": "פסטיבל", "אינטימי": "אינטימי" };
 
 function InterestsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { t } = useLanguage();
   const [music, setMusic] = useState<string[]>([]);
   const [eventTypes, setEventTypes] = useState<string[]>([]);
   const [ageRange, setAgeRange] = useState<string>("");
@@ -42,113 +37,104 @@ function InterestsContent() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Header showAuth />
 
       <main className="flex-1 px-6 py-8 max-w-2xl mx-auto w-full">
-        <h1 className="font-heading text-3xl sm:text-4xl text-white mb-3">
-          {t("interests.title")}
+        <h1 className="font-heading text-3xl sm:text-4xl text-gray-900 mb-3">
+          מה בא לך הערב?
         </h1>
-        <p className="text-violet-400 text-sm mb-12">
-          {t("interests.subtitle")}
+        <p className="text-gray-600 text-sm mb-12">
+          בחר את ההעדפות שלך
         </p>
 
-        <section className="mb-10">
-          <h2 className="text-violet-400 text-xs uppercase tracking-wider mb-4 font-semibold">
-            {t("interests.music")}
-          </h2>
-          <div className="flex flex-wrap gap-3">
-            {MUSIC_KEYS.map((key) => (
-              <button
-                key={key}
-                onClick={() => toggle(music, setMusic, key)}
-                className={`px-4 py-3 rounded-lg border font-medium text-sm transition ${
-                  music.includes(key)
-                    ? "bg-violet-600 border-violet-500 text-white"
-                    : "bg-[#1a0f2e] border-[#2d1b4e] text-violet-300 hover:border-violet-500/50"
-                }`}
-              >
-                {MUSIC_LABELS[key] || key}
-              </button>
-            ))}
-          </div>
-        </section>
+        <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-8">
+          <section>
+            <h2 className="text-gray-700 font-semibold text-sm mb-4">סוג מוזיקה</h2>
+            <div className="flex flex-wrap gap-3">
+              {MUSIC.map((m) => (
+                <button
+                  key={m}
+                  onClick={() => toggle(music, setMusic, m)}
+                  className={`px-4 py-3 rounded-md border font-medium text-sm transition ${
+                    music.includes(m)
+                      ? "bg-[#f05537] border-[#f05537] text-white"
+                      : "bg-white border-gray-300 text-gray-700 hover:border-[#f05537]"
+                  }`}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+          </section>
 
-        <section className="mb-10">
-          <h2 className="text-violet-400 text-xs uppercase tracking-wider mb-4 font-semibold">
-            {t("interests.eventType")}
-          </h2>
-          <div className="flex flex-wrap gap-3">
-            {EVENT_KEYS.map((key) => (
-              <button
-                key={key}
-                onClick={() => toggle(eventTypes, setEventTypes, key)}
-                className={`px-4 py-3 rounded-lg border font-medium text-sm transition ${
-                  eventTypes.includes(key)
-                    ? "bg-violet-600 border-violet-500 text-white"
-                    : "bg-[#1a0f2e] border-[#2d1b4e] text-violet-300 hover:border-violet-500/50"
-                }`}
-              >
-                {EVENT_LABELS[key] || key}
-              </button>
-            ))}
-          </div>
-        </section>
+          <section>
+            <h2 className="text-gray-700 font-semibold text-sm mb-4">סוג אירוע</h2>
+            <div className="flex flex-wrap gap-3">
+              {EVENT_TYPES.map((e) => (
+                <button
+                  key={e}
+                  onClick={() => toggle(eventTypes, setEventTypes, e)}
+                  className={`px-4 py-3 rounded-md border font-medium text-sm transition ${
+                    eventTypes.includes(e)
+                      ? "bg-[#f05537] border-[#f05537] text-white"
+                      : "bg-white border-gray-300 text-gray-700 hover:border-[#f05537]"
+                  }`}
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+          </section>
 
-        <section className="mb-10">
-          <h2 className="text-violet-400 text-xs uppercase tracking-wider mb-4 font-semibold">
-            {t("interests.ageRange")}
-          </h2>
-          <div className="flex flex-wrap gap-3">
-            {AGE_RANGES.map((a) => (
-              <button
-                key={a}
-                onClick={() => setAgeRange(ageRange === a ? "" : a)}
-                className={`px-4 py-3 rounded-lg border font-medium text-sm transition ${
-                  ageRange === a
-                    ? "bg-violet-600 border-violet-500 text-white"
-                    : "bg-[#1a0f2e] border-[#2d1b4e] text-violet-300 hover:border-violet-500/50"
-                }`}
-              >
-                {a}
-              </button>
-            ))}
-          </div>
-        </section>
+          <section>
+            <h2 className="text-gray-700 font-semibold text-sm mb-4">טווח גילאים</h2>
+            <div className="flex flex-wrap gap-3">
+              {AGE_RANGES.map((a) => (
+                <button
+                  key={a}
+                  onClick={() => setAgeRange(ageRange === a ? "" : a)}
+                  className={`px-4 py-3 rounded-md border font-medium text-sm transition ${
+                    ageRange === a
+                      ? "bg-[#f05537] border-[#f05537] text-white"
+                      : "bg-white border-gray-300 text-gray-700 hover:border-[#f05537]"
+                  }`}
+                >
+                  {a}
+                </button>
+              ))}
+            </div>
+          </section>
 
-        <section className="mb-12">
-          <h2 className="text-violet-400 text-xs uppercase tracking-wider mb-4 font-semibold">
-            {t("interests.region")}
-          </h2>
-          <div className="flex flex-wrap gap-3">
-            {REGIONS.map((r) => (
-              <button
-                key={r}
-                onClick={() => setRegion(region === r ? "" : r)}
-                className={`px-4 py-3 rounded-lg border font-medium text-sm transition ${
-                  region === r
-                    ? "bg-violet-600 border-violet-500 text-white"
-                    : "bg-[#1a0f2e] border-[#2d1b4e] text-violet-300 hover:border-violet-500/50"
-                }`}
-              >
-                {r}
-              </button>
-            ))}
-          </div>
-        </section>
+          <section>
+            <h2 className="text-gray-700 font-semibold text-sm mb-4">אזור</h2>
+            <div className="flex flex-wrap gap-3">
+              {REGIONS.map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setRegion(region === r ? "" : r)}
+                  className={`px-4 py-3 rounded-md border font-medium text-sm transition ${
+                    region === r
+                      ? "bg-[#f05537] border-[#f05537] text-white"
+                      : "bg-white border-gray-300 text-gray-700 hover:border-[#f05537]"
+                  }`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
 
         <button
           onClick={handleFind}
-          className="w-full py-4 bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-lg transition"
+          className="w-full mt-8 py-4 bg-[#f05537] hover:bg-[#e04a2d] text-white font-semibold rounded-md transition"
         >
-          {t("interests.findParty")}
+          מצא לי את המסיבה שלי
         </button>
 
-        <Link
-          href="/results"
-          className="block text-center text-violet-400 text-sm mt-6 hover:text-white transition"
-        >
-          {t("interests.showAll")}
+        <Link href="/results" className="block text-center text-gray-600 text-sm mt-6 hover:text-[#f05537] transition">
+          הצג את כל האירועים
         </Link>
       </main>
 
@@ -161,8 +147,8 @@ export default function InterestsPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin w-12 h-12 border-2 border-violet-500 border-t-transparent rounded-full" />
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="animate-spin w-12 h-12 border-2 border-[#f05537] border-t-transparent rounded-full" />
         </div>
       }
     >

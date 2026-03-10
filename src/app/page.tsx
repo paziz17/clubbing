@@ -5,11 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { useLanguage } from "@/context/LanguageContext";
 
 export default function HomePage() {
   const router = useRouter();
-  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [region, setRegion] = useState("");
 
@@ -21,35 +19,35 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Header showAuth />
 
       <main className="flex-1">
-        {/* Hero - Edmtrain style */}
-        <section className="relative py-20 px-4 sm:px-6">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl text-white mb-4">
-              Concerts · Festivals · Raves
+        {/* Hero - Eventbrite style */}
+        <section className="bg-white border-b border-gray-200 py-12 px-4 sm:px-6">
+          <div className="max-w-4xl mx-auto">
+            <h1 className="font-heading text-3xl sm:text-4xl text-gray-900 mb-2">
+              אירועי מסיבות ורייבס בישראל
             </h1>
-            <p className="text-violet-300 text-lg mb-12">
-              {t("home.subtitle")}
+            <p className="text-gray-600 mb-8">
+              גלה אירועים, מסיבות ומועדונים בהתאם לטעמך
             </p>
 
-            {/* Search bar - Edmtrain style */}
-            <div className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto">
+            {/* Search bar - Eventbrite style */}
+            <div className="flex flex-col sm:flex-row gap-3">
               <input
                 type="text"
-                placeholder="Genre / Artist..."
+                placeholder="חפש אירועים..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="flex-1 px-4 py-3 bg-[#1a0f2e] border border-[#2d1b4e] rounded-lg text-white placeholder-violet-500/60 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50"
+                className="flex-1 px-4 py-3 bg-white border border-gray-300 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#f05537]/50 focus:border-[#f05537]"
               />
               <select
                 value={region}
                 onChange={(e) => setRegion(e.target.value)}
-                className="px-4 py-3 bg-[#1a0f2e] border border-[#2d1b4e] rounded-lg text-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                className="px-4 py-3 bg-white border border-gray-300 rounded-md text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#f05537]/50"
               >
-                <option value="">Add Location</option>
+                <option value="">בחר מיקום</option>
                 <option value="תל אביב">תל אביב</option>
                 <option value="חיפה">חיפה</option>
                 <option value="ירושלים">ירושלים</option>
@@ -59,44 +57,44 @@ export default function HomePage() {
               </select>
               <button
                 onClick={handleSearch}
-                className="px-8 py-3 bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-lg transition"
+                className="px-8 py-3 bg-[#f05537] hover:bg-[#e04a2d] text-white font-semibold rounded-md transition"
               >
-                Search
+                חפש
               </button>
             </div>
 
-            <div className="mt-8 flex flex-wrap justify-center gap-4">
+            <div className="mt-6 flex flex-wrap gap-4">
               <Link
                 href="/interests"
-                className="px-6 py-3 border border-violet-500/50 text-violet-300 hover:bg-violet-500/20 hover:border-violet-400 rounded-lg transition font-medium"
+                className="text-[#f05537] hover:underline font-medium text-sm"
               >
-                {t("home.findEvents")}
+                מצא אירועים
               </Link>
               <Link
                 href="/auth"
-                className="text-violet-400 hover:text-white transition text-sm"
+                className="text-gray-600 hover:text-gray-900 transition text-sm"
               >
-                {t("home.loginOrGuest")}
+                התחברות / כניסה כאורח
               </Link>
             </div>
           </div>
         </section>
 
-        {/* Quick links - Edmtrain style */}
-        <section className="py-12 px-4 sm:px-6 border-t border-[#2d1b4e]">
+        {/* Quick links - Eventbrite style */}
+        <section className="py-12 px-4 sm:px-6">
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-violet-400 font-semibold text-sm uppercase tracking-wider mb-6 text-center">
-              Browse by
+            <h2 className="text-gray-500 font-semibold text-sm uppercase tracking-wider mb-6">
+              גלוש לפי
             </h2>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Link href="/results" className="px-6 py-3 bg-[#1a0f2e] border border-[#2d1b4e] rounded-lg text-violet-300 hover:border-violet-500/50 hover:text-white transition font-medium">
-                All Events
+            <div className="flex flex-wrap gap-4">
+              <Link href="/results" className="px-6 py-3 bg-white border border-gray-200 rounded-md text-gray-700 hover:border-[#f05537] hover:text-[#f05537] transition font-medium">
+                כל האירועים
               </Link>
-              <Link href="/interests" className="px-6 py-3 bg-[#1a0f2e] border border-[#2d1b4e] rounded-lg text-violet-300 hover:border-violet-500/50 hover:text-white transition font-medium">
-                Festivals
+              <Link href="/interests" className="px-6 py-3 bg-white border border-gray-200 rounded-md text-gray-700 hover:border-[#f05537] hover:text-[#f05537] transition font-medium">
+                פסטיבלים
               </Link>
-              <Link href="/create" className="px-6 py-3 bg-[#1a0f2e] border border-[#2d1b4e] rounded-lg text-violet-300 hover:border-violet-500/50 hover:text-white transition font-medium">
-                Add Event
+              <Link href="/create" className="px-6 py-3 bg-white border border-gray-200 rounded-md text-gray-700 hover:border-[#f05537] hover:text-[#f05537] transition font-medium">
+                הוסף אירוע
               </Link>
             </div>
           </div>

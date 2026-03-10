@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -105,7 +105,20 @@ model Event {
   updatedAt       DateTime @updatedAt
 
   creator User? @relation("EventCreator", fields: [createdById], references: [id], onDelete: SetNull)
-  favorites UserFavorite[]
+  favorites   UserFavorite[]
+  reservations Reservation[]
+}
+
+model Reservation {
+  id        String   @id @default(uuid())
+  eventId   String
+  numPeople Int      // כמה אנשים
+  phone     String
+  email     String
+  over18    Boolean  // אישור מעל גיל 18
+  createdAt DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 }
 
 model UserFavorite {

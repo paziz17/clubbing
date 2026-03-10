@@ -24,6 +24,12 @@ export default function EventPage() {
   const params = useParams();
   const id = params.id as string;
   const [event, setEvent] = useState<Event | null>(null);
+  const [showReserve, setShowReserve] = useState(false);
+  const [numPeople, setNumPeople] = useState("2");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [over18, setOver18] = useState(false);
+  const [reserveStatus, setReserveStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
   useEffect(() => {
     fetch(`/api/events/${id}`)
@@ -57,6 +63,36 @@ export default function EventPage() {
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
   const smsUrl = `sms:?body=${encodeURIComponent(shareText)}`;
 
+  const handleReserve = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!over18) return;
+    setReserveStatus("loading");
+    try {
+      const r = await fetch(`/api/events/${id}/reserve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          numPeople: parseInt(numPeople, 10) || 1,
+          phone,
+          email,
+          over18,
+        }),
+      });
+      const data = await r.json();
+      if (r.ok) {
+        setReserveStatus("success");
+        setShowReserve(false);
+        setNumPeople("2");
+        setPhone("");
+        setEmail("");
+        setOver18(false);
+      } else {
+        setReserveStatus("error");
+      }
+    } catch {
+      setReserveStatus("error");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#0d0d12]">
@@ -102,6 +138,83 @@ export default function EventPage() {
         )}
 
         <div className="mt-8 space-y-3">
+          {reserveStatus === "success" && (
+            <div className="py-4 px-4 bg-green-500/20 border border-green-500/50 rounded-xl text-green-400 text-center">
+              ✅ ההזמנה נשלחה בהצלחה!
+            </div>
+          )}
+          {!showReserve ? (
+            <button
+              onClick={() => setShowReserve(true)}
+              className="w-full py-4 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-semibold"
+            >
+              הזמן מקום
+            </button>
+          ) : (
+            <form onSubmit={handleReserve} className="p-4 bg-[#16161d] border border-zinc-700 rounded-xl space-y-4">
+              <h3 className="text-white font-semibold">הזמן מקום</h3>
+              <div>
+                <label className="block text-zinc-400 text-sm mb-1">כמה אנשים</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={numPeople}
+                  onChange={(e) => setNumPeople(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 bg-[#0d0d12] border border-zinc-700 rounded-xl text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-zinc-400 text-sm mb-1">טלפון</label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                  placeholder="050-1234567"
+                  className="w-full px-4 py-3 bg-[#0d0d12] border border-zinc-700 rounded-xl text-white placeholder-zinc-500"
+                />
+              </div>
+              <div>
+                <label className="block text-zinc-400 text-sm mb-1">מייל</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="email@example.com"
+                  className="w-full px-4 py-3 bg-[#0d0d12] border border-zinc-700 rounded-xl text-white placeholder-zinc-500"
+                />
+              </div>
+              <label className="flex items-center gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={over18}
+                  onChange={(e) => setOver18(e.target.checked)}
+                  required
+                  className="w-5 h-5 rounded border-zinc-600 bg-[#0d0d12] text-rose-500 focus:ring-rose-500"
+                />
+                <span className="text-zinc-300">אני מאשר/ת שמעל גיל 18</span>
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowReserve(false)}
+                  className="flex-1 py-3 border border-zinc-700 text-zinc-400 rounded-xl"
+                >
+                  ביטול
+                </button>
+                <button
+                  type="submit"
+                  disabled={!over18 || reserveStatus === "loading"}
+                  className="flex-1 py-3 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white rounded-xl font-semibold"
+                >
+                  {reserveStatus === "loading" ? "שולח..." : "שלח הזמנה"}
+                </button>
+              </div>
+            </form>
+          )}
           {event.ticketLink && !event.ticketLink.includes("example.com") && (
             <a
               href={event.ticketLink}

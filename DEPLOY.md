@@ -1,5 +1,17 @@
 # פריסה ל-Vercel
 
+## 0. הפרויקט כבר מחובר
+
+הפרויקט מקושר ל-Vercel. כדי להשלים:
+
+1. **הוסף Database:** https://vercel.com/omers-projects-fee986ef/clubbing/stores → Create Database → **Neon**
+2. אחרי יצירת ה-DB, הוסף משתנה:
+   - `DATABASE_URL` = הערך של `POSTGRES_PRISMA_URL` (מופיע ב-Storage)
+3. **Redeploy:** https://vercel.com/omers-projects-fee986ef/clubbing → Deployments → ⋮ → Redeploy
+4. הוסף `AUTH_URL` = `https://clubbing-xxx.vercel.app` (הכתובת שלך)
+
+---
+
 ## 1. חיבור ל-GitHub
 
 ```bash

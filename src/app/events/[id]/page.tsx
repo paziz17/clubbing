@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
+
 interface Event {
   id: string;
   name: string;
@@ -42,6 +43,20 @@ export default function EventPage() {
   const mapsUrl = `https://maps.google.com/?q=${encodeURIComponent(address)}`;
   const appleMapsUrl = `https://maps.apple.com/?q=${encodeURIComponent(address)}`;
   const wazeUrl = `https://waze.com/ul?q=${encodeURIComponent(address)}&navigate=yes`;
+  const eventUrl = typeof window !== "undefined" ? `${window.location.origin}/events/${id}` : `https://clubbing-omers-projects-fee986ef.vercel.app/events/${id}`;
+
+  const shareText = [
+    `🎉 ${event.name}`,
+    `📅 ${new Date(event.date).toLocaleDateString("he-IL")} • ${event.time}`,
+    `📍 ${address}`,
+    ``,
+    `נווט: ${mapsUrl}`,
+    `לפרטים: ${eventUrl}`,
+  ].join("\n");
+
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+  const smsUrl = `sms:?body=${encodeURIComponent(shareText)}`;
+
 
   return (
     <div className="min-h-screen bg-[#0d0d12]">
@@ -123,9 +138,27 @@ export default function EventPage() {
               נווט ב-Waze
             </a>
           </div>
-          <button className="w-full py-3 border border-zinc-700 text-zinc-400 rounded-xl hover:text-white transition">
-            שתף חבר
-          </button>
+          <div className="space-y-2">
+            <p className="text-zinc-500 text-sm">שתף חבר</p>
+            <div className="flex gap-2">
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 py-3 border border-zinc-700 text-zinc-400 rounded-xl hover:text-white hover:border-[#25D366] hover:bg-[#25D366]/10 transition flex items-center justify-center gap-2"
+              >
+                <span className="text-lg">💬</span>
+                וואטסאפ
+              </a>
+              <a
+                href={smsUrl}
+                className="flex-1 py-3 border border-zinc-700 text-zinc-400 rounded-xl hover:text-white hover:border-zinc-500 transition flex items-center justify-center gap-2"
+              >
+                <span className="text-lg">📱</span>
+                SMS
+              </a>
+            </div>
+          </div>
         </div>
       </div>
       </div>

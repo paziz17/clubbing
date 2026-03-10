@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
-import { Montserrat } from "next/font/google";
+import { Inter, Heebo } from "next/font/google";
 import { Providers } from "@/components/Providers";
 import "./globals.css";
 
-const montserrat = Montserrat({
-  variable: "--font-montserrat",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+});
+
+const heebo = Heebo({
+  variable: "--font-heebo",
+  subsets: ["latin", "hebrew"],
   weight: ["400", "500", "600", "700"],
 });
 
@@ -19,7 +25,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="he" dir="rtl">
-      <body className={`${montserrat.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${heebo.variable} font-sans antialiased`}>
         <Providers>{children}</Providers>
       </body>
     </html>

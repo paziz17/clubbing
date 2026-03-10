@@ -52,77 +52,97 @@ function ResultsContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0d0d12]">
-        <div className="animate-spin w-12 h-12 border-2 border-rose-500 border-t-transparent rounded-full" />
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="animate-spin w-12 h-12 border-2 border-white border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0d12] px-4 py-6">
-      <header className="flex justify-between items-center mb-6">
-        <Link href="/" className="text-xl font-bold text-white">CLUBBING</Link>
-        <div className="flex gap-4">
-          <Link href="/create" className="text-rose-500 text-sm">Be The Party</Link>
-          <Link href="/profile" className="text-zinc-400 text-sm">פרופיל</Link>
+    <div className="min-h-screen bg-black">
+      <header className="sticky top-0 z-50 flex justify-between items-center px-6 py-4 border-b border-[#1a1a1a] bg-black/90 backdrop-blur-sm">
+        <Link href="/" className="font-heading text-xl text-white tracking-widest">CLUBBING</Link>
+        <div className="flex items-center gap-6">
+          <Link href="/create" className="text-zinc-400 text-sm tracking-widest uppercase hover:text-white transition">Be The Party</Link>
+          <Link href="/profile" className="text-zinc-400 text-sm tracking-widest uppercase hover:text-white transition">פרופיל</Link>
         </div>
       </header>
-      <div className="flex justify-between items-center mb-6 flex-wrap gap-2">
-        <h1 className="text-xl font-bold text-white">תוצאות לפי התאמה</h1>
-        <div className="flex gap-2">
-          <button
-            onClick={() => loadEvents(true)}
-            disabled={refreshing}
-            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-white rounded-lg text-sm"
-          >
-            {refreshing ? "מרענן..." : "🔄 רענן נתונים"}
-          </button>
-          <Link href="/interests" className="px-4 py-2 text-rose-500 text-sm border border-rose-500/50 rounded-lg hover:bg-rose-500/10">
-            שנה סינון
-          </Link>
+
+      <main className="px-6 py-12 max-w-6xl mx-auto">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-12">
+          <h1 className="font-heading text-3xl sm:text-4xl text-white">
+            אירועים
+          </h1>
+          <div className="flex gap-3">
+            <button
+              onClick={() => loadEvents(true)}
+              disabled={refreshing}
+              className="px-4 py-2 border border-[#1a1a1a] text-zinc-400 hover:text-white hover:border-white/30 transition disabled:opacity-50 text-sm tracking-widest uppercase"
+            >
+              {refreshing ? "מרענן..." : "רענן"}
+            </button>
+            <Link
+              href="/interests"
+              className="px-4 py-2 border border-white text-white hover:bg-white hover:text-black transition text-sm tracking-widest uppercase"
+            >
+              שנה סינון
+            </Link>
+          </div>
         </div>
-      </div>
 
-      <div className="space-y-4">
-        {events.map((e) => (
-          <Link key={e.id} href={`/events/${e.id}`}>
-            <div className="bg-[#16161d] border border-zinc-800 rounded-2xl overflow-hidden flex gap-4">
-              <div className="w-28 h-28 min-w-[7rem] bg-zinc-800 relative shrink-0 rounded-2xl overflow-hidden">
-                {e.imageUrl ? (
-                  <img src={e.imageUrl} alt={e.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-2xl">🎉</div>
-                )}
-              </div>
-              <div className="p-4 flex-1 min-w-0">
-                <h3 className="text-white font-semibold">{e.name}</h3>
-                <div className="flex gap-2 mt-2 flex-wrap">
-                  {e.tags.slice(0, 3).map((t) => (
-                    <span key={t} className="px-2 py-0.5 bg-zinc-800 rounded text-xs text-zinc-400">
-                      {t}
-                    </span>
-                  ))}
+        <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {events.map((e) => (
+            <Link key={e.id} href={`/events/${e.id}`} className="group">
+              <article className="border border-[#1a1a1a] overflow-hidden hover:border-white/30 transition">
+                <div className="aspect-[4/3] bg-[#0a0a0a] relative overflow-hidden">
+                  {e.imageUrl ? (
+                    <img
+                      src={e.imageUrl}
+                      alt={e.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-4xl">🎉</div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition" />
                 </div>
-                <p className="text-zinc-500 text-sm mt-2">
-                  {new Date(e.date).toLocaleDateString("he-IL")} • {e.time} • {e.location}
-                </p>
-                <p className="text-rose-500 text-xs mt-1">לפרטים נוספים ←</p>
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
+                <div className="p-5 border-t border-[#1a1a1a]">
+                  <h3 className="text-white font-semibold text-lg mb-2 group-hover:text-white">{e.name}</h3>
+                  <div className="flex gap-2 mb-2 flex-wrap">
+                    {e.tags.slice(0, 3).map((t) => (
+                      <span key={t} className="text-zinc-500 text-xs uppercase tracking-wider">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-zinc-500 text-sm">
+                    {new Date(e.date).toLocaleDateString("he-IL")} • {e.time} • {e.location}
+                  </p>
+                  <p className="text-white text-sm mt-3 tracking-widest uppercase group-hover:underline">
+                    לפרטים ←
+                  </p>
+                </div>
+              </article>
+            </Link>
+          ))}
+        </section>
 
-      {events.length === 0 && (
-        <p className="text-center text-zinc-500 py-12">לא נמצאו אירועים</p>
-      )}
+        {events.length === 0 && (
+          <div className="text-center py-24">
+            <p className="text-zinc-500 text-lg">לא נמצאו אירועים</p>
+            <Link href="/interests" className="inline-block mt-4 text-white border border-white px-6 py-3 tracking-widest uppercase hover:bg-white hover:text-black transition">
+              שנה סינון
+            </Link>
+          </div>
+        )}
+      </main>
     </div>
   );
 }
 
 export default function ResultsPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#0d0d12]"><div className="animate-spin w-12 h-12 border-2 border-rose-500 border-t-transparent rounded-full" /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-black"><div className="animate-spin w-12 h-12 border-2 border-white border-t-transparent" /></div>}>
       <ResultsContent />
     </Suspense>
   );

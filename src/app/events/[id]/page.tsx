@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { WhatsAppIcon, SMSIcon, AppleMapsIcon, GoogleMapsIcon, WazeIcon } from "@/components/SocialIcons";
 
 
 interface Event {
@@ -230,24 +231,27 @@ export default function EventPage() {
               href={appleMapsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 min-w-[100px] py-3 bg-[#16161d] border border-zinc-700 text-white text-center rounded-xl hover:border-zinc-500"
+              className="flex-1 min-w-[100px] py-3 bg-[#16161d] border border-zinc-700 text-white text-center rounded-xl hover:border-zinc-500 flex items-center justify-center gap-2"
             >
+              <AppleMapsIcon className="w-5 h-5" />
               נווט באפל
             </a>
             <a
               href={mapsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 min-w-[100px] py-3 bg-[#16161d] border border-zinc-700 text-white text-center rounded-xl hover:border-zinc-500"
+              className="flex-1 min-w-[100px] py-3 bg-[#16161d] border border-zinc-700 text-white text-center rounded-xl hover:border-zinc-500 flex items-center justify-center gap-2"
             >
+              <GoogleMapsIcon className="w-5 h-5" />
               נווט בגוגל
             </a>
             <a
               href={wazeUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 min-w-[100px] py-3 bg-[#16161d] border border-zinc-700 text-white text-center rounded-xl hover:border-[#33CCFF] hover:bg-[#33CCFF]/10"
+              className="flex-1 min-w-[100px] py-3 bg-[#16161d] border border-zinc-700 text-white text-center rounded-xl hover:border-[#33CCFF] hover:bg-[#33CCFF]/10 flex items-center justify-center gap-2"
             >
+              <WazeIcon className="w-5 h-5 text-[#33CCFF]" />
               נווט ב-Waze
             </a>
           </div>
@@ -260,14 +264,14 @@ export default function EventPage() {
                 rel="noopener noreferrer"
                 className="flex-1 py-3 border border-zinc-700 text-zinc-400 rounded-xl hover:text-white hover:border-[#25D366] hover:bg-[#25D366]/10 transition flex items-center justify-center gap-2"
               >
-                <span className="text-lg">💬</span>
+                <WhatsAppIcon className="w-6 h-6" />
                 וואטסאפ
               </a>
               <a
                 href={smsUrl}
                 className="flex-1 py-3 border border-zinc-700 text-zinc-400 rounded-xl hover:text-white hover:border-zinc-500 transition flex items-center justify-center gap-2"
               >
-                <span className="text-lg">📱</span>
+                <SMSIcon className="w-6 h-6" />
                 SMS
               </a>
             </div>

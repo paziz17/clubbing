@@ -25,7 +25,6 @@ export default function EventPage() {
   const params = useParams();
   const id = params.id as string;
   const [event, setEvent] = useState<Event | null>(null);
-  const [showReserve, setShowReserve] = useState(false);
   const [numPeople, setNumPeople] = useState("2");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -82,7 +81,6 @@ export default function EventPage() {
       const data = await r.json();
       if (r.ok) {
         setReserveStatus("success");
-        setShowReserve(false);
         setNumPeople("2");
         setPhone("");
         setEmail("");
@@ -157,15 +155,7 @@ export default function EventPage() {
               ✅ ההזמנה נשלחה בהצלחה!
             </div>
           )}
-          {!showReserve ? (
-            <button
-              onClick={() => setShowReserve(true)}
-              className="w-full py-4 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-semibold"
-            >
-              הזמן מקום
-            </button>
-          ) : (
-            <form onSubmit={handleReserve} className="p-4 bg-[#16161d] border border-zinc-700 rounded-xl space-y-4">
+          <form onSubmit={handleReserve} className="p-4 bg-[#16161d] border border-zinc-700 rounded-xl space-y-4">
               <h3 className="text-white font-semibold">הזמן מקום</h3>
               <div>
                 <label className="block text-zinc-400 text-sm mb-1">כמה אנשים</label>
@@ -213,13 +203,6 @@ export default function EventPage() {
               </label>
               <div className="flex gap-2">
                 <button
-                  type="button"
-                  onClick={() => setShowReserve(false)}
-                  className="flex-1 py-3 border border-zinc-700 text-zinc-400 rounded-xl"
-                >
-                  ביטול
-                </button>
-                <button
                   type="submit"
                   disabled={!over18 || reserveStatus === "loading"}
                   className="flex-1 py-3 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white rounded-xl font-semibold"
@@ -228,7 +211,6 @@ export default function EventPage() {
                 </button>
               </div>
             </form>
-          )}
           {event.ticketLink && !event.ticketLink.includes("example.com") && (
             <a
               href={event.ticketLink}

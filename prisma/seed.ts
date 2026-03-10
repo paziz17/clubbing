@@ -120,7 +120,7 @@ export async function runSeed() {
     await prisma.event.create({
       data: {
         name: e.name,
-        description: `${e.name} ב${e.venue} - ערב מוזיקה ואווירה מעולה. בואו לרקוד!`,
+        description: `${e.name} ב${e.venue}`,
         date: getRandomDate(30),
         time: "22:00",
         location: e.location,

@@ -125,7 +125,20 @@ export default function EventPage() {
 
         <div className="mt-6 space-y-4 text-zinc-300">
           <p>📅 {new Date(event.date).toLocaleDateString("he-IL")} • {event.time}</p>
-          <p>📍 {event.address || event.location}</p>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span>📍 {event.address || event.location}</span>
+            <div className="flex gap-1">
+              <a href={appleMapsUrl} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg hover:bg-zinc-700" title="נווט באפל">
+                <AppleMapsIcon className="w-5 h-5 text-white" />
+              </a>
+              <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg hover:bg-zinc-700" title="נווט בגוגל">
+                <GoogleMapsIcon className="w-5 h-5" />
+              </a>
+              <a href={wazeUrl} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg hover:bg-zinc-700" title="נווט ב-Waze">
+                <WazeIcon className="w-5 h-5 text-[#33CCFF]" />
+              </a>
+            </div>
+          </div>
           {event.phone && (
             <a href={`tel:${event.phone.replace(/\D/g, "")}`} className="block text-rose-400 hover:text-rose-300">
               📞 {event.phone}
@@ -226,35 +239,6 @@ export default function EventPage() {
               רכישת כרטיסים
             </a>
           )}
-          <div className="flex gap-2 flex-wrap">
-            <a
-              href={appleMapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 min-w-[100px] py-3 bg-[#16161d] border border-zinc-700 text-white text-center rounded-xl hover:border-zinc-500 flex items-center justify-center gap-2"
-            >
-              <AppleMapsIcon className="w-5 h-5" />
-              נווט באפל
-            </a>
-            <a
-              href={mapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 min-w-[100px] py-3 bg-[#16161d] border border-zinc-700 text-white text-center rounded-xl hover:border-zinc-500 flex items-center justify-center gap-2"
-            >
-              <GoogleMapsIcon className="w-5 h-5" />
-              נווט בגוגל
-            </a>
-            <a
-              href={wazeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 min-w-[100px] py-3 bg-[#16161d] border border-zinc-700 text-white text-center rounded-xl hover:border-[#33CCFF] hover:bg-[#33CCFF]/10 flex items-center justify-center gap-2"
-            >
-              <WazeIcon className="w-5 h-5 text-[#33CCFF]" />
-              נווט ב-Waze
-            </a>
-          </div>
           <div className="space-y-2">
             <p className="text-zinc-500 text-sm">שתף חבר</p>
             <div className="flex gap-2">

@@ -2,7 +2,6 @@
 
 import { useEffect, useState, Suspense, useCallback } from "react";
 import Link from "next/link";
-import { UserIcon } from "@/components/SocialIcons";
 import { useSearchParams } from "next/navigation";
 
 interface Event {
@@ -51,6 +50,12 @@ function ResultsContent() {
     loadEvents();
   }, [loadEvents]);
 
+  useEffect(() => {
+    const onRefresh = () => loadEvents(true);
+    window.addEventListener("clubbing-refresh-events", onRefresh);
+    return () => window.removeEventListener("clubbing-refresh-events", onRefresh);
+  }, [loadEvents]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0d0d12]">
@@ -61,27 +66,11 @@ function ResultsContent() {
 
   return (
     <div className="min-h-screen bg-[#0d0d12] px-4 py-6">
-      <nav className="flex justify-between items-center mb-6">
-        <Link href="/profile" className="text-zinc-400 text-sm shrink-0 flex items-center gap-1.5 hover:text-white transition">
-          <UserIcon className="w-4 h-4" />
-          פרופיל
-        </Link>
-        <Link href="/create" className="text-rose-500 text-sm shrink-0">Be The Party</Link>
-      </nav>
-      <div className="flex justify-between items-center mb-6 flex-wrap gap-2">
+      <div className="flex flex-col items-center mb-6 gap-4">
         <h1 className="text-xl font-bold text-white">תוצאות לפי התאמה</h1>
-        <div className="flex gap-2">
-          <button
-            onClick={() => loadEvents(true)}
-            disabled={refreshing}
-            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-white rounded-lg text-sm"
-          >
-            {refreshing ? "מרענן..." : "🔄 רענן נתונים"}
-          </button>
-          <Link href="/interests" className="px-4 py-2 text-rose-500 text-sm border border-rose-500/50 rounded-lg hover:bg-rose-500/10">
-            שנה סינון
-          </Link>
-        </div>
+        <Link href="/interests" className="px-4 py-2 text-rose-500 text-sm border border-rose-500/50 rounded-lg hover:bg-rose-500/10">
+          שנה סינון
+        </Link>
       </div>
 
       <div className="space-y-4">

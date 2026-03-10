@@ -3,6 +3,9 @@
 import { useEffect, useState, Suspense, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface Event {
   id: string;
@@ -10,13 +13,16 @@ interface Event {
   date: string;
   time?: string;
   location: string;
+  address?: string;
   imageUrl?: string;
+  ticketLink?: string;
   tags: string[];
   ageRestriction?: string;
 }
 
 function ResultsContent() {
   const searchParams = useSearchParams();
+  const { t } = useLanguage();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -50,99 +56,123 @@ function ResultsContent() {
     loadEvents();
   }, [loadEvents]);
 
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="animate-spin w-12 h-12 border-2 border-white border-t-transparent" />
+      <div className="min-h-screen flex flex-col">
+        <Header showAuth />
+        <div className="flex-1 flex items-center justify-center py-24">
+          <div className="animate-spin w-12 h-12 border-2 border-violet-500 border-t-transparent rounded-full" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      <header className="sticky top-0 z-50 flex justify-between items-center px-6 py-4 border-b border-[#1a1a1a] bg-black/90 backdrop-blur-sm">
-        <Link href="/" className="font-heading text-xl text-white tracking-widest">CLUBBING</Link>
-        <div className="flex items-center gap-6">
-          <Link href="/create" className="text-zinc-400 text-sm tracking-widest uppercase hover:text-white transition">Be The Party</Link>
-          <Link href="/profile" className="text-zinc-400 text-sm tracking-widest uppercase hover:text-white transition">פרופיל</Link>
-        </div>
-      </header>
+    <div className="min-h-screen flex flex-col">
+      <Header showAuth />
 
-      <main className="px-6 py-12 max-w-6xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-12">
-          <h1 className="font-heading text-3xl sm:text-4xl text-white">
-            אירועים
+      <main className="flex-1 px-4 sm:px-6 py-8 max-w-6xl mx-auto w-full">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
+          <h1 className="font-heading text-2xl sm:text-3xl text-white">
+            {t("results.title")}
           </h1>
           <div className="flex gap-3">
             <button
               onClick={() => loadEvents(true)}
               disabled={refreshing}
-              className="px-4 py-2 border border-[#1a1a1a] text-zinc-400 hover:text-white hover:border-white/30 transition disabled:opacity-50 text-sm tracking-widest uppercase"
+              className="px-4 py-2 bg-[#1a0f2e] border border-[#2d1b4e] text-violet-300 hover:border-violet-500/50 rounded-lg transition disabled:opacity-50 text-sm font-medium"
             >
-              {refreshing ? "מרענן..." : "רענן"}
+              {refreshing ? t("results.refreshing") : t("results.refresh")}
             </button>
             <Link
               href="/interests"
-              className="px-4 py-2 border border-white text-white hover:bg-white hover:text-black transition text-sm tracking-widest uppercase"
+              className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-sm font-medium transition"
             >
-              שנה סינון
+              {t("results.changeFilter")}
             </Link>
           </div>
         </div>
 
+        {/* Edmtrain-style event grid */}
         <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {events.map((e) => (
-            <Link key={e.id} href={`/events/${e.id}`} className="group">
-              <article className="border border-[#1a1a1a] overflow-hidden hover:border-white/30 transition">
-                <div className="aspect-[4/3] bg-[#0a0a0a] relative overflow-hidden">
-                  {e.imageUrl ? (
-                    <img
-                      src={e.imageUrl}
-                      alt={e.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-4xl">🎉</div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition" />
-                </div>
-                <div className="p-5 border-t border-[#1a1a1a]">
-                  <h3 className="text-white font-semibold text-lg mb-2 group-hover:text-white">{e.name}</h3>
-                  <div className="flex gap-2 mb-2 flex-wrap">
-                    {e.tags.slice(0, 3).map((t) => (
-                      <span key={t} className="text-zinc-500 text-xs uppercase tracking-wider">
-                        {t}
-                      </span>
-                    ))}
+            <Link
+              key={e.id}
+              href={`/events/${e.id}`}
+              className="event-card block bg-[#1a0f2e] border border-[#2d1b4e] rounded-xl overflow-hidden"
+            >
+              <div className="aspect-[4/3] bg-[#0f0a1a] relative overflow-hidden">
+                {e.imageUrl ? (
+                  <img
+                    src={e.imageUrl}
+                    alt={e.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-5xl bg-gradient-to-br from-violet-900/30 to-purple-900/20">
+                    🎉
                   </div>
-                  <p className="text-zinc-500 text-sm">
-                    {new Date(e.date).toLocaleDateString("he-IL")} • {e.time} • {e.location}
-                  </p>
-                  <p className="text-white text-sm mt-3 tracking-widest uppercase group-hover:underline">
-                    לפרטים ←
-                  </p>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                <div className="absolute bottom-3 left-3 right-3">
+                  <span className="inline-block px-2 py-1 bg-violet-600/90 text-white text-xs font-medium rounded">
+                    {formatDate(e.date)}
+                  </span>
                 </div>
-              </article>
+              </div>
+              <div className="p-4">
+                <h3 className="text-white font-semibold text-lg mb-2 line-clamp-2">
+                  {e.name}
+                </h3>
+                <p className="text-violet-400 text-sm mb-3">
+                  📍 {e.address || e.location}
+                </p>
+                {e.time && (
+                  <p className="text-violet-500 text-sm mb-3">
+                    🕐 {e.time}
+                  </p>
+                )}
+                <span className="inline-flex items-center gap-1 text-violet-400 text-sm font-medium">
+                  {t("results.tickets")}
+                  <span>→</span>
+                </span>
+              </div>
             </Link>
           ))}
         </section>
 
         {events.length === 0 && (
           <div className="text-center py-24">
-            <p className="text-zinc-500 text-lg">לא נמצאו אירועים</p>
-            <Link href="/interests" className="inline-block mt-4 text-white border border-white px-6 py-3 tracking-widest uppercase hover:bg-white hover:text-black transition">
-              שנה סינון
+            <p className="text-violet-400 text-lg mb-4">{t("results.noEvents")}</p>
+            <Link
+              href="/interests"
+              className="inline-block px-6 py-3 bg-violet-600 hover:bg-violet-500 text-white rounded-lg font-medium transition"
+            >
+              {t("results.changeFilter")}
             </Link>
           </div>
         )}
       </main>
+
+      <Footer />
     </div>
   );
 }
 
 export default function ResultsPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-black"><div className="animate-spin w-12 h-12 border-2 border-white border-t-transparent" /></div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin w-12 h-12 border-2 border-violet-500 border-t-transparent rounded-full" />
+        </div>
+      }
+    >
       <ResultsContent />
     </Suspense>
   );

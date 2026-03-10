@@ -3,81 +3,107 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function HomePage() {
   const router = useRouter();
-  const today = new Date().toISOString().slice(0, 10);
-  const nextMonth = new Date();
-  nextMonth.setMonth(nextMonth.getMonth() + 1);
-  const defaultTo = nextMonth.toISOString().slice(0, 10);
-  const [from, setFrom] = useState(today);
-  const [to, setTo] = useState(defaultTo);
+  const { t } = useLanguage();
+  const [search, setSearch] = useState("");
+  const [region, setRegion] = useState("");
 
-  const handleFind = () => {
+  const handleSearch = () => {
     const params = new URLSearchParams();
-    params.set("from", from);
-    params.set("to", to);
-    router.push(`/interests?${params.toString()}`);
+    if (region) params.set("region", region);
+    if (search) params.set("music", search);
+    router.push(`/results?${params.toString()}`);
   };
 
   return (
-    <div className="min-h-screen bg-black flex flex-col">
-      <header className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-6 py-4 border-b border-[#1a1a1a] bg-black/80 backdrop-blur-sm">
-        <span className="text-zinc-500 text-sm tracking-widest uppercase">
-          {new Date().getFullYear()} | Club with us
-        </span>
-        <Link href="/auth" className="text-white text-sm tracking-widest uppercase hover:text-zinc-400 transition">
-          התחברות
-        </Link>
-      </header>
+    <div className="min-h-screen flex flex-col">
+      <Header showAuth />
 
-      <main className="flex-1 flex flex-col items-center justify-center px-6 pt-24 pb-12">
-        <h1 className="font-heading text-5xl sm:text-7xl md:text-8xl text-white tracking-tight text-center mb-4">
-          העתיד של הקלאבינג
-        </h1>
-        <p className="text-zinc-400 text-lg sm:text-xl tracking-widest uppercase mb-16">
-          The Future Of Clubbing
-        </p>
+      <main className="flex-1">
+        {/* Hero - Edmtrain style */}
+        <section className="relative py-20 px-4 sm:px-6">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl text-white mb-4">
+              Concerts · Festivals · Raves
+            </h1>
+            <p className="text-violet-300 text-lg mb-12">
+              {t("home.subtitle")}
+            </p>
 
-        <div className="w-full max-w-md space-y-6">
-          <p className="text-white text-sm tracking-[0.2em] uppercase text-center">
-            מצא תאריכים בשבילך
-          </p>
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <label className="block text-zinc-500 text-xs uppercase tracking-widest mb-2">מ</label>
+            {/* Search bar - Edmtrain style */}
+            <div className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto">
               <input
-                type="date"
-                value={from}
-                onChange={(e) => setFrom(e.target.value)}
-                className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-none text-white focus:outline-none focus:border-white/50 transition"
+                type="text"
+                placeholder="Genre / Artist..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="flex-1 px-4 py-3 bg-[#1a0f2e] border border-[#2d1b4e] rounded-lg text-white placeholder-violet-500/60 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50"
               />
+              <select
+                value={region}
+                onChange={(e) => setRegion(e.target.value)}
+                className="px-4 py-3 bg-[#1a0f2e] border border-[#2d1b4e] rounded-lg text-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+              >
+                <option value="">Add Location</option>
+                <option value="תל אביב">תל אביב</option>
+                <option value="חיפה">חיפה</option>
+                <option value="ירושלים">ירושלים</option>
+                <option value="אילת">אילת</option>
+                <option value="הרצליה">הרצליה</option>
+                <option value="רמת גן">רמת גן</option>
+              </select>
+              <button
+                onClick={handleSearch}
+                className="px-8 py-3 bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-lg transition"
+              >
+                Search
+              </button>
             </div>
-            <div className="flex-1">
-              <label className="block text-zinc-500 text-xs uppercase tracking-widest mb-2">עד</label>
-              <input
-                type="date"
-                value={to}
-                onChange={(e) => setTo(e.target.value)}
-                className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-none text-white focus:outline-none focus:border-white/50 transition"
-              />
+
+            <div className="mt-8 flex flex-wrap justify-center gap-4">
+              <Link
+                href="/interests"
+                className="px-6 py-3 border border-violet-500/50 text-violet-300 hover:bg-violet-500/20 hover:border-violet-400 rounded-lg transition font-medium"
+              >
+                {t("home.findEvents")}
+              </Link>
+              <Link
+                href="/auth"
+                className="text-violet-400 hover:text-white transition text-sm"
+              >
+                {t("home.loginOrGuest")}
+              </Link>
             </div>
           </div>
-          <button
-            onClick={handleFind}
-            className="w-full py-4 bg-white text-black font-semibold tracking-widest uppercase hover:bg-zinc-200 transition"
-          >
-            מצא אירועים
-          </button>
-        </div>
+        </section>
 
-        <Link
-          href="/auth"
-          className="mt-12 text-zinc-500 text-sm tracking-widest uppercase hover:text-white transition"
-        >
-          התחברות / כניסה כאורח
-        </Link>
+        {/* Quick links - Edmtrain style */}
+        <section className="py-12 px-4 sm:px-6 border-t border-[#2d1b4e]">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-violet-400 font-semibold text-sm uppercase tracking-wider mb-6 text-center">
+              Browse by
+            </h2>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Link href="/results" className="px-6 py-3 bg-[#1a0f2e] border border-[#2d1b4e] rounded-lg text-violet-300 hover:border-violet-500/50 hover:text-white transition font-medium">
+                All Events
+              </Link>
+              <Link href="/interests" className="px-6 py-3 bg-[#1a0f2e] border border-[#2d1b4e] rounded-lg text-violet-300 hover:border-violet-500/50 hover:text-white transition font-medium">
+                Festivals
+              </Link>
+              <Link href="/create" className="px-6 py-3 bg-[#1a0f2e] border border-[#2d1b4e] rounded-lg text-violet-300 hover:border-violet-500/50 hover:text-white transition font-medium">
+                Add Event
+              </Link>
+            </div>
+          </div>
+        </section>
       </main>
+
+      <Footer />
     </div>
   );
 }

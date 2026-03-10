@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { WhatsAppIcon, SMSIcon, AppleMapsIcon, GoogleMapsIcon, WazeIcon } from "@/components/SocialIcons";
-
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface Event {
   id: string;
@@ -24,6 +26,7 @@ interface Event {
 export default function EventPage() {
   const params = useParams();
   const id = params.id as string;
+  const { t } = useLanguage();
   const [event, setEvent] = useState<Event | null>(null);
   const [numPeople, setNumPeople] = useState("2");
   const [phone, setPhone] = useState("");
@@ -39,8 +42,11 @@ export default function EventPage() {
 
   if (!event) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="animate-spin w-12 h-12 border-2 border-white border-t-transparent" />
+      <div className="min-h-screen flex flex-col">
+        <Header showAuth showBack backHref="/results" />
+        <div className="flex-1 flex items-center justify-center py-24">
+          <div className="animate-spin w-12 h-12 border-2 border-violet-500 border-t-transparent rounded-full" />
+        </div>
       </div>
     );
   }
@@ -53,11 +59,11 @@ export default function EventPage() {
 
   const shareText = [
     `🎉 ${event.name}`,
-    `📅 ${new Date(event.date).toLocaleDateString("he-IL")} • ${event.time}`,
+    `📅 ${new Date(event.date).toLocaleDateString()} • ${event.time}`,
     `📍 ${address}`,
     ``,
-    `נווט: ${mapsUrl}`,
-    `לפרטים: ${eventUrl}`,
+    `Navigate: ${mapsUrl}`,
+    `Details: ${eventUrl}`,
   ].join("\n");
 
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
@@ -93,154 +99,162 @@ export default function EventPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-black">
-      <header className="sticky top-0 z-50 flex justify-between items-center p-4 border-b border-[#1a1a1a] bg-black/90 backdrop-blur-sm">
-        <Link href="/results" className="w-10 h-10 border border-[#1a1a1a] rounded-none flex items-center justify-center text-white hover:border-white/50 transition">
-          ←
-        </Link>
-        <span className="text-zinc-500 text-xs tracking-widest uppercase">פרטי אירוע</span>
-      </header>
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString(undefined, { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
+  };
 
-      <main className="max-w-2xl mx-auto px-6 py-8">
-        <div className="aspect-[4/3] rounded-none overflow-hidden bg-[#0a0a0a] mb-8">
-          {event.imageUrl ? (
-            <img src={event.imageUrl} alt={event.name} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-5xl">🎉</div>
-          )}
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Header showAuth showBack backHref="/results" />
+
+      <main className="flex-1 max-w-2xl mx-auto w-full px-4 sm:px-6 py-8">
+        <div className="rounded-xl overflow-hidden bg-[#1a0f2e] border border-[#2d1b4e] mb-8">
+          <div className="aspect-[4/3] bg-[#0f0a1a] relative">
+            {event.imageUrl ? (
+              <img src={event.imageUrl} alt={event.name} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-5xl bg-gradient-to-br from-violet-900/30 to-purple-900/20">
+                🎉
+              </div>
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+          </div>
         </div>
 
         <h1 className="font-heading text-3xl sm:text-4xl text-white mb-4">{event.name}</h1>
         <div className="flex gap-2 mb-6 flex-wrap">
-          {event.tags.map((t) => (
-            <span key={t} className="px-3 py-1 border border-[#1a1a1a] text-sm text-zinc-400 uppercase tracking-wider">
-              {t}
+          {event.tags.map((tag) => (
+            <span
+              key={tag}
+              className="px-3 py-1 bg-[#1a0f2e] border border-[#2d1b4e] text-violet-400 text-sm rounded-lg"
+            >
+              {tag}
             </span>
           ))}
         </div>
 
-        <div className="space-y-4 text-zinc-400 mb-8">
-          <p>📅 {new Date(event.date).toLocaleDateString("he-IL")} • {event.time}</p>
+        <div className="space-y-4 text-violet-400 mb-8">
+          <p>📅 {formatDate(event.date)} • {event.time}</p>
           <div className="flex items-center gap-2 flex-wrap">
-            <span>📍 {event.address || event.location}</span>
+            <span>📍 {address}</span>
             <div className="flex gap-1">
-              <a href={appleMapsUrl} target="_blank" rel="noopener noreferrer" className="p-1.5 border border-[#1a1a1a] hover:border-white/50 transition" title="נווט באפל">
+              <a href={appleMapsUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-[#1a0f2e] border border-[#2d1b4e] rounded-lg hover:border-violet-500/50 transition" title="Apple Maps">
                 <AppleMapsIcon className="w-5 h-5 text-white" />
               </a>
-              <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="p-1.5 border border-[#1a1a1a] hover:border-white/50 transition" title="נווט בגוגל">
+              <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-[#1a0f2e] border border-[#2d1b4e] rounded-lg hover:border-violet-500/50 transition" title="Google Maps">
                 <GoogleMapsIcon className="w-5 h-5" />
               </a>
-              <a href={wazeUrl} target="_blank" rel="noopener noreferrer" className="p-1.5 border border-[#1a1a1a] hover:border-white/50 transition" title="נווט ב-Waze">
+              <a href={wazeUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-[#1a0f2e] border border-[#2d1b4e] rounded-lg hover:border-violet-500/50 transition" title="Waze">
                 <WazeIcon className="w-5 h-5 text-[#33CCFF]" />
               </a>
             </div>
           </div>
           {event.phone && (
-            <a href={`tel:${event.phone.replace(/\D/g, "")}`} className="block text-white hover:underline">
+            <a href={`tel:${event.phone.replace(/\D/g, "")}`} className="block text-white hover:text-violet-300">
               📞 {event.phone}
             </a>
           )}
           {event.ageRestriction && <p>🔞 {event.ageRestriction}</p>}
         </div>
 
-        {event.description && (
-          <p className="mb-8 text-zinc-500">{event.description}</p>
-        )}
+        {event.description && <p className="mb-8 text-violet-300">{event.description}</p>}
 
         <div className="space-y-6">
           {reserveStatus === "success" && (
-            <div className="py-4 px-4 border border-white/30 text-white text-center">
-              ✅ ההזמנה נשלחה בהצלחה!
+            <div className="py-4 px-4 bg-violet-600/20 border border-violet-500/50 text-white text-center rounded-lg">
+              ✅ {t("event.reserveSuccess")}
             </div>
           )}
-          <form onSubmit={handleReserve} className="p-6 border border-[#1a1a1a] space-y-4">
-              <h3 className="text-white font-semibold tracking-widest uppercase">הזמן מקום</h3>
-              <div>
-                <label className="block text-zinc-500 text-xs uppercase tracking-widest mb-2">כמה אנשים</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="20"
-                  value={numPeople}
-                  onChange={(e) => setNumPeople(e.target.value)}
-                  required
-                  className="w-full px-4 py-3 bg-black border border-[#1a1a1a] text-white focus:outline-none focus:border-white/50 transition"
-                />
-              </div>
-              <div>
-                <label className="block text-zinc-500 text-xs uppercase tracking-widest mb-2">טלפון</label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  required
-                  placeholder="050-1234567"
-                  className="w-full px-4 py-3 bg-black border border-[#1a1a1a] text-white placeholder-zinc-600 focus:outline-none focus:border-white/50 transition"
-                />
-              </div>
-              <div>
-                <label className="block text-zinc-500 text-xs uppercase tracking-widest mb-2">מייל</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  placeholder="email@example.com"
-                  className="w-full px-4 py-3 bg-black border border-[#1a1a1a] text-white placeholder-zinc-600 focus:outline-none focus:border-white/50 transition"
-                />
-              </div>
-              <label className="flex items-center gap-3 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={over18}
-                  onChange={(e) => setOver18(e.target.checked)}
-                  required
-                  className="w-5 h-5 rounded-none border-[#1a1a1a] bg-black text-white focus:ring-white/50"
-                />
-                <span className="text-zinc-400">אני מאשר/ת שמעל גיל 18</span>
-              </label>
-              <button
-                type="submit"
-                disabled={!over18 || reserveStatus === "loading"}
-                className="w-full py-4 bg-white text-black font-semibold tracking-widest uppercase hover:bg-zinc-200 disabled:opacity-50 transition"
-              >
-                {reserveStatus === "loading" ? "שולח..." : "שלח הזמנה"}
-              </button>
-            </form>
+          <form onSubmit={handleReserve} className="p-6 bg-[#1a0f2e] border border-[#2d1b4e] rounded-xl space-y-4">
+            <h3 className="text-white font-semibold">{t("event.reserve")}</h3>
+            <div>
+              <label className="block text-violet-400 text-sm mb-2">{t("event.howMany")}</label>
+              <input
+                type="number"
+                min="1"
+                max="20"
+                value={numPeople}
+                onChange={(e) => setNumPeople(e.target.value)}
+                required
+                className="w-full px-4 py-3 bg-[#0f0a1a] border border-[#2d1b4e] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+              />
+            </div>
+            <div>
+              <label className="block text-violet-400 text-sm mb-2">{t("event.phone")}</label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+                placeholder="050-1234567"
+                className="w-full px-4 py-3 bg-[#0f0a1a] border border-[#2d1b4e] rounded-lg text-white placeholder-violet-500/40 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+              />
+            </div>
+            <div>
+              <label className="block text-violet-400 text-sm mb-2">{t("event.email")}</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="email@example.com"
+                className="w-full px-4 py-3 bg-[#0f0a1a] border border-[#2d1b4e] rounded-lg text-white placeholder-violet-500/40 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+              />
+            </div>
+            <label className="flex items-center gap-3 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={over18}
+                onChange={(e) => setOver18(e.target.checked)}
+                required
+                className="w-5 h-5 rounded border-[#2d1b4e] bg-[#0f0a1a] text-violet-600 focus:ring-violet-500/50"
+              />
+              <span className="text-violet-300">{t("event.confirmAge")}</span>
+            </label>
+            <button
+              type="submit"
+              disabled={!over18 || reserveStatus === "loading"}
+              className="w-full py-4 bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-lg disabled:opacity-50 transition"
+            >
+              {reserveStatus === "loading" ? t("event.sending") : t("event.sendReserve")}
+            </button>
+          </form>
           {event.ticketLink && !event.ticketLink.includes("example.com") && (
             <a
               href={event.ticketLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full py-4 bg-white text-black text-center font-semibold tracking-widest uppercase hover:bg-zinc-200 transition"
+              className="block w-full py-4 bg-violet-600 hover:bg-violet-500 text-white text-center font-semibold rounded-lg transition"
             >
-              רכישת כרטיסים
+              {t("event.buyTickets")}
             </a>
           )}
           <div className="space-y-3">
-            <p className="text-zinc-500 text-xs uppercase tracking-widest">שתף חבר</p>
+            <p className="text-violet-400 text-sm font-medium">{t("event.shareFriend")}</p>
             <div className="flex gap-3">
               <a
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 py-3 border border-[#1a1a1a] text-zinc-400 rounded-none hover:text-white hover:border-[#25D366] transition flex items-center justify-center gap-2"
+                className="flex-1 py-3 bg-[#1a0f2e] border border-[#2d1b4e] text-violet-300 rounded-lg hover:border-[#25D366] hover:text-[#25D366] transition flex items-center justify-center gap-2"
               >
                 <WhatsAppIcon className="w-6 h-6" />
-                וואטסאפ
+                {t("event.whatsapp")}
               </a>
               <a
                 href={smsUrl}
-                className="flex-1 py-3 border border-[#1a1a1a] text-zinc-400 rounded-none hover:text-white hover:border-white/30 transition flex items-center justify-center gap-2"
+                className="flex-1 py-3 bg-[#1a0f2e] border border-[#2d1b4e] text-violet-300 rounded-lg hover:border-violet-500/50 hover:text-white transition flex items-center justify-center gap-2"
               >
                 <SMSIcon className="w-6 h-6" />
-                SMS
+                {t("event.sms")}
               </a>
             </div>
           </div>
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 }

@@ -4,6 +4,9 @@ import { useEffect, useState, Suspense, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
+const DEFAULT_EVENT_IMAGE =
+  "https://images.unsplash.com/photo-1571266028243-d220e8c3c9e2?w=400&h=300&fit=crop";
+
 interface Event {
   id: string;
   name: string;
@@ -78,11 +81,14 @@ function ResultsContent() {
           <Link key={e.id} href={`/events/${e.id}`}>
             <div className="bg-[#16161d] border border-zinc-800 rounded-2xl overflow-hidden flex gap-4">
               <div className="w-28 h-28 min-w-[7rem] bg-zinc-800 relative shrink-0 rounded-2xl overflow-hidden">
-                {e.imageUrl ? (
-                  <img src={e.imageUrl} alt={e.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-2xl">🎉</div>
-                )}
+                <img
+                  src={e.imageUrl || DEFAULT_EVENT_IMAGE}
+                  alt={e.name}
+                  className="w-full h-full object-cover"
+                  onError={(ev) => {
+                    (ev.target as HTMLImageElement).src = DEFAULT_EVENT_IMAGE;
+                  }}
+                />
               </div>
               <div className="p-4 flex-1 min-w-0">
                 <h3 className="text-white font-semibold">{e.name}</h3>

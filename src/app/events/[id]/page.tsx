@@ -104,11 +104,14 @@ export default function EventPage() {
 
       <div className="p-4">
         <div className="w-full max-w-md mx-auto aspect-[4/3] rounded-2xl overflow-hidden bg-zinc-800 mb-6">
-          {event.imageUrl ? (
-            <img src={event.imageUrl} alt={event.name} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-5xl">🎉</div>
-          )}
+          <img
+            src={event.imageUrl || "https://images.unsplash.com/photo-1571266028243-d220e8c3c9e2?w=800&h=600&fit=crop"}
+            alt={event.name}
+            className="w-full h-full object-cover"
+            onError={(ev) => {
+              (ev.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1571266028243-d220e8c3c9e2?w=800&h=600&fit=crop";
+            }}
+          />
         </div>
 
         <div>

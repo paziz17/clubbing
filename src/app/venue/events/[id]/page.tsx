@@ -48,16 +48,16 @@ export default function VenueEventDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#080810] flex items-center justify-center">
-        <div className="animate-spin w-12 h-12 border-2 border-[#00d4ff] border-t-transparent rounded-full" />
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+        <div className="animate-spin w-12 h-12 border-2 border-[#d4af37] border-t-transparent rounded-full" />
       </div>
     );
   }
 
   if (!event) {
     return (
-      <div className="min-h-screen bg-[#080810] flex items-center justify-center">
-        <p className="text-[#ff2d6a]">אירוע לא נמצא</p>
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+        <p className="text-[#d4af37]">אירוע לא נמצא</p>
       </div>
     );
   }
@@ -65,15 +65,15 @@ export default function VenueEventDetailPage() {
   const totalPeople = event.reservations.reduce((s, r) => s + r.numPeople, 0);
 
   return (
-    <div className="min-h-screen bg-[#080810] px-4 py-8">
+    <div className="min-h-screen bg-[#0a0a0a] px-4 py-8">
       <div className="max-w-3xl mx-auto">
         <Link href="/venue" className="text-zinc-500 text-sm hover:text-white mb-6 inline-block">
           ← חזרה ל-CRM
         </Link>
 
-        <div className="bg-[#0e0e16] border border-[#00d4ff]/30 rounded-2xl overflow-hidden mb-8">
+        <div className="bg-[#111111] border border-[#d4af37]/30 rounded-2xl overflow-hidden mb-8">
           {event.imageUrl && (
-            <div className="aspect-video bg-[#0e0e16] border border-[#00d4ff]/20">
+            <div className="aspect-video bg-[#111111] border border-[#d4af37]/20">
               <img src={event.imageUrl} alt={event.name} className="w-full h-full object-cover" />
             </div>
           )}
@@ -86,11 +86,11 @@ export default function VenueEventDetailPage() {
             </div>
             {event.description && <p className="text-zinc-500 text-sm mb-4">{event.description}</p>}
             <div className="flex gap-4">
-              <div className="px-4 py-2 bg-[#0e0e16] border border-[#00d4ff]/20 rounded-lg">
+              <div className="px-4 py-2 bg-[#111111] border border-[#d4af37]/20 rounded-lg">
                 <span className="text-zinc-500 text-xs">הזמנות</span>
                 <p className="text-white font-bold">{event.reservations.length}</p>
               </div>
-              <div className="px-4 py-2 bg-[#0e0e16] border border-[#00d4ff]/20 rounded-lg">
+              <div className="px-4 py-2 bg-[#111111] border border-[#d4af37]/20 rounded-lg">
                 <span className="text-zinc-500 text-xs">אנשים</span>
                 <p className="text-white font-bold">{totalPeople}</p>
               </div>
@@ -102,11 +102,11 @@ export default function VenueEventDetailPage() {
         {event.reservations.length === 0 ? (
           <p className="text-zinc-500 text-center py-12">אין הזמנות עדיין</p>
         ) : (
-          <div className="bg-[#0e0e16] border border-[#00d4ff]/30 rounded-xl overflow-hidden">
+          <div className="bg-[#111111] border border-[#d4af37]/30 rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-right">
                 <thead>
-                  <tr className="border-b border-[#00d4ff]/20">
+                  <tr className="border-b border-[#d4af37]/20">
                     <th className="px-4 py-3 text-zinc-500 text-sm font-medium">תאריך</th>
                     <th className="px-4 py-3 text-zinc-500 text-sm font-medium">טלפון</th>
                     <th className="px-4 py-3 text-zinc-500 text-sm font-medium">מייל</th>
@@ -115,21 +115,21 @@ export default function VenueEventDetailPage() {
                 </thead>
                 <tbody>
                   {event.reservations.map((r) => (
-                    <tr key={r.id} className="border-b border-[#00d4ff]/20/50 last:border-0">
+                    <tr key={r.id} className="border-b border-[#d4af37]/20 last:border-0">
                       <td className="px-4 py-3 text-zinc-300 text-sm">
                         {new Date(r.createdAt).toLocaleString("he-IL")}
                       </td>
                       <td className="px-4 py-3 text-white">
-                        <a href={`tel:${r.phone}`} className="hover:text-[#ff2d6a]">
+                        <a href={`tel:${r.phone}`} className="hover:text-[#d4af37]">
                           {r.phone}
                         </a>
                       </td>
                       <td className="px-4 py-3 text-white">
-                        <a href={`mailto:${r.email}`} className="hover:text-[#ff2d6a]">
+                        <a href={`mailto:${r.email}`} className="hover:text-[#d4af37]">
                           {r.email}
                         </a>
                       </td>
-                      <td className="px-4 py-3 text-[#ff2d6a] font-medium">{r.numPeople}</td>
+                      <td className="px-4 py-3 text-[#d4af37] font-medium">{r.numPeople}</td>
                     </tr>
                   ))}
                 </tbody>

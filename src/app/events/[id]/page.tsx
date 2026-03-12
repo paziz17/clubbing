@@ -51,16 +51,16 @@ export default function EventPage() {
 
   if (!loaded) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#080810]">
-        <div className="animate-spin w-12 h-12 border-2 border-[#00d4ff] border-t-transparent rounded-full" />
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
+        <div className="animate-spin w-12 h-12 border-2 border-[#d4af37] border-t-transparent rounded-full" />
       </div>
     );
   }
   if (!event) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#080810] gap-4">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a0a] gap-4">
         <p className="text-zinc-500">אירוע לא נמצא</p>
-        <Link href="/results" className="text-[#ff2d6a] hover:text-[#ff6b35] transition">← חזרה לתוצאות</Link>
+        <Link href="/results" className="text-[#d4af37] hover:text-[#f0d78c] transition">← חזרה לתוצאות</Link>
       </div>
     );
   }
@@ -114,16 +114,16 @@ export default function EventPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#080810]">
-      <header className="flex justify-between items-center p-4 border-b border-[#00d4ff]/20">
-        <Link href="/results" className="w-10 h-10 bg-[#0e0e16] border border-[#00d4ff]/40 rounded-full flex items-center justify-center text-white hover:border-[#00d4ff]/70 transition">
+    <div className="min-h-screen bg-[#0a0a0a]">
+      <header className="flex justify-between items-center p-4 border-b border-[#d4af37]/20">
+        <Link href="/results" className="w-10 h-10 bg-[#111111] border border-[#d4af37]/40 rounded-full flex items-center justify-center text-white hover:border-[#d4af37]/70 transition">
           ←
         </Link>
         <span className="text-zinc-500 text-sm">פרטי אירוע</span>
       </header>
 
       <div className="p-4">
-        <div className="w-full max-w-md mx-auto aspect-[4/3] rounded-2xl overflow-hidden bg-zinc-900 border border-[#ff2d6a]/20 mb-6">
+        <div className="w-full max-w-md mx-auto aspect-[4/3] rounded-2xl overflow-hidden bg-zinc-900 border border-[#d4af37]/20 mb-6">
           <img
             src={event.imageUrl || "https://images.unsplash.com/photo-1764510376258-2c9978ec3e4e?w=800&h=600&fit=crop"}
             alt={event.name}
@@ -135,10 +135,10 @@ export default function EventPage() {
         </div>
 
         <div>
-        <h1 className="text-2xl font-bold text-gradient-title">{event.name}</h1>
+        <h1 className="text-2xl font-bold text-[#d4af37]">{event.name}</h1>
         <div className="flex gap-2 mt-2 flex-wrap">
           {event.tags.map((t) => (
-            <span key={t} className="px-3 py-1 bg-[#ff2d6a]/20 border border-[#ff2d6a]/40 rounded-full text-sm text-zinc-300">
+            <span key={t} className="px-3 py-1 bg-[#d4af37]/20 border border-[#d4af37]/40 rounded-full text-sm text-zinc-300">
               {t}
             </span>
           ))}
@@ -148,7 +148,7 @@ export default function EventPage() {
           <p>📅 {new Date(event.date).toLocaleDateString("he-IL")} • {event.time}</p>
           <div className="flex items-center gap-2 flex-wrap">
             <span className="inline-flex items-center gap-1.5">
-              <LocationPinIcon className="w-4 h-4 text-[#ff2d6a] shrink-0" />
+              <LocationPinIcon className="w-4 h-4 text-[#d4af37] shrink-0" />
               {event.address || event.location}
             </span>
             <div className="flex gap-1">
@@ -164,7 +164,7 @@ export default function EventPage() {
             </div>
           </div>
           {event.phone && (
-            <a href={`tel:${event.phone.replace(/\D/g, "")}`} className="block text-[#ff2d6a] hover:text-[#ff6b35] transition">
+            <a href={`tel:${event.phone.replace(/\D/g, "")}`} className="block text-[#d4af37] hover:text-[#f0d78c] transition">
               📞 {event.phone}
             </a>
           )}
@@ -177,11 +177,11 @@ export default function EventPage() {
 
         <div className="mt-8 space-y-3">
           {reserveStatus === "success" && (
-            <div className="py-4 px-4 bg-[#00d4ff]/20 border border-[#00d4ff]/50 rounded-xl text-[#00d4ff] text-center">
+            <div className="py-4 px-4 bg-[#d4af37]/20 border border-[#d4af37]/50 rounded-xl text-[#d4af37] text-center">
               ✅ ההזמנה נשלחה בהצלחה!
             </div>
           )}
-          <form onSubmit={handleReserve} className="p-4 bg-[#0e0e16] border border-[#00d4ff]/30 rounded-xl space-y-4">
+          <form onSubmit={handleReserve} className="p-4 bg-[#111111] border border-[#d4af37]/30 rounded-xl space-y-4">
               <h3 className="text-white font-semibold">הזמן מקום</h3>
               <div>
                 <label className="block text-zinc-400 text-sm mb-1">כמה אנשים</label>
@@ -192,7 +192,7 @@ export default function EventPage() {
                   value={numPeople}
                   onChange={(e) => setNumPeople(e.target.value)}
                   required
-                  className="w-full px-4 py-3 bg-[#080810] border border-[#00d4ff]/40 rounded-xl text-white focus:border-[#00d4ff]/70 focus:ring-1 focus:ring-[#00d4ff]/30"
+                  className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#d4af37]/40 rounded-xl text-white focus:border-[#d4af37]/70 focus:ring-1 focus:ring-[#d4af37]/30"
                 />
               </div>
               <div>
@@ -203,7 +203,7 @@ export default function EventPage() {
                   onChange={(e) => setPhone(e.target.value)}
                   required
                   placeholder="050-1234567"
-                  className="w-full px-4 py-3 bg-[#080810] border border-[#00d4ff]/40 rounded-xl text-white placeholder-zinc-500 focus:border-[#00d4ff]/70"
+                  className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#d4af37]/40 rounded-xl text-white placeholder-zinc-500 focus:border-[#d4af37]/70"
                 />
               </div>
               <div>
@@ -214,7 +214,7 @@ export default function EventPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   placeholder="email@example.com"
-                  className="w-full px-4 py-3 bg-[#080810] border border-[#00d4ff]/40 rounded-xl text-white placeholder-zinc-500 focus:border-[#00d4ff]/70"
+                  className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#d4af37]/40 rounded-xl text-white placeholder-zinc-500 focus:border-[#d4af37]/70"
                 />
               </div>
               <label className="flex items-center gap-3 cursor-pointer select-none">
@@ -223,7 +223,7 @@ export default function EventPage() {
                   checked={over18}
                   onChange={(e) => setOver18(e.target.checked)}
                   required
-                  className="w-5 h-5 rounded border-[#00d4ff]/40 bg-[#080810] text-[#ff2d6a] focus:ring-[#ff2d6a]"
+                  className="w-5 h-5 rounded border-[#d4af37]/40 bg-[#0a0a0a] text-[#d4af37] focus:ring-[#d4af37]"
                 />
                 <span className="text-zinc-300">אני מאשר/ת שמעל גיל 18</span>
               </label>
@@ -231,7 +231,7 @@ export default function EventPage() {
                 <button
                   type="submit"
                   disabled={!over18 || reserveStatus === "loading"}
-                  className="flex-1 py-3 bg-gradient-to-r from-[#ff2d6a] to-[#ff6b35] hover:shadow-[0_0_25px_rgba(255,45,106,0.4)] disabled:opacity-50 text-white rounded-xl font-semibold transition"
+                  className="flex-1 py-3 bg-[#d4af37] hover:bg-[#f0d78c] disabled:opacity-50 text-[#0a0a0a] rounded-xl font-semibold transition"
                 >
                   {reserveStatus === "loading" ? "שולח..." : "שלח הזמנה"}
                 </button>
@@ -242,7 +242,7 @@ export default function EventPage() {
               href={event.ticketLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full py-4 bg-gradient-to-r from-[#ff2d6a] to-[#ff6b35] hover:shadow-[0_0_25px_rgba(255,45,106,0.4)] text-white text-center rounded-xl font-semibold transition"
+              className="block w-full py-4 bg-[#d4af37] hover:bg-[#f0d78c] text-[#0a0a0a] text-center rounded-xl font-semibold transition"
             >
               רכישת כרטיסים
             </a>
@@ -261,7 +261,7 @@ export default function EventPage() {
               </a>
               <a
                 href={smsUrl}
-                className="flex-1 py-3 border border-[#00d4ff]/40 text-zinc-400 rounded-xl hover:text-white hover:border-[#00d4ff]/70 transition flex items-center justify-center gap-2"
+                className="flex-1 py-3 border border-[#d4af37]/40 text-zinc-400 rounded-xl hover:text-white hover:border-[#d4af37]/70 transition flex items-center justify-center gap-2"
               >
                 <SMSIcon className="w-6 h-6" />
                 SMS

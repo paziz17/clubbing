@@ -64,17 +64,17 @@ function ResultsContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#080810]">
-        <div className="animate-spin w-12 h-12 border-2 border-[#00d4ff] border-t-transparent rounded-full" />
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
+        <div className="animate-spin w-12 h-12 border-2 border-[#d4af37] border-t-transparent rounded-full" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#080810] px-4 py-6">
+    <div className="min-h-screen bg-[#0a0a0a] px-4 py-6">
       <div className="flex flex-col items-center mb-6 gap-4">
-        <h1 className="text-xl font-bold text-gradient-title">תוצאות לפי התאמה</h1>
-        <Link href="/interests" className="px-5 py-2.5 text-[#00d4ff] text-sm border border-[#00d4ff]/60 rounded-full hover:bg-[#00d4ff]/10 hover:shadow-[0_0_15px_rgba(0,212,255,0.2)] transition">
+        <h1 className="text-xl font-bold text-[#d4af37]">תוצאות לפי התאמה</h1>
+        <Link href="/interests" className="px-5 py-2.5 text-[#d4af37] text-sm border border-[#d4af37]/60 rounded-full hover:bg-[#d4af37]/10 hover:bg-[#d4af37]/10 transition">
           שנה סינון
         </Link>
       </div>
@@ -82,7 +82,7 @@ function ResultsContent() {
       <div className="space-y-4">
         {events.map((e) => (
           <Link key={e.id} href={`/events/${e.id}`}>
-            <div className="bg-[#0e0e16] border border-[#ff2d6a]/30 rounded-2xl overflow-hidden flex gap-4 hover:border-[#ff2d6a]/60 hover:shadow-[0_0_20px_rgba(255,45,106,0.15)] transition">
+            <div className="bg-[#111111] border border-[#d4af37]/30 rounded-2xl overflow-hidden flex gap-4  hover:border-[#d4af37]/80 transition">
               <div className="w-28 h-28 min-w-[7rem] bg-zinc-900 relative shrink-0 rounded-2xl overflow-hidden">
                 <img
                   src={e.imageUrl || DEFAULT_EVENT_IMAGE}
@@ -94,18 +94,18 @@ function ResultsContent() {
                 />
               </div>
               <div className="p-4 flex-1 min-w-0">
-                <h3 className="text-white font-semibold">{e.name}</h3>
+                <h3 className="text-[#d4af37] font-semibold">{e.name}</h3>
                 <div className="flex gap-2 mt-2 flex-wrap">
                   {e.tags.slice(0, 3).map((t) => (
-                    <span key={t} className="px-2 py-0.5 bg-[#ff2d6a]/20 border border-[#ff2d6a]/40 rounded text-xs text-zinc-300">
+                    <span key={t} className="px-2 py-0.5 bg-[#d4af37]/20 border border-[#d4af37]/40 rounded text-xs text-[#d4af37]/90">
                       {t}
                     </span>
                   ))}
                 </div>
-                <p className="text-zinc-500 text-sm mt-2">
+                <p className="text-[#d4af37]/60 text-sm mt-2">
                   {new Date(e.date).toLocaleDateString("he-IL")} • {e.time} • {e.location}
                 </p>
-                <p className="text-[#ff2d6a] text-xs mt-1">לפרטים נוספים ←</p>
+                <p className="text-[#d4af37]/80 text-xs mt-1">לפרטים נוספים ←</p>
               </div>
             </div>
           </Link>
@@ -113,7 +113,7 @@ function ResultsContent() {
       </div>
 
       {events.length === 0 && (
-        <p className="text-center text-zinc-500 py-12">לא נמצאו אירועים</p>
+        <p className="text-center text-[#d4af37]/60 py-12">לא נמצאו אירועים</p>
       )}
     </div>
   );
@@ -121,7 +121,7 @@ function ResultsContent() {
 
 export default function ResultsPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#080810]"><div className="animate-spin w-12 h-12 border-2 border-[#00d4ff] border-t-transparent rounded-full" /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]"><div className="animate-spin w-12 h-12 border-2 border-[#d4af37] border-t-transparent rounded-full" /></div>}>
       <ResultsContent />
     </Suspense>
   );

@@ -20,7 +20,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="he" dir="rtl">
-      <body className={`${montserrat.variable} font-sans antialiased neon-bg`}>
+      <body className={`${montserrat.variable} font-sans antialiased`}>
         <Providers>
           <div className="relative z-10">
             <LogoHeader />

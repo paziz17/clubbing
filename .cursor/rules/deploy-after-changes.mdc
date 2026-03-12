@@ -1,0 +1,14 @@
+---
+description: אחרי כל שינוי בקוד — דחיפה ל-GitHub והעלאה ל-Vercel
+alwaysApply: true
+---
+
+# פריסה אוטומטית
+
+אחרי כל שינוי בקוד בפרויקט Clubbing:
+
+1. **Git** — לבצע `git add -A`, `git commit` עם הודעה מתאימה בעברית
+2. **GitHub** — לדחוף עם `git push origin main`
+3. **Vercel** — לפרוס עם `vercel --prod --yes`
+
+אין לסיים שיחה עם שינויים בקוד בלי לדחוף ל-GitHub ולהעלות ל-Vercel.

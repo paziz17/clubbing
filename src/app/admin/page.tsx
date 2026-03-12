@@ -15,6 +15,7 @@ interface EventItem {
   phone: string | null;
   imageUrl: string | null;
   status: string;
+  venueId?: string | null;
   reservationsCount: number;
   totalPeople: number;
 }
@@ -48,6 +49,7 @@ export default function AdminPage() {
 
   const totalReservations = events.reduce((s, e) => s + e.reservationsCount, 0);
   const totalPeople = events.reduce((s, e) => s + e.totalPeople, 0);
+  const totalVenues = new Set(events.map((e) => e.venueId).filter(Boolean)).size;
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [recentReservations, setRecentReservations] = useState<
     { id: string; phone: string; email: string; numPeople: number; createdAt: string; event: { id: string; name: string } }[]
@@ -88,7 +90,7 @@ export default function AdminPage() {
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-3 gap-4 mb-8">
           <div className="bg-[#16161d] border border-zinc-800 rounded-2xl p-6">
             <p className="text-zinc-500 text-sm mb-1">סה״כ הזמנות</p>
             <p className="text-3xl font-bold text-white">{totalReservations}</p>
@@ -96,6 +98,10 @@ export default function AdminPage() {
           <div className="bg-[#16161d] border border-zinc-800 rounded-2xl p-6">
             <p className="text-zinc-500 text-sm mb-1">סה״כ אנשים</p>
             <p className="text-3xl font-bold text-white">{totalPeople}</p>
+          </div>
+          <div className="bg-[#16161d] border border-zinc-800 rounded-2xl p-6">
+            <p className="text-zinc-500 text-sm mb-1">סה״כ מועדונים</p>
+            <p className="text-3xl font-bold text-white">{totalVenues}</p>
           </div>
         </div>
 

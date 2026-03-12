@@ -30,6 +30,7 @@ export async function GET() {
       phone: e.phone,
       imageUrl: e.imageUrl,
       status: e.status,
+      venueId: e.venueId,
       reservationsCount: e._count.reservations,
       totalPeople: e.reservations.reduce((s, r) => s + r.numPeople, 0),
     }));
@@ -37,7 +38,7 @@ export async function GET() {
     return NextResponse.json(eventsWithStats);
   } catch {
     return NextResponse.json(
-      DEMO_EVENTS.map((e) => ({
+      DEMO_EVENTS.map((e, i) => ({
         id: e.id,
         name: e.name,
         description: e.description,
@@ -48,6 +49,7 @@ export async function GET() {
         phone: e.phone,
         imageUrl: e.imageUrl,
         status: "approved",
+        venueId: `demo-venue-${i + 1}`,
         reservationsCount: 0,
         totalPeople: 0,
       })),

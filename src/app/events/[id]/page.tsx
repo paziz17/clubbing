@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { WhatsAppIcon, SMSIcon, AppleMapsIcon, GoogleMapsIcon, WazeIcon, LocationPinIcon } from "@/components/SocialIcons";
-
+import { appUrl } from "@/lib/app-url";
 
 interface Event {
   id: string;
@@ -69,7 +69,7 @@ export default function EventPage() {
   const mapsUrl = `https://maps.google.com/?q=${encodeURIComponent(address)}`;
   const appleMapsUrl = `https://maps.apple.com/?q=${encodeURIComponent(address)}`;
   const wazeUrl = `https://waze.com/ul?q=${encodeURIComponent(address)}&navigate=yes`;
-  const eventUrl = typeof window !== "undefined" ? `${window.location.origin}/events/${id}` : `https://clubbing-omers-projects-fee986ef.vercel.app/events/${id}`;
+  const eventUrl = typeof window !== "undefined" ? `${window.location.origin}/events/${id}` : appUrl(`/events/${id}`);
 
   const shareText = [
     `🎉 ${event.name}`,

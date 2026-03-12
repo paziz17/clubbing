@@ -4,27 +4,28 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-interface Stats {
-  totalReservations: number;
+interface EventItem {
+  id: string;
+  name: string;
+  date: string;
+  time: string | null;
+  location: string;
+  address: string | null;
+  phone: string | null;
+  imageUrl: string | null;
+  status: string;
+  reservationsCount: number;
   totalPeople: number;
-  totalEvents: number;
-  byEvent: {
-    eventId: string;
-    eventName: string;
-    eventDate: string;
-    reservations: number;
-    totalPeople: number;
-  }[];
 }
 
 export default function AdminPage() {
   const router = useRouter();
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("/api/admin/stats")
+    fetch("/api/admin/events")
       .then((r) => {
         if (r.status === 401) {
           router.replace("/admin/login");
@@ -33,7 +34,7 @@ export default function AdminPage() {
         return r.json();
       })
       .then((data) => {
-        if (data) setStats(data);
+        if (data) setEvents(data);
       })
       .catch(() => setError("שגיאה בטעינת הנתונים"))
       .finally(() => setLoading(false));
@@ -44,6 +45,9 @@ export default function AdminPage() {
     router.replace("/admin/login");
   };
 
+  const totalReservations = events.reduce((s, e) => s + e.reservationsCount, 0);
+  const totalPeople = events.reduce((s, e) => s + e.totalPeople, 0);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0d0d12] flex items-center justify-center">
@@ -52,19 +56,19 @@ export default function AdminPage() {
     );
   }
 
-  if (error || !stats) {
+  if (error) {
     return (
       <div className="min-h-screen bg-[#0d0d12] flex items-center justify-center px-6">
-        <p className="text-rose-500">{error || "טוען..."}</p>
+        <p className="text-rose-500">{error}</p>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-[#0d0d12] px-4 py-8">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold text-white">CRM – ניהול הזמנות</h1>
+          <h1 className="text-2xl font-bold text-white">CRM – ניהול מועדונים</h1>
           <button
             onClick={handleLogout}
             className="text-zinc-500 text-sm hover:text-white transition"
@@ -76,35 +80,47 @@ export default function AdminPage() {
         <div className="grid grid-cols-2 gap-4 mb-8">
           <div className="bg-[#16161d] border border-zinc-800 rounded-2xl p-6">
             <p className="text-zinc-500 text-sm mb-1">סה״כ הזמנות</p>
-            <p className="text-3xl font-bold text-white">{stats.totalReservations}</p>
+            <p className="text-3xl font-bold text-white">{totalReservations}</p>
           </div>
           <div className="bg-[#16161d] border border-zinc-800 rounded-2xl p-6">
             <p className="text-zinc-500 text-sm mb-1">סה״כ אנשים</p>
-            <p className="text-3xl font-bold text-white">{stats.totalPeople}</p>
+            <p className="text-3xl font-bold text-white">{totalPeople}</p>
           </div>
         </div>
 
-        <h2 className="text-lg font-semibold text-white mb-4">הזמנות לפי אירוע</h2>
+        <h2 className="text-lg font-semibold text-white mb-4">כל המועדונים והאירועים</h2>
         <div className="space-y-3">
-          {stats.byEvent.length === 0 ? (
-            <p className="text-zinc-500 text-center py-8">אין הזמנות עדיין</p>
+          {events.length === 0 ? (
+            <p className="text-zinc-500 text-center py-12">אין אירועים במערכת</p>
           ) : (
-            stats.byEvent.map((e) => (
-              <div
-                key={e.eventId}
-                className="bg-[#16161d] border border-zinc-800 rounded-xl p-4 flex justify-between items-center"
+            events.map((e) => (
+              <Link
+                key={e.id}
+                href={`/admin/events/${e.id}`}
+                className="block bg-[#16161d] border border-zinc-800 rounded-xl p-4 hover:border-zinc-600 transition"
               >
-                <div>
-                  <p className="text-white font-medium">{e.eventName}</p>
-                  <p className="text-zinc-500 text-sm">
-                    {new Date(e.eventDate).toLocaleDateString("he-IL")}
-                  </p>
+                <div className="flex gap-4 items-center">
+                  {e.imageUrl && (
+                    <img
+                      src={e.imageUrl}
+                      alt={e.name}
+                      className="w-16 h-16 rounded-lg object-cover shrink-0"
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-medium">{e.name}</p>
+                    <p className="text-zinc-500 text-sm">
+                      {new Date(e.date).toLocaleDateString("he-IL")} • {e.location}
+                      {e.address && ` • ${e.address}`}
+                    </p>
+                  </div>
+                  <div className="text-left shrink-0">
+                    <p className="text-rose-500 font-semibold">{e.reservationsCount} הזמנות</p>
+                    <p className="text-zinc-400 text-sm">{e.totalPeople} אנשים</p>
+                  </div>
+                  <span className="text-zinc-500">→</span>
                 </div>
-                <div className="text-left">
-                  <p className="text-rose-500 font-semibold">{e.reservations} הזמנות</p>
-                  <p className="text-zinc-400 text-sm">{e.totalPeople} אנשים</p>
-                </div>
-              </div>
+              </Link>
             ))
           )}
         </div>

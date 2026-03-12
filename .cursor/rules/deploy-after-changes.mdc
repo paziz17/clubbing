@@ -1,14 +1,14 @@
 ---
-description: אחרי כל שינוי בקוד — דחיפה ל-GitHub והעלאה ל-Vercel
+description: סדר עבודה — מקומי → GitHub → Vercel
 alwaysApply: true
 ---
 
-# פריסה אוטומטית
+# סדר עבודה — Clubbing
 
-אחרי כל שינוי בקוד בפרויקט Clubbing:
+**תמיד לעדכן בסדר הזה:**
 
-1. **Git** — לבצע `git add -A`, `git commit` עם הודעה מתאימה בעברית
-2. **GitHub** — לדחוף עם `git push origin main`
-3. **Vercel** — לפרוס עם `vercel --prod --yes`
+1. **מקומי** — לעדכן את הקוד המקומי, לוודא שהאתר רץ (`npm run dev`) ועובד
+2. **GitHub** — `git add -A`, `git commit` (הודעה בעברית), `git push origin main`
+3. **Vercel** — `vercel --prod --yes`
 
 אין לסיים שיחה עם שינויים בקוד בלי לדחוף ל-GitHub ולהעלות ל-Vercel.

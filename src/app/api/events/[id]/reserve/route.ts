@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { DEMO_EVENTS_MAP } from "@/lib/demo-events";
 
 export async function POST(
   req: NextRequest,
@@ -14,6 +15,10 @@ export async function POST(
       { error: "נדרש: כמות אנשים, טלפון, מייל ואישור גיל 18+" },
       { status: 400 }
     );
+  }
+
+  if (DEMO_EVENTS_MAP[eventId]) {
+    return NextResponse.json({ success: true, message: "ההזמנה נשלחה בהצלחה (דמו)" });
   }
 
   const event = await prisma.event.findUnique({ where: { id: eventId } });

@@ -41,8 +41,11 @@ function ResultsContent() {
         await fetch("/api/events/refresh", { method: "POST" });
       }
       const r = await fetch(`/api/events?${params}`, { cache: "no-store" });
-      const data = await r.json();
-      setEvents(data);
+      const text = await r.text();
+      const data = text ? (JSON.parse(text) as Event[]) : [];
+      setEvents(Array.isArray(data) ? data : []);
+    } catch {
+      setEvents([]);
     } finally {
       setLoading(false);
       setRefreshing(false);

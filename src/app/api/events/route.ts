@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { DEMO_EVENTS } from "@/lib/demo-events";
 
 // קואורדינטות ערים — נקודת ייחוס למיון לפי מרחק
 const REGION_COORDS: Record<string, { lat: number; lng: number }> = {
@@ -33,71 +34,76 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export async function GET(req: NextRequest) {
-  const region = req.nextUrl.searchParams.get("region");
-  const userLat = req.nextUrl.searchParams.get("lat");
-  const userLng = req.nextUrl.searchParams.get("lng");
-  const music = req.nextUrl.searchParams.get("music");
-  const eventType = req.nextUrl.searchParams.get("eventType");
-  const age = req.nextUrl.searchParams.get("age");
+  try {
+    const region = req.nextUrl.searchParams.get("region");
+    const userLat = req.nextUrl.searchParams.get("lat");
+    const userLng = req.nextUrl.searchParams.get("lng");
+    const music = req.nextUrl.searchParams.get("music");
+    const eventType = req.nextUrl.searchParams.get("eventType");
+    const age = req.nextUrl.searchParams.get("age");
 
-  const events = await prisma.event.findMany({
-    where: {
-      status: "approved",
-      ...(region && { location: { contains: region } }),
-    },
-    orderBy: { date: "asc" },
-  });
-
-  let filtered = events;
-  if (music) {
-    filtered = filtered.filter((e) => {
-      const tags = JSON.parse(e.tags || "[]") as string[];
-      return tags.some((t) => t.toLowerCase().includes(music.toLowerCase()));
+    const events = await prisma.event.findMany({
+      where: {
+        status: "approved",
+        ...(region && { location: { contains: region } }),
+      },
+      orderBy: { date: "asc" },
     });
-  }
-  if (eventType) {
-    filtered = filtered.filter((e) => {
-      const tags = JSON.parse(e.tags || "[]") as string[];
-      return tags.some((t) => t.toLowerCase().includes(eventType.toLowerCase()));
-    });
-  }
-  if (age) {
-    const minAge = parseInt(age, 10) || 18;
-    filtered = filtered.filter((e) => {
-      const restriction = e.ageRestriction?.replace("+", "") || "18";
-      return parseInt(restriction, 10) <= minAge;
-    });
-  }
 
-  // מיון מהכי קרוב להכי רחוק
-  let ref = REGION_COORDS["תל אביב"];
-  if (userLat && userLng) {
-    const lat = parseFloat(userLat);
-    const lng = parseFloat(userLng);
-    if (!isNaN(lat) && !isNaN(lng)) ref = { lat, lng };
-  } else if (region && REGION_COORDS[region]) {
-    ref = REGION_COORDS[region];
-  }
-  filtered.sort((a, b) => {
-    const distA = a.lat != null && a.lng != null ? haversineKm(ref.lat, ref.lng, a.lat, a.lng) : 9999;
-    const distB = b.lat != null && b.lng != null ? haversineKm(ref.lat, ref.lng, b.lat, b.lng) : 9999;
-    return distA - distB;
-  });
+    let filtered = events;
+    if (music) {
+      filtered = filtered.filter((e) => {
+        const tags = JSON.parse(e.tags || "[]") as string[];
+        return tags.some((t) => t.toLowerCase().includes(music.toLowerCase()));
+      });
+    }
+    if (eventType) {
+      filtered = filtered.filter((e) => {
+        const tags = JSON.parse(e.tags || "[]") as string[];
+        return tags.some((t) => t.toLowerCase().includes(eventType.toLowerCase()));
+      });
+    }
+    if (age) {
+      const minAge = parseInt(age, 10) || 18;
+      filtered = filtered.filter((e) => {
+        const restriction = e.ageRestriction?.replace("+", "") || "18";
+        return parseInt(restriction, 10) <= minAge;
+      });
+    }
 
-  return NextResponse.json(
-    filtered.map((e) => ({
-      id: e.id,
-      name: e.name,
-      description: e.description,
-      date: e.date.toISOString(),
-      time: e.time,
-      location: e.location,
-      address: e.address,
-      imageUrl: e.imageUrl,
-      ticketLink: e.ticketLink,
-      phone: e.phone,
-      ageRestriction: e.ageRestriction,
-      tags: JSON.parse(e.tags || "[]"),
-    }))
-  );
+    // מיון מהכי קרוב להכי רחוק
+    let ref = REGION_COORDS["תל אביב"];
+    if (userLat && userLng) {
+      const lat = parseFloat(userLat);
+      const lng = parseFloat(userLng);
+      if (!isNaN(lat) && !isNaN(lng)) ref = { lat, lng };
+    } else if (region && REGION_COORDS[region]) {
+      ref = REGION_COORDS[region];
+    }
+    filtered.sort((a, b) => {
+      const distA = a.lat != null && a.lng != null ? haversineKm(ref.lat, ref.lng, a.lat, a.lng) : 9999;
+      const distB = b.lat != null && b.lng != null ? haversineKm(ref.lat, ref.lng, b.lat, b.lng) : 9999;
+      return distA - distB;
+    });
+
+    return NextResponse.json(
+      filtered.map((e) => ({
+        id: e.id,
+        name: e.name,
+        description: e.description,
+        date: e.date.toISOString(),
+        time: e.time,
+        location: e.location,
+        address: e.address,
+        imageUrl: e.imageUrl,
+        ticketLink: e.ticketLink,
+        phone: e.phone,
+        ageRestriction: e.ageRestriction,
+        tags: JSON.parse(e.tags || "[]"),
+      }))
+    );
+  } catch (err) {
+    console.error("[api/events]", err);
+    return NextResponse.json(DEMO_EVENTS, { status: 200 });
+  }
 }

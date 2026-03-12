@@ -25,6 +25,7 @@ export default function EventPage() {
   const params = useParams();
   const id = params.id as string;
   const [event, setEvent] = useState<Event | null>(null);
+  const [loaded, setLoaded] = useState(false);
   const [numPeople, setNumPeople] = useState("2");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -32,15 +33,34 @@ export default function EventPage() {
   const [reserveStatus, setReserveStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
   useEffect(() => {
+    setLoaded(false);
     fetch(`/api/events/${id}`)
-      .then((r) => r.json())
-      .then(setEvent);
+      .then(async (r) => {
+        try {
+          const text = await r.text();
+          const data = text ? JSON.parse(text) : null;
+          if (r.ok && data && !data.error) setEvent(data);
+          else setEvent(null);
+        } catch {
+          setEvent(null);
+        }
+      })
+      .catch(() => setEvent(null))
+      .finally(() => setLoaded(true));
   }, [id]);
 
-  if (!event) {
+  if (!loaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0d0d12]">
         <div className="animate-spin w-12 h-12 border-2 border-rose-500 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+  if (!event) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0d0d12] gap-4">
+        <p className="text-zinc-500">אירוע לא נמצא</p>
+        <Link href="/results" className="text-rose-500 hover:underline">← חזרה לתוצאות</Link>
       </div>
     );
   }

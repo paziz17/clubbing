@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { AdminCalendar } from "@/components/AdminCalendar";
 
 interface EventItem {
   id: string;
@@ -47,6 +48,16 @@ export default function AdminPage() {
 
   const totalReservations = events.reduce((s, e) => s + e.reservationsCount, 0);
   const totalPeople = events.reduce((s, e) => s + e.totalPeople, 0);
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const [recentReservations, setRecentReservations] = useState<
+    { id: string; phone: string; email: string; numPeople: number; createdAt: string; event: { id: string; name: string } }[]
+  >([]);
+
+  useEffect(() => {
+    fetch("/api/admin/reservations")
+      .then((r) => r.status === 401 ? null : r.json())
+      .then((data) => data && setRecentReservations(data));
+  }, []);
 
   if (loading) {
     return (
@@ -87,6 +98,41 @@ export default function AdminPage() {
             <p className="text-3xl font-bold text-white">{totalPeople}</p>
           </div>
         </div>
+
+        <div className="mb-8">
+          <AdminCalendar
+            events={events}
+            currentMonth={calendarMonth}
+            onMonthChange={setCalendarMonth}
+          />
+        </div>
+
+        {recentReservations.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-white mb-4">הזמנות אחרונות</h2>
+            <div className="bg-[#16161d] border border-zinc-800 rounded-xl overflow-hidden">
+              <div className="divide-y divide-zinc-800 max-h-48 overflow-y-auto">
+                {recentReservations.slice(0, 10).map((r) => (
+                  <Link
+                    key={r.id}
+                    href={`/admin/events/${r.event.id}`}
+                    className="block px-4 py-3 hover:bg-zinc-800/50 transition"
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-white text-sm font-medium">{r.event.name}</p>
+                        <p className="text-zinc-500 text-xs">
+                          {r.numPeople} אנשים • {r.phone} • {new Date(r.createdAt).toLocaleString("he-IL")}
+                        </p>
+                      </div>
+                      <span className="text-rose-500 text-sm">→</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         <h2 className="text-lg font-semibold text-white mb-4">כל המועדונים והאירועים</h2>
         <div className="space-y-3">

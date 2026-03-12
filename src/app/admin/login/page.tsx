@@ -35,9 +35,9 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0d0d12] flex flex-col items-center justify-center px-6">
+    <div className="min-h-screen bg-[#080810] flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-white text-center mb-2">כניסת בעלי מועדונים</h1>
+        <h1 className="text-2xl font-bold text-gradient-title text-center mb-2">כניסת בעלי מועדונים</h1>
         <p className="text-zinc-500 text-sm text-center mb-8">התחבר לניהול ההזמנות</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -48,7 +48,7 @@ export default function AdminLoginPage() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-[#16161d] border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-500/50"
+              className="w-full px-4 py-3 bg-[#0e0e16] border border-[#00d4ff]/40 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#00d4ff]/50 focus:border-[#00d4ff]/70"
               placeholder="admin"
             />
           </div>
@@ -59,15 +59,15 @@ export default function AdminLoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-[#16161d] border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-500/50"
+              className="w-full px-4 py-3 bg-[#0e0e16] border border-[#00d4ff]/40 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#00d4ff]/50 focus:border-[#00d4ff]/70"
               placeholder="••••••••"
             />
           </div>
-          {error && <p className="text-rose-500 text-sm">{error}</p>}
+          {error && <p className="text-[#ff2d6a] text-sm">{error}</p>}
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white rounded-xl font-semibold transition"
+            className="w-full py-3 bg-gradient-to-r from-[#ff2d6a] to-[#ff6b35] hover:shadow-[0_0_25px_rgba(255,45,106,0.4)] disabled:opacity-50 text-white rounded-xl font-semibold transition"
           >
             {loading ? "מתחבר..." : "התחבר"}
           </button>

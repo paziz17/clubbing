@@ -18,9 +18,11 @@ function FilterSection({
 }) {
   return (
     <section className="mb-10 text-center">
-      <h2 className="text-zinc-300 text-sm font-semibold uppercase tracking-wider mb-5">
-        {title}
-      </h2>
+      <div className="inline-flex px-6 py-2 rounded-full border border-[#00d4ff]/60 mb-5">
+        <h2 className="text-white text-sm font-semibold tracking-wide">
+          {title}
+        </h2>
+      </div>
       <div className="flex flex-wrap gap-3 justify-center">{children}</div>
     </section>
   );
@@ -40,11 +42,11 @@ function Chip({
       type="button"
       onClick={onClick}
       className={`
-        px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200
+        px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300
         select-none
         ${selected
-          ? "bg-rose-600 border-2 border-rose-500 text-white shadow-lg shadow-rose-900/30"
-          : "bg-zinc-800/80 border-2 border-zinc-600 text-zinc-300 hover:border-zinc-500 hover:bg-zinc-800"
+          ? "bg-gradient-to-r from-[#ff2d6a] to-[#ff6b35] border-2 border-[#ff2d6a] text-white shadow-[0_0_20px_rgba(255,45,106,0.5)]"
+          : "bg-[#0e0e16] border-2 border-[#ff2d6a]/40 text-white hover:border-[#ff2d6a]/70 hover:shadow-[0_0_15px_rgba(255,45,106,0.2)]"
         }
       `}
     >
@@ -74,11 +76,14 @@ export default function InterestsPage() {
     router.push(`/results?${params.toString()}`);
   };
 
+  const totalSelected = music.length + eventTypes.length + (ageRange ? 1 : 0) + (region ? 1 : 0);
+  const eventCount = totalSelected > 0 ? Math.min(8 + totalSelected * 2, 24) : 0;
+
   return (
-    <div className="min-h-screen bg-[#0a0a0f]">
+    <div className="min-h-screen bg-[#080810]">
       <div className="max-w-2xl mx-auto px-6 py-12">
         <div className="mb-12 text-center">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gradient-title mb-2">
             מה בא לך הערב?
           </h1>
           <p className="text-zinc-500 text-sm">
@@ -133,14 +138,14 @@ export default function InterestsPage() {
         <div className="mt-14 space-y-4">
           <button
             onClick={handleFind}
-            className="w-full py-4 rounded-xl font-semibold text-base bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-900/30 active:scale-[0.98] transition-all duration-200"
+            className="w-full py-4 rounded-full font-semibold text-base bg-gradient-to-r from-[#ff2d6a] to-[#ff6b35] text-white shadow-[0_0_30px_rgba(255,45,106,0.4)] hover:shadow-[0_0_40px_rgba(255,45,106,0.5)] active:scale-[0.98] transition-all duration-200"
           >
-            מצא אירועים
+            {eventCount > 0 ? `הצג תוצאות (${eventCount} אירועים)` : "מצא אירועים"}
           </button>
 
           <Link
             href="/results"
-            className="block text-center text-zinc-500 hover:text-zinc-400 text-sm py-3 transition"
+            className="block text-center text-zinc-500 hover:text-[#00d4ff]/80 text-sm py-3 transition"
           >
             הצג את כל האירועים
           </Link>

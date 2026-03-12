@@ -1,10 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0d0d12;
+  --background: #080810;
   --foreground: #f5f5f7;
-  --accent: #ff3366;
-  --card: #16161d;
+  --card: #0e0e16;
+  --neon-pink: #ff2d6a;
+  --neon-pink-glow: rgba(255, 45, 106, 0.5);
+  --neon-pink-dim: rgba(255, 45, 106, 0.2);
+  --neon-blue: #00d4ff;
+  --neon-blue-glow: rgba(0, 212, 255, 0.4);
+  --neon-blue-dim: rgba(0, 212, 255, 0.15);
+  --neon-purple: #a855f7;
+  --gradient-title: linear-gradient(90deg, #00d4ff, #c026d3);
+  --gradient-cta: linear-gradient(90deg, #ff2d6a, #ff6b35);
 }
 
 @theme inline {
@@ -16,4 +24,42 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-montserrat), system-ui, sans-serif;
+}
+
+/* Glow effects */
+.neon-glow-pink {
+  box-shadow: 0 0 20px var(--neon-pink-glow), 0 0 40px var(--neon-pink-dim);
+}
+.neon-glow-blue {
+  box-shadow: 0 0 20px var(--neon-blue-glow), 0 0 40px var(--neon-blue-dim);
+}
+.text-gradient-title {
+  background: var(--gradient-title);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Neon background ambiance */
+.neon-bg::before {
+  content: "";
+  position: fixed;
+  top: -20%;
+  right: -10%;
+  width: 60%;
+  height: 60%;
+  background: radial-gradient(circle, var(--neon-pink-dim) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+.neon-bg::after {
+  content: "";
+  position: fixed;
+  bottom: -20%;
+  left: -10%;
+  width: 50%;
+  height: 50%;
+  background: radial-gradient(circle, var(--neon-blue-dim) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
 }

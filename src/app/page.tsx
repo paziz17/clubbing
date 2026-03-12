@@ -18,14 +18,14 @@ export default function SplashPage() {
   }, [mounted, router]);
 
   return (
-    <div className="min-h-screen bg-[#0d0d12] flex flex-col items-center justify-center">
-      <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tight">
+    <div className="min-h-screen bg-[#080810] flex flex-col items-center justify-center">
+      <h1 className="text-4xl md:text-6xl font-bold text-gradient-title tracking-tight">
         CLUBBING
       </h1>
       <p className="text-xl text-zinc-400 mt-2 tracking-widest">
         Join the Party
       </p>
-      <div className="mt-12 w-12 h-12 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
+      <div className="mt-12 w-12 h-12 border-2 border-[#00d4ff] border-t-transparent rounded-full animate-spin" />
     </div>
   );
 }

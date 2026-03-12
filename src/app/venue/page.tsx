@@ -61,22 +61,22 @@ export default function VenuePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0d0d12] flex items-center justify-center">
-        <div className="animate-spin w-12 h-12 border-2 border-rose-500 border-t-transparent rounded-full" />
+      <div className="min-h-screen bg-[#080810] flex items-center justify-center">
+        <div className="animate-spin w-12 h-12 border-2 border-[#00d4ff] border-t-transparent rounded-full" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#0d0d12] flex items-center justify-center px-6">
-        <p className="text-rose-500">{error}</p>
+      <div className="min-h-screen bg-[#080810] flex items-center justify-center px-6">
+        <p className="text-[#ff2d6a]">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0d12] px-4 py-8">
+    <div className="min-h-screen bg-[#080810] px-4 py-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold text-white">CRM המועדון שלי</h1>
@@ -89,11 +89,11 @@ export default function VenuePage() {
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-8">
-          <div className="bg-[#16161d] border border-zinc-800 rounded-2xl p-6">
+          <div className="bg-[#0e0e16] border border-[#00d4ff]/30 rounded-2xl p-6">
             <p className="text-zinc-500 text-sm mb-1">סה״כ הזמנות</p>
             <p className="text-3xl font-bold text-white">{totalReservations}</p>
           </div>
-          <div className="bg-[#16161d] border border-zinc-800 rounded-2xl p-6">
+          <div className="bg-[#0e0e16] border border-[#00d4ff]/30 rounded-2xl p-6">
             <p className="text-zinc-500 text-sm mb-1">סה״כ אנשים</p>
             <p className="text-3xl font-bold text-white">{totalPeople}</p>
           </div>
@@ -110,13 +110,13 @@ export default function VenuePage() {
         {recentReservations.length > 0 && (
           <div className="mb-8">
             <h2 className="text-lg font-semibold text-white mb-4">הזמנות אחרונות</h2>
-            <div className="bg-[#16161d] border border-zinc-800 rounded-xl overflow-hidden">
-              <div className="divide-y divide-zinc-800 max-h-48 overflow-y-auto">
+            <div className="bg-[#0e0e16] border border-[#00d4ff]/30 rounded-xl overflow-hidden">
+              <div className="divide-y divide-[#00d4ff]/20 max-h-48 overflow-y-auto">
                 {recentReservations.slice(0, 10).map((r) => (
                   <Link
                     key={r.id}
                     href={`/venue/events/${r.event.id}`}
-                    className="block px-4 py-3 hover:bg-zinc-800/50 transition"
+                    className="block px-4 py-3 hover:bg-[#00d4ff]/10 transition"
                   >
                     <div className="flex justify-between items-center">
                       <div>
@@ -125,7 +125,7 @@ export default function VenuePage() {
                           {r.numPeople} אנשים • {r.phone} • {new Date(r.createdAt).toLocaleString("he-IL")}
                         </p>
                       </div>
-                      <span className="text-rose-500 text-sm">→</span>
+                      <span className="text-[#ff2d6a] text-sm">→</span>
                     </div>
                   </Link>
                 ))}
@@ -143,7 +143,7 @@ export default function VenuePage() {
               <Link
                 key={e.id}
                 href={`/venue/events/${e.id}`}
-                className="block bg-[#16161d] border border-zinc-800 rounded-xl p-4 hover:border-zinc-600 transition"
+                className="block bg-[#0e0e16] border border-[#00d4ff]/30 rounded-xl p-4 hover:border-[#ff2d6a]/50 transition"
               >
                 <div className="flex gap-4 items-center">
                   {e.imageUrl && (
@@ -156,7 +156,7 @@ export default function VenuePage() {
                     </p>
                   </div>
                   <div className="text-left shrink-0">
-                    <p className="text-rose-500 font-semibold">{e.reservationsCount} הזמנות</p>
+                    <p className="text-[#ff2d6a] font-semibold">{e.reservationsCount} הזמנות</p>
                     <p className="text-zinc-400 text-sm">{e.totalPeople} אנשים</p>
                   </div>
                   <span className="text-zinc-500">→</span>

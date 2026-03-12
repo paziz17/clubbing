@@ -64,17 +64,17 @@ function ResultsContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0d0d12]">
-        <div className="animate-spin w-12 h-12 border-2 border-rose-500 border-t-transparent rounded-full" />
+      <div className="min-h-screen flex items-center justify-center bg-[#080810]">
+        <div className="animate-spin w-12 h-12 border-2 border-[#00d4ff] border-t-transparent rounded-full" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0d12] px-4 py-6">
+    <div className="min-h-screen bg-[#080810] px-4 py-6">
       <div className="flex flex-col items-center mb-6 gap-4">
-        <h1 className="text-xl font-bold text-white">תוצאות לפי התאמה</h1>
-        <Link href="/interests" className="px-4 py-2 text-rose-500 text-sm border border-rose-500/50 rounded-lg hover:bg-rose-500/10">
+        <h1 className="text-xl font-bold text-gradient-title">תוצאות לפי התאמה</h1>
+        <Link href="/interests" className="px-5 py-2.5 text-[#00d4ff] text-sm border border-[#00d4ff]/60 rounded-full hover:bg-[#00d4ff]/10 hover:shadow-[0_0_15px_rgba(0,212,255,0.2)] transition">
           שנה סינון
         </Link>
       </div>
@@ -82,8 +82,8 @@ function ResultsContent() {
       <div className="space-y-4">
         {events.map((e) => (
           <Link key={e.id} href={`/events/${e.id}`}>
-            <div className="bg-[#16161d] border border-zinc-800 rounded-2xl overflow-hidden flex gap-4">
-              <div className="w-28 h-28 min-w-[7rem] bg-zinc-800 relative shrink-0 rounded-2xl overflow-hidden">
+            <div className="bg-[#0e0e16] border border-[#ff2d6a]/30 rounded-2xl overflow-hidden flex gap-4 hover:border-[#ff2d6a]/60 hover:shadow-[0_0_20px_rgba(255,45,106,0.15)] transition">
+              <div className="w-28 h-28 min-w-[7rem] bg-zinc-900 relative shrink-0 rounded-2xl overflow-hidden">
                 <img
                   src={e.imageUrl || DEFAULT_EVENT_IMAGE}
                   alt={e.name}
@@ -97,7 +97,7 @@ function ResultsContent() {
                 <h3 className="text-white font-semibold">{e.name}</h3>
                 <div className="flex gap-2 mt-2 flex-wrap">
                   {e.tags.slice(0, 3).map((t) => (
-                    <span key={t} className="px-2 py-0.5 bg-zinc-800 rounded text-xs text-zinc-400">
+                    <span key={t} className="px-2 py-0.5 bg-[#ff2d6a]/20 border border-[#ff2d6a]/40 rounded text-xs text-zinc-300">
                       {t}
                     </span>
                   ))}
@@ -105,7 +105,7 @@ function ResultsContent() {
                 <p className="text-zinc-500 text-sm mt-2">
                   {new Date(e.date).toLocaleDateString("he-IL")} • {e.time} • {e.location}
                 </p>
-                <p className="text-rose-500 text-xs mt-1">לפרטים נוספים ←</p>
+                <p className="text-[#ff2d6a] text-xs mt-1">לפרטים נוספים ←</p>
               </div>
             </div>
           </Link>
@@ -121,7 +121,7 @@ function ResultsContent() {
 
 export default function ResultsPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#0d0d12]"><div className="animate-spin w-12 h-12 border-2 border-rose-500 border-t-transparent rounded-full" /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#080810]"><div className="animate-spin w-12 h-12 border-2 border-[#00d4ff] border-t-transparent rounded-full" /></div>}>
       <ResultsContent />
     </Suspense>
   );

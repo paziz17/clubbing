@@ -20,10 +20,12 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="he" dir="rtl">
-      <body className={`${montserrat.variable} font-sans antialiased`}>
+      <body className={`${montserrat.variable} font-sans antialiased neon-bg`}>
         <Providers>
-          <LogoHeader />
-          {children}
+          <div className="relative z-10">
+            <LogoHeader />
+            {children}
+          </div>
         </Providers>
       </body>
     </html>

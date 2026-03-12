@@ -49,14 +49,14 @@ export function AdminCalendar({
   for (let i = 1; i <= daysInMonth; i++) days.push(i);
 
   return (
-    <div className="bg-[#16161d] border border-zinc-800 rounded-2xl p-6">
+    <div className="bg-[#0e0e16] border border-[#00d4ff]/30 rounded-2xl p-6">
       <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
         <h2 className="text-lg font-semibold text-white">לוח שנה שנתי</h2>
         <div className="flex items-center gap-2">
           <select
             value={year}
             onChange={(e) => onMonthChange(new Date(parseInt(e.target.value), month))}
-            className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm"
+            className="bg-[#080810] border border-[#00d4ff]/40 rounded-lg px-3 py-2 text-white text-sm"
           >
             {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map((y) => (
               <option key={y} value={y}>
@@ -66,7 +66,7 @@ export function AdminCalendar({
           </select>
           <button
             onClick={prevMonth}
-            className="w-9 h-9 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white flex items-center justify-center"
+            className="w-9 h-9 rounded-lg bg-[#0e0e16] border border-[#00d4ff]/40 hover:border-[#00d4ff]/70 text-white flex items-center justify-center"
           >
             ←
           </button>
@@ -75,7 +75,7 @@ export function AdminCalendar({
           </span>
           <button
             onClick={nextMonth}
-            className="w-9 h-9 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white flex items-center justify-center"
+            className="w-9 h-9 rounded-lg bg-[#0e0e16] border border-[#00d4ff]/40 hover:border-[#00d4ff]/70 text-white flex items-center justify-center"
           >
             →
           </button>
@@ -106,8 +106,8 @@ export function AdminCalendar({
             <div
               key={day}
               className={`aspect-square rounded-lg p-1 flex flex-col items-center justify-center min-h-[48px] ${
-                hasEvents ? "bg-rose-500/20 border border-rose-500/50" : "bg-zinc-800/50"
-              } ${today ? "ring-2 ring-rose-500" : ""}`}
+                hasEvents ? "bg-[#ff2d6a]/20 border border-[#ff2d6a]/50" : "bg-[#0e0e16]/80"
+              } ${today ? "ring-2 ring-[#ff2d6a]" : ""}`}
             >
               <span className="text-white text-sm font-medium">{day}</span>
               {hasEvents && (
@@ -132,7 +132,7 @@ export function AdminCalendar({
         })}
       </div>
 
-      <div className="mt-4 pt-4 border-t border-zinc-800">
+      <div className="mt-4 pt-4 border-t border-[#00d4ff]/20">
         <p className="text-zinc-500 text-sm">
           לחיצה על תאריך עם אירועים — מעבר לפרטי האירוע וההזמנות
         </p>

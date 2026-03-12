@@ -10,18 +10,20 @@ function hashPassword(password: string): string {
 }
 
 // דמו — עובד גם בלי DB
-const DEMO_CREDENTIALS: { username: string; password: string; venueId: string }[] = [
-  { username: "democlub", password: "demo123", venueId: "demo-venue-1" },
-  { username: "theblock", password: "block123", venueId: "demo-venue-2" },
+const DEMO_CREDENTIALS: { usernames: string[]; password: string; venueId: string }[] = [
+  { usernames: ["democlub", "demo club"], password: "demo123", venueId: "demo-venue-1" },
+  { usernames: ["theblock", "the block"], password: "block123", venueId: "demo-venue-2" },
 ];
 
 export async function verifyVenueCredentials(username: string, password: string): Promise<string | null> {
   if (!username || !password) return null;
-  const u = String(username).trim().toLowerCase();
+  const u = String(username).trim().toLowerCase().replace(/\s+/g, " ");
   const p = String(password).trim();
 
   // דמו — בלי DB
-  const demo = DEMO_CREDENTIALS.find((c) => c.username === u && c.password === p);
+  const demo = DEMO_CREDENTIALS.find(
+    (c) => c.usernames.some((n) => n.toLowerCase() === u) && c.password === p
+  );
   if (demo) return demo.venueId;
 
   // DB

@@ -38,8 +38,8 @@ export default function VenueLoginPage() {
     <div className="min-h-screen bg-[#0d0d12] flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-bold text-white text-center mb-2">CRM מועדון</h1>
-        <p className="text-zinc-500 text-sm text-center mb-8">
-          התחבר עם שם המועדון (שם משתמש וסיסמה זהים)
+        <p className="text-zinc-500 text-sm text-center mb-6">
+          דמו: democlub/demo123 | theblock/block123
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">

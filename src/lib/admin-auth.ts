@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 
-const ADMIN_USER = process.env.ADMIN_USERNAME ?? "admin";
-const ADMIN_PASS = process.env.ADMIN_PASSWORD ?? "admin";
+const ADMIN_USER = (process.env.ADMIN_USERNAME || "admin").trim();
+const ADMIN_PASS = (process.env.ADMIN_PASSWORD || "admin").trim();
 const ADMIN_COOKIE = "clubbing_admin";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 

@@ -8,6 +8,10 @@ export async function GET() {
     return NextResponse.json({ error: "אין הרשאה" }, { status: 401 });
   }
 
+  if (venueId === "demo-venue-1" || venueId === "demo-venue-2") {
+    return NextResponse.json([]);
+  }
+
   const reservations = await prisma.reservation.findMany({
     where: { event: { venueId } },
     orderBy: { createdAt: "desc" },

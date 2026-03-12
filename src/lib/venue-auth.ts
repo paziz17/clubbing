@@ -9,19 +9,34 @@ function hashPassword(password: string): string {
   return createHash("sha256").update(password).digest("hex");
 }
 
+// דמו — עובד גם בלי DB
+const DEMO_CREDENTIALS: { username: string; password: string; venueId: string }[] = [
+  { username: "democlub", password: "demo123", venueId: "demo-venue-1" },
+  { username: "theblock", password: "block123", venueId: "demo-venue-2" },
+];
+
 export async function verifyVenueCredentials(username: string, password: string): Promise<string | null> {
   if (!username || !password) return null;
-  const hash = hashPassword(password);
-  const venue = await prisma.venue.findFirst({
-    where: {
-      OR: [
-        { loginName: username },
-        { name: username },
-      ],
-    },
-  });
-  if (!venue || venue.passwordHash !== hash) return null;
-  return venue.id;
+  const u = String(username).trim().toLowerCase();
+  const p = String(password).trim();
+
+  // דמו — בלי DB
+  const demo = DEMO_CREDENTIALS.find((c) => c.username === u && c.password === p);
+  if (demo) return demo.venueId;
+
+  // DB
+  try {
+    const hash = hashPassword(p);
+    const venue = await prisma.venue.findFirst({
+      where: {
+        OR: [{ loginName: u }, { name: username.trim() }],
+      },
+    });
+    if (!venue || venue.passwordHash !== hash) return null;
+    return venue.id;
+  } catch {
+    return null;
+  }
 }
 
 export async function setVenueSession(venueId: string): Promise<void> {

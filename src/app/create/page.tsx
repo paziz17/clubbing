@@ -63,7 +63,7 @@ export default function CreateEventPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] px-6 py-8">
       <Link href="/results" className="text-[#d4af37] mb-6 inline-block">← חזרה</Link>
-      <h1 className="text-2xl font-bold text-white mb-8">Be The Party</h1>
+      <h1 className="text-2xl font-bold text-[#d4af37] mb-8">יצירת אירוע</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <input

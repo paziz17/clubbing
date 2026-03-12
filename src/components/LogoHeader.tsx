@@ -58,7 +58,6 @@ export function LogoHeader() {
           <Link href="/venue/login" className="text-zinc-500 text-xs hover:text-[#d4af37] transition">
             בעל מועדון?
           </Link>
-          <Link href="/create" className="text-[#d4af37] text-sm shrink-0 hover:text-[#f0d78c] transition">Be The Party</Link>
         </div>
       </div>
     </header>

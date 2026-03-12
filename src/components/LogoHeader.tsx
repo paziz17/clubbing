@@ -55,7 +55,7 @@ export function LogoHeader() {
           CLUBBING
         </Link>
         <div className="flex items-center gap-3 shrink-0">
-          <Link href="/admin/login" className="text-zinc-500 text-xs hover:text-zinc-400 transition">
+          <Link href="/venue/login" className="text-zinc-500 text-xs hover:text-zinc-400 transition">
             בעל מועדון?
           </Link>
           <Link href="/create" className="text-rose-500 text-sm shrink-0">Be The Party</Link>

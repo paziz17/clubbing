@@ -1,8 +1,14 @@
 import { PrismaClient } from "@prisma/client";
+import { createHash } from "crypto";
 
 const prisma = new PrismaClient();
 
-// אירוע דמו יחיד — מתחבר ל-CRM
+function hashPassword(password: string): string {
+  return createHash("sha256").update(password).digest("hex");
+}
+
+// מועדון דמו — שם משתמש וסיסמה: Demo Club
+const DEMO_VENUE_NAME = "Demo Club";
 const DEMO_EVENT = {
   name: "Demo Club — מסיבת הדגמה",
   description: "מועדון הדמו להצגת המערכת. הזמנות יופיעו ב-CRM של בעלי המועדונים.",
@@ -14,9 +20,16 @@ const DEMO_EVENT = {
 };
 
 export async function runSeed() {
-  // מחיקת כל האירועים וההזמנות
   await prisma.reservation.deleteMany({});
   await prisma.event.deleteMany({});
+  await prisma.venue.deleteMany({});
+
+  const venue = await prisma.venue.create({
+    data: {
+      name: DEMO_VENUE_NAME,
+      passwordHash: hashPassword(DEMO_VENUE_NAME),
+    },
+  });
 
   const eventDate = new Date();
   eventDate.setDate(eventDate.getDate() + 7);
@@ -38,13 +51,13 @@ export async function runSeed() {
       ageRestriction: "21+",
       tags: JSON.stringify(DEMO_EVENT.tags),
       status: "approved",
+      venueId: venue.id,
     },
   });
 
-  console.log("Seeded 1 demo event — connected to CRM");
+  console.log("Seeded 1 venue (Demo Club) + 1 demo event — CRM: login with 'Demo Club' / 'Demo Club'");
 }
 
-// הרצה מהטרמינל: npx tsx prisma/seed.ts
 const isCli = process.argv[1]?.includes("seed");
 if (isCli) {
   runSeed()

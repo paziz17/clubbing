@@ -82,6 +82,15 @@ model UserPreferences {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model Venue {
+  id           String   @id @default(uuid())
+  name         String   @unique // שם המועדון = שם משתמש וסיסמה
+  passwordHash String   // hash של השם לאימות
+  createdAt    DateTime @default(now())
+
+  events Event[]
+}
+
 model Event {
   id              String   @id @default(uuid())
   name            String
@@ -100,11 +109,13 @@ model Event {
   status          String   @default("pending") // pending, approved
   source          String?  // facebook, instagram, manual
   externalId      String?  @unique // מזהה חיצוני (למשל Facebook event ID)
+  venueId         String?
   createdById     String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  creator User? @relation("EventCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  venue   Venue?  @relation(fields: [venueId], references: [id], onDelete: SetNull)
+  creator User?  @relation("EventCreator", fields: [createdById], references: [id], onDelete: SetNull)
   favorites   UserFavorite[]
   reservations Reservation[]
 }

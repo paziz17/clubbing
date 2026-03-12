@@ -84,8 +84,9 @@ model UserPreferences {
 
 model Venue {
   id           String   @id @default(uuid())
-  name         String   @unique // שם המועדון = שם משתמש וסיסמה
-  passwordHash String   // hash של השם לאימות
+  name         String   @unique // שם התצוגה של המועדון
+  loginName    String?  @unique // שם משתמש ל-CRM (אם ריק — משתמשים ב-name)
+  passwordHash String   // hash של הסיסמה
   createdAt    DateTime @default(now())
 
   events Event[]

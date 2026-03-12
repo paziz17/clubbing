@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
 const DEFAULT_EVENT_IMAGE =
-  "https://images.unsplash.com/photo-1571266028243-d220e8c3c9e2?w=400&h=300&fit=crop";
+  "https://images.unsplash.com/photo-1764510376258-2c9978ec3e4e?w=400&h=300&fit=crop";
 
 interface Event {
   id: string;

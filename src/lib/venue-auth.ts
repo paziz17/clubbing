@@ -10,10 +10,15 @@ function hashPassword(password: string): string {
 }
 
 export async function verifyVenueCredentials(username: string, password: string): Promise<string | null> {
-  if (!username || !password || username !== password) return null;
-  const hash = hashPassword(username);
+  if (!username || !password) return null;
+  const hash = hashPassword(password);
   const venue = await prisma.venue.findFirst({
-    where: { name: username },
+    where: {
+      OR: [
+        { loginName: username },
+        { name: username },
+      ],
+    },
   });
   if (!venue || venue.passwordHash !== hash) return null;
   return venue.id;

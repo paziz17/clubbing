@@ -125,11 +125,11 @@ export default function EventPage() {
       <div className="p-4">
         <div className="w-full max-w-md mx-auto aspect-[4/3] rounded-2xl overflow-hidden bg-zinc-800 mb-6">
           <img
-            src={event.imageUrl || "https://images.unsplash.com/photo-1571266028243-d220e8c3c9e2?w=800&h=600&fit=crop"}
+            src={event.imageUrl || "https://images.unsplash.com/photo-1764510376258-2c9978ec3e4e?w=800&h=600&fit=crop"}
             alt={event.name}
             className="w-full h-full object-cover"
             onError={(ev) => {
-              (ev.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1571266028243-d220e8c3c9e2?w=800&h=600&fit=crop";
+              (ev.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1764510376258-2c9978ec3e4e?w=800&h=600&fit=crop";
             }}
           />
         </div>

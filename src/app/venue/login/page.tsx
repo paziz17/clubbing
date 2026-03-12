@@ -51,7 +51,7 @@ export default function VenueLoginPage() {
               onChange={(e) => setUsername(e.target.value)}
               required
               className="w-full px-4 py-3 bg-[#16161d] border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-500/50"
-              placeholder="Demo Club"
+              placeholder="democlub"
             />
           </div>
           <div>

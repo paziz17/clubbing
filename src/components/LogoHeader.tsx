@@ -7,7 +7,7 @@ import { UserIcon } from "@/components/SocialIcons";
 import { useAuth } from "@/context/AuthContext";
 
 export function LogoHeader() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
@@ -65,6 +65,18 @@ export function LogoHeader() {
           CLUBBING
         </Link>
         <div className="flex items-center gap-3 shrink-0">
+          {user && !user.isGuest && (
+            <button
+              onClick={() => {
+                logout();
+                router.push("/auth");
+                router.refresh();
+              }}
+              className="text-zinc-500 text-xs hover:text-[#d4af37] transition"
+            >
+              התנתק
+            </button>
+          )}
           <Link href="/venue/login" className="text-zinc-500 text-xs hover:text-[#d4af37] transition">
             בעל מועדון?
           </Link>

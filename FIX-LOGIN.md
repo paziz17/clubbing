@@ -1,5 +1,17 @@
 # 🔧 תיקון התחברות Google — צעד אחר צעד
 
+## אם oauth-status מראה ready: false
+
+| שדה | משמעות |
+|-----|--------|
+| google: false | AUTH_GOOGLE_ID ו-AUTH_GOOGLE_SECRET חסרים |
+| nextAuthUrl: false | NEXTAUTH_URL חסר |
+| authUrlCorrect: false | AUTH_URL שגוי (חייב להיות https://clubbing-two.vercel.app) |
+
+**חשוב:** בעת הוספת משתנים ב-Vercel — אל תוסיף רווחים או שורות חדשות בסוף הערך!
+
+---
+
 ## שלב 1: Google Cloud Console (חובה!)
 
 1. היכנס ל־https://console.cloud.google.com/
@@ -23,7 +35,7 @@
 
 | Key | Value |
 |-----|-------|
-| AUTH_URL | https://clubbing-two.vercel.app |
+| AUTH_URL | https://clubbing-two.vercel.app (בדיוק! בלי רווחים) |
 | NEXTAUTH_URL | https://clubbing-two.vercel.app |
 | NEXT_PUBLIC_APP_URL | https://clubbing-two.vercel.app |
 | AUTH_GOOGLE_ID | (המפתח מ-Google) |

@@ -1,11 +1,9 @@
 // כתובת האתר — לשימוש בשרת (SSR) כשצריך URL מלא
 function getBase(): string {
-  if (process.env.NEXT_PUBLIC_APP_URL) {
-    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
-  }
-  if (process.env.AUTH_URL) {
-    return process.env.AUTH_URL.replace(/\/$/, "");
-  }
+  const nextPublic = (process.env.NEXT_PUBLIC_APP_URL || "").trim().replace(/\/$/, "");
+  const authUrl = (process.env.AUTH_URL || "").trim().replace(/\/$/, "");
+  if (nextPublic) return nextPublic;
+  if (authUrl) return authUrl;
   return "https://clubbing-two.vercel.app";
 }
 

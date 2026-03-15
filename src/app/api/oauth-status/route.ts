@@ -7,11 +7,13 @@ export async function GET() {
   const hasAuthUrl = !!process.env.AUTH_URL;
   const hasNextAuthUrl = !!process.env.NEXTAUTH_URL;
 
+  const authUrl = (process.env.AUTH_URL || "").trim();
   return NextResponse.json({
     google: hasGoogle,
     authUrl: hasAuthUrl,
     nextAuthUrl: hasNextAuthUrl,
-    authUrlValue: process.env.AUTH_URL || "(לא מוגדר)",
+    authUrlValue: authUrl || "(לא מוגדר)",
+    authUrlCorrect: authUrl === "https://clubbing-two.vercel.app",
     ready: hasGoogle && (hasAuthUrl || hasNextAuthUrl),
   });
 }

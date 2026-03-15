@@ -16,10 +16,9 @@ if (process.env.AUTH_FACEBOOK_ID && process.env.AUTH_FACEBOOK_SECRET) {
   );
 }
 if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
-  const base = (process.env.AUTH_URL || process.env.NEXTAUTH_URL || "").replace(
-    /\/$/,
-    ""
-  );
+  const base = (process.env.AUTH_URL || process.env.NEXTAUTH_URL || "")
+    .trim()
+    .replace(/\/$/, "");
   providers.push(
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,

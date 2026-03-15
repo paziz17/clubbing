@@ -1,12 +1,21 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { FacebookIcon, GoogleIcon, InstagramIcon } from "@/components/SocialIcons";
 
 export default function AuthPage() {
   const router = useRouter();
   const { loginGuest, signInWithProvider } = useAuth();
+  const [providersReady, setProvidersReady] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/providers")
+      .then((r) => r.json())
+      .then((p) => setProvidersReady(Object.keys(p).length > 0))
+      .catch(() => setProvidersReady(false));
+  }, []);
 
   const handleGuest = () => {
     loginGuest();
@@ -57,6 +66,11 @@ export default function AuthPage() {
         >
           כניסה כאורח
         </button>
+        {providersReady === false && (
+          <p className="text-amber-500/90 text-sm text-center mt-4">
+            התחברות עם Google/Facebook לא מופעלת. יש להגדיר משתני סביבה ב-Vercel.
+          </p>
+        )}
       </div>
     </div>
   );

@@ -6,6 +6,9 @@ import { useSession, signIn, signOut } from "next-auth/react";
 interface User {
   id: string;
   name?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
   age?: number;
   location?: string;
   gender?: string;
@@ -63,12 +66,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const user: User | null =
     status === "authenticated" && session?.user
-      ? {
-          id: (session.user as { id?: string }).id ?? session.user.email ?? "user",
-          name: session.user.name ?? undefined,
-          profilePhotoUrl: session.user.image ?? undefined,
-          isGuest: false,
-        }
+      ? (() => {
+          const name = session.user.name ?? "";
+          const parts = name.trim().split(/\s+/);
+          const firstName = parts[0] ?? "";
+          const lastName = parts.slice(1).join(" ") || undefined;
+          return {
+            id: (session.user as { id?: string }).id ?? session.user.email ?? "user",
+            name: session.user.name ?? undefined,
+            firstName: firstName || undefined,
+            lastName: lastName,
+            email: session.user.email ?? undefined,
+            profilePhotoUrl: session.user.image ?? undefined,
+            isGuest: false,
+          };
+        })()
       : guestUser;
 
   return (

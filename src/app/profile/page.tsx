@@ -23,6 +23,25 @@ export default function ProfilePage() {
         </div>
         <h2 className="text-[#d4af37] font-semibold">{user?.name || "משתמש"}</h2>
         {user?.isGuest && <span className="text-[#d4af37]/60 text-sm">אורח</span>}
+        {!user?.isGuest && (user?.firstName || user?.lastName || user?.email) && (
+          <div className="mt-4 w-full max-w-sm space-y-2 text-right">
+            {user.firstName && (
+              <p className="text-zinc-300 text-sm">
+                <span className="text-zinc-500">שם פרטי:</span> {user.firstName}
+              </p>
+            )}
+            {user.lastName && (
+              <p className="text-zinc-300 text-sm">
+                <span className="text-zinc-500">שם משפחה:</span> {user.lastName}
+              </p>
+            )}
+            {user.email && (
+              <p className="text-zinc-300 text-sm">
+                <span className="text-zinc-500">אימייל:</span> {user.email}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="space-y-4">

@@ -4,8 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { UserIcon } from "@/components/SocialIcons";
+import { useAuth } from "@/context/AuthContext";
 
 export function LogoHeader() {
+  const { user } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
@@ -44,7 +46,15 @@ export function LogoHeader() {
             </button>
           )}
           <Link href="/profile" className="text-zinc-400 text-sm shrink-0 flex items-center gap-1.5 hover:text-[#d4af37] transition">
-            <UserIcon className="w-4 h-4" />
+            {user?.profilePhotoUrl ? (
+              <img
+                src={user.profilePhotoUrl}
+                alt=""
+                className="w-8 h-8 rounded-full object-cover border border-[#d4af37]/40"
+              />
+            ) : (
+              <UserIcon className="w-4 h-4" />
+            )}
             פרופיל
           </Link>
         </div>

@@ -31,6 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const [guestUser, setGuestUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [dbProfile, setDbProfile] = useState<{ profilePhotoUrl?: string; name?: string } | null>(null);
 
   useEffect(() => {
     const stored = typeof window !== "undefined" ? localStorage.getItem("clubbing_guest") : null;
@@ -41,6 +42,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     setLoading(false);
   }, []);
+
+  useEffect(() => {
+    if (status === "authenticated" && session?.user?.email) {
+      fetch("/api/user/me")
+        .then((r) => r.ok ? r.json() : null)
+        .then((data) => data && setDbProfile({ profilePhotoUrl: data.profilePhotoUrl, name: data.name }))
+        .catch(() => setDbProfile(null));
+    } else {
+      setDbProfile(null);
+    }
+  }, [status, session?.user?.email]);
 
   const saveGuest = (u: User) => {
     localStorage.setItem("clubbing_guest", JSON.stringify(u));
@@ -56,6 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loginGuest = () => saveGuest({ id: "guest-" + Date.now(), name: "אורח", isGuest: true });
   const logout = () => {
     clearGuest();
+    setDbProfile(null);
     if (session) signOut();
   };
 
@@ -67,17 +80,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const user: User | null =
     status === "authenticated" && session?.user
       ? (() => {
-          const name = session.user.name ?? "";
+          const name = dbProfile?.name ?? session.user.name ?? "";
           const parts = name.trim().split(/\s+/);
           const firstName = parts[0] ?? "";
           const lastName = parts.slice(1).join(" ") || undefined;
+          const profilePhotoUrl = session.user.image ?? dbProfile?.profilePhotoUrl ?? undefined;
           return {
             id: (session.user as { id?: string }).id ?? session.user.email ?? "user",
-            name: session.user.name ?? undefined,
+            name: dbProfile?.name ?? session.user.name ?? undefined,
             firstName: firstName || undefined,
             lastName: lastName,
             email: session.user.email ?? undefined,
-            profilePhotoUrl: session.user.image ?? undefined,
+            profilePhotoUrl,
             isGuest: false,
           };
         })()

@@ -1,14 +1,24 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { FacebookIcon, GoogleIcon, InstagramIcon } from "@/components/SocialIcons";
 
+const ERROR_MESSAGES: Record<string, string> = {
+  Configuration: "שגיאה בהגדרת ההתחברות. נסה שוב או פנה למפתח.",
+  AccessDenied: "ההתחברות נדחתה.",
+  Verification: "קישור ההתחברות פג תוקף. נסה שוב.",
+  Default: "אירעה שגיאה בהתחברות. נסה שוב.",
+};
+
 export default function AuthPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { loginGuest, signInWithProvider } = useAuth();
   const [providersReady, setProvidersReady] = useState<boolean | null>(null);
+  const errorCode = searchParams.get("error");
+  const errorMsg = errorCode ? (ERROR_MESSAGES[errorCode] ?? ERROR_MESSAGES.Default) : null;
 
   useEffect(() => {
     fetch("/api/auth/providers")
@@ -25,6 +35,12 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center px-6">
       <h1 className="text-3xl font-bold text-[#d4af37] mb-8">התחברות</h1>
+
+      {errorMsg && (
+        <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-sm text-center max-w-sm">
+          {errorMsg}
+        </div>
+      )}
 
       <div className="w-full max-w-sm space-y-4">
         <button

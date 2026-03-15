@@ -28,7 +28,7 @@ export function LogoHeader() {
   return (
     <header className="sticky top-0 z-40 bg-[#0a0a0a]/95 backdrop-blur-sm border-b border-[#d4af37]/20">
       <div className="relative flex justify-between items-center h-14 px-4">
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {isResultsPage && (
             <button
               onClick={handleRefresh}
@@ -57,6 +57,25 @@ export function LogoHeader() {
             )}
             פרופיל
           </Link>
+          {user ? (
+            <button
+              onClick={() => {
+                logout();
+                router.push("/auth");
+                router.refresh();
+              }}
+              className="text-zinc-500 text-xs hover:text-[#d4af37] transition whitespace-nowrap"
+            >
+              התנתק
+            </button>
+          ) : (
+            <Link href="/auth" className="text-zinc-500 text-xs hover:text-[#d4af37] transition whitespace-nowrap">
+              התחבר
+            </Link>
+          )}
+          <Link href="/venue/login" className="text-zinc-500 text-xs hover:text-[#d4af37] transition whitespace-nowrap">
+            בעל מועדון?
+          </Link>
         </div>
         <Link
           href="/results"
@@ -64,23 +83,7 @@ export function LogoHeader() {
         >
           CLUBBING
         </Link>
-        <div className="flex items-center gap-3 shrink-0">
-          {user && !user.isGuest && (
-            <button
-              onClick={() => {
-                logout();
-                router.push("/auth");
-                router.refresh();
-              }}
-              className="text-zinc-500 text-xs hover:text-[#d4af37] transition"
-            >
-              התנתק
-            </button>
-          )}
-          <Link href="/venue/login" className="text-zinc-500 text-xs hover:text-[#d4af37] transition">
-            בעל מועדון?
-          </Link>
-        </div>
+        <div className="w-24 shrink-0" />
       </div>
     </header>
   );

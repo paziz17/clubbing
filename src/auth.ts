@@ -15,14 +15,13 @@ if (process.env.AUTH_FACEBOOK_ID && process.env.AUTH_FACEBOOK_SECRET) {
     })
   );
 }
-if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
-  const base = (process.env.AUTH_URL || process.env.NEXTAUTH_URL || "")
-    .trim()
-    .replace(/\/$/, "");
+const googleId = process.env.AUTH_GOOGLE_ID || process.env.GOOGLE_CLIENT_ID;
+const googleSecret = process.env.AUTH_GOOGLE_SECRET || process.env.GOOGLE_CLIENT_SECRET;
+if (googleId && googleSecret) {
   providers.push(
     Google({
-      clientId: process.env.AUTH_GOOGLE_ID,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      clientId: googleId,
+      clientSecret: googleSecret,
       profile(profile) {
         return {
           id: profile.sub,
@@ -31,13 +30,6 @@ if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
           image: profile.picture ?? profile.image ?? null,
         };
       },
-      ...(base && {
-        authorization: {
-          params: {
-            redirect_uri: `${base}/api/auth/callback/google`,
-          },
-        },
-      }),
     })
   );
 }
@@ -56,24 +48,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: providers as any,
   pages: {
     signIn: "/auth",
+    error: "/auth",
   },
   callbacks: {
     async signIn({ user, account, profile }) {
-      if (account?.provider === "google" && profile && "picture" in profile && user.id) {
-        const image = (profile as { picture?: string }).picture ?? (profile as { image?: string }).image;
-        if (image) {
-          await prisma.user.update({
-            where: { id: user.id },
-            data: { image },
-          });
+      try {
+        if (account?.provider === "google" && profile) {
+          const image = (profile as { picture?: string }).picture ?? (profile as { image?: string }).image;
+          const email = (profile as { email?: string }).email;
+          if (image && email) {
+            await prisma.user.updateMany({
+              where: { email },
+              data: { image, profilePhotoUrl: image },
+            });
+          }
         }
+      } catch {
+        // לא לכשול את ההתחברות אם עדכון התמונה נכשל
       }
       return true;
     },
     async session({ session, user }) {
       if (session.user) {
         (session.user as { id?: string }).id = user.id;
-        session.user.image = user.image ?? undefined;
+        const img = user.image ?? user.profilePhotoUrl ?? undefined;
+        session.user.image = img;
       }
       return session;
     },

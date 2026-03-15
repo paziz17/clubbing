@@ -6,7 +6,7 @@ function getBase(): string {
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
-  return "https://clubbing-omers-projects-fee986ef.vercel.app";
+  return "https://clubbing-two.vercel.app";
 }
 
 export function appUrl(path: string): string {

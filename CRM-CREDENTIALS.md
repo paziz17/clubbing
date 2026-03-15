@@ -1,7 +1,6 @@
 # פרטי התחברות ל-CRM — Clubbing
 
-> **כתובת האתר:** https://clubbing-omers-projects-fee986ef.vercel.app  
-> (או הכתובת שלך מ-Vercel אם שינית)
+> **כתובת האתר:** https://clubbing-two.vercel.app
 
 ---
 
@@ -9,7 +8,7 @@
 
 | שדה | ערך |
 |-----|-----|
-| **קישור** | https://clubbing-omers-projects-fee986ef.vercel.app/admin/login |
+| **קישור** | https://clubbing-two.vercel.app/admin/login |
 | **שם משתמש** | `admin` |
 | **סיסמה** | `admin` |
 
@@ -21,7 +20,7 @@
 
 | שדה | ערך |
 |-----|-----|
-| **קישור** | https://clubbing-omers-projects-fee986ef.vercel.app/venue/login |
+| **קישור** | https://clubbing-two.vercel.app/venue/login |
 | **שם משתמש** | `democlub` |
 | **סיסמה** | `demo123` |
 
@@ -29,7 +28,7 @@
 
 | שדה | ערך |
 |-----|-----|
-| **קישור** | https://clubbing-omers-projects-fee986ef.vercel.app/venue/login |
+| **קישור** | https://clubbing-two.vercel.app/venue/login |
 | **שם משתמש** | `theblock` |
 | **סיסמה** | `block123` |
 
@@ -39,9 +38,9 @@
 
 | עמוד | קישור |
 |------|-------|
-| תוצאות / אירועים | https://clubbing-omers-projects-fee986ef.vercel.app/results |
-| העדפות / סינון | https://clubbing-omers-projects-fee986ef.vercel.app/interests |
-| התחברות | https://clubbing-omers-projects-fee986ef.vercel.app/auth |
+| תוצאות / אירועים | https://clubbing-two.vercel.app/results |
+| העדפות / סינון | https://clubbing-two.vercel.app/interests |
+| התחברות | https://clubbing-two.vercel.app/auth |
 
 ---
 

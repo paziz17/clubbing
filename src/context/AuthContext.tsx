@@ -57,7 +57,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithProvider = (provider: "facebook" | "google" | "instagram") => {
-    signIn(provider, { callbackUrl: "/interests" });
+    const base = typeof window !== "undefined" ? window.location.origin : "";
+    signIn(provider, { callbackUrl: `${base}/interests` });
   };
 
   const user: User | null =

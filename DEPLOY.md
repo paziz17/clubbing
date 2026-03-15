@@ -8,7 +8,7 @@
 2. אחרי יצירת ה-DB, הוסף משתנה:
    - `DATABASE_URL` = הערך של `POSTGRES_PRISMA_URL` (מופיע ב-Storage)
 3. **Redeploy:** https://vercel.com/omers-projects-fee986ef/clubbing → Deployments → ⋮ → Redeploy
-4. הוסף `AUTH_URL` = `https://clubbing-xxx.vercel.app` (הכתובת שלך)
+4. הוסף `AUTH_URL` = `https://clubbing-two.vercel.app`
 
 ---
 
@@ -43,7 +43,7 @@ git push -u origin main
 |-------|-----|
 | `DATABASE_URL` | **חשוב:** SQLite לא עובד ב-Vercel. השתמש ב-[Vercel Postgres](https://vercel.com/storage/postgres) (חינם) או [Turso](https://turso.tech) |
 | `AUTH_SECRET` | מפתח אקראי (למשל: `openssl rand -base64 32`) |
-| `AUTH_URL` | `https://YOUR_APP.vercel.app` (אחרי הפריסה הראשונה) |
+| `AUTH_URL` | `https://clubbing-two.vercel.app` |
 
 5. **Database:** אם משתמש ב-Vercel Postgres — צור Storage, העתק את `POSTGRES_URL` ל-`DATABASE_URL`
 6. **שינוי ל-Postgres:** עדכן `prisma/schema.prisma`:

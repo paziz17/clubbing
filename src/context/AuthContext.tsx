@@ -28,7 +28,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const [guestUser, setGuestUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [dbProfile, setDbProfile] = useState<{ profilePhotoUrl?: string; name?: string } | null>(null);
@@ -47,12 +47,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (status === "authenticated" && session?.user?.email) {
       fetch("/api/user/me")
         .then((r) => r.ok ? r.json() : null)
-        .then((data) => data && setDbProfile({ profilePhotoUrl: data.profilePhotoUrl, name: data.name }))
+        .then((data) => {
+          if (data) {
+            setDbProfile({ profilePhotoUrl: data.profilePhotoUrl, name: data.name });
+            // אם אין תמונה — נסה לסנכרן מ-Google
+            if (!data.profilePhotoUrl && !session?.user?.image) {
+              fetch("/api/user/sync-google-profile", { method: "POST" })
+                .then((r) => r.ok ? r.json() : null)
+                .then((sync) => {
+                  if (sync?.profilePhotoUrl) {
+                    setDbProfile((p) => ({ ...p!, profilePhotoUrl: sync.profilePhotoUrl }));
+                    update();
+                  }
+                });
+            }
+          }
+        })
         .catch(() => setDbProfile(null));
     } else {
       setDbProfile(null);
     }
-  }, [status, session?.user?.email]);
+  }, [status, session?.user?.email, session?.user?.image]);
 
   const saveGuest = (u: User) => {
     localStorage.setItem("clubbing_guest", JSON.stringify(u));

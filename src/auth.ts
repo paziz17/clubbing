@@ -22,6 +22,7 @@ if (googleId && googleSecret) {
     Google({
       clientId: googleId,
       clientSecret: googleSecret,
+      authorization: { params: { scope: "openid email profile" } },
       profile(profile) {
         return {
           id: profile.sub,

@@ -1,10 +1,24 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 
 export default function ProfilePage() {
   const { user, logout } = useAuth();
+  const [syncing, setSyncing] = useState(false);
+
+  const handleSyncProfile = async () => {
+    setSyncing(true);
+    try {
+      const r = await fetch("/api/user/sync-google-profile", { method: "POST" });
+      if (r.ok) {
+        window.location.reload();
+      }
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] px-6 py-8">
@@ -16,11 +30,20 @@ export default function ProfilePage() {
       <div className="flex flex-col items-center mb-8">
         <div className="w-24 h-24 rounded-full bg-[#111111] border border-[#d4af37]/40 flex items-center justify-center text-4xl mb-4 overflow-hidden">
           {user?.profilePhotoUrl ? (
-            <img src={user.profilePhotoUrl} alt="" className="w-full h-full object-cover" />
+            <img src={user.profilePhotoUrl} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
           ) : (
             <span className="text-4xl">👤</span>
           )}
         </div>
+        {!user?.isGuest && !user?.profilePhotoUrl && (
+          <button
+            onClick={handleSyncProfile}
+            disabled={syncing}
+            className="mt-2 text-sm text-[#d4af37]/80 hover:text-[#d4af37] disabled:opacity-50"
+          >
+            {syncing ? "מסנכרן..." : "משוך תמונת פרופיל מ-Google"}
+          </button>
+        )}
         <h2 className="text-[#d4af37] font-semibold">{user?.name || "משתמש"}</h2>
         {user?.isGuest && <span className="text-[#d4af37]/60 text-sm">אורח</span>}
         {!user?.isGuest && (user?.firstName || user?.lastName || user?.email) && (

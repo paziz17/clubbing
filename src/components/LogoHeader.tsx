@@ -51,6 +51,7 @@ export function LogoHeader() {
                 src={user.profilePhotoUrl}
                 alt=""
                 className="w-8 h-8 rounded-full object-cover border border-[#d4af37]/40"
+                referrerPolicy="no-referrer"
               />
             ) : (
               <UserIcon className="w-4 h-4" />

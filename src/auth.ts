@@ -72,7 +72,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, user }) {
       if (session.user) {
         (session.user as { id?: string }).id = user.id;
-        const img = user.image ?? user.profilePhotoUrl ?? undefined;
+        const img = user.image ?? (user as { profilePhotoUrl?: string }).profilePhotoUrl ?? undefined;
         session.user.image = img;
       }
       return session;

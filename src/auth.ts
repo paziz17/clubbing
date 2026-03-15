@@ -23,6 +23,14 @@ if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      profile(profile) {
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture ?? profile.image ?? null,
+        };
+      },
       ...(base && {
         authorization: {
           params: {
@@ -50,6 +58,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     signIn: "/auth",
   },
   callbacks: {
+    async signIn({ user, account, profile }) {
+      if (account?.provider === "google" && profile && "picture" in profile && user.id) {
+        const image = (profile as { picture?: string }).picture ?? (profile as { image?: string }).image;
+        if (image) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { image },
+          });
+        }
+      }
+      return true;
+    },
     async session({ session, user }) {
       if (session.user) {
         (session.user as { id?: string }).id = user.id;

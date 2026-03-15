@@ -107,6 +107,7 @@ AUTH_INSTAGRAM_SECRET=xxxxx
 |-------|-----|
 | `AUTH_URL` | `https://clubbing-two.vercel.app` |
 | `NEXTAUTH_URL` | `https://clubbing-two.vercel.app` |
+| `NEXT_PUBLIC_APP_URL` | `https://clubbing-two.vercel.app` |
 | `AUTH_GOOGLE_ID` | המפתח מ־Google Cloud Console |
 | `AUTH_GOOGLE_SECRET` | הסיסמה מ־Google Cloud Console |
 | `AUTH_SECRET` | מפתח אקראי (למשל: `openssl rand -base64 32`) |

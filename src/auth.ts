@@ -16,10 +16,21 @@ if (process.env.AUTH_FACEBOOK_ID && process.env.AUTH_FACEBOOK_SECRET) {
   );
 }
 if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
+  const base = (process.env.AUTH_URL || process.env.NEXTAUTH_URL || "").replace(
+    /\/$/,
+    ""
+  );
   providers.push(
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      ...(base && {
+        authorization: {
+          params: {
+            redirect_uri: `${base}/api/auth/callback/google`,
+          },
+        },
+      }),
     })
   );
 }

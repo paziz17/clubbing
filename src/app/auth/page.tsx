@@ -67,9 +67,14 @@ export default function AuthPage() {
           כניסה כאורח
         </button>
         {providersReady === false && (
-          <p className="text-amber-500/90 text-sm text-center mt-4">
-            התחברות עם Google/Facebook לא מופעלת. יש להגדיר משתני סביבה ב-Vercel.
-          </p>
+          <a
+            href="https://github.com/paziz17/clubbing/blob/main/FIX-LOGIN.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block text-amber-500/90 text-sm text-center mt-4 hover:underline"
+          >
+            התחברות לא מופעלת — הוראות תיקון
+          </a>
         )}
       </div>
     </div>

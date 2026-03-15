@@ -25,6 +25,19 @@
 2. חכה לסיום ה-deploy
 3. נסה שוב: https://clubbing-two.vercel.app/auth
 
+## Google Cloud Console — חובה!
+
+ב־[Google Cloud Console](https://console.cloud.google.com/) → Credentials → OAuth client → **Authorized redirect URIs** — הוסף **שניהם**:
+
+```
+https://clubbing-two.vercel.app/api/auth/callback/google
+http://localhost:3000/api/auth/callback/google
+```
+
+בלי זה תקבל `Error 400: redirect_uri_mismatch`.
+
+---
+
 ## בדיקה
 
 אם `/api/auth/providers` מחזיר `{}` — המשתנים לא נטענו. ודא:

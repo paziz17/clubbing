@@ -28,11 +28,11 @@ https://clubbing-two.vercel.app/api/auth/callback/[provider]
 2. צור פרויקט חדש או בחר קיים
 3. **APIs & Services** → **Credentials** → **Create Credentials** → **OAuth client ID**
 4. בחר **Web application**
-5. **Authorized redirect URIs** — הוסף:
+5. **Authorized redirect URIs** — הוסף **שניהם** (למקומי ולפרודקשן):
    ```
    https://clubbing-two.vercel.app/api/auth/callback/google
+   http://localhost:3000/api/auth/callback/google
    ```
-   (למקומי: `http://localhost:3000/api/auth/callback/google`)
 6. העתק **Client ID** ו־**Client Secret**
 
 ### משתני סביבה

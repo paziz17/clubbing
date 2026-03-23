@@ -1,4 +1,4 @@
-# משתני סביבה נדרשים ב-Vercel — Clubbing
+# משתני סביבה נדרשים ב-Vercel — Clubing
 
 ## חובה (ללא אלה האתר לא יעבוד)
 
@@ -30,7 +30,7 @@
 | `FACEBOOK_ACCESS_TOKEN`, `FACEBOOK_PAGE_IDS` | סנכרון אירועים מ-Facebook |
 | `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `ADMIN_SECRET` | CRM מנהלים (ברירת מחדל: admin/admin) |
 
-## משתנים שלא בשימוש ב-Clubbing
+## משתנים שלא בשימוש ב-Clubing
 
 אם יש לך משתנים כמו `ATLAS_URI`, `REDIS_URL`, `NEXT_PUBLIC_CLOUDINARY_*` — הם כנראה מפרויקט אחר. אפשר למחוק אם לא משתמשים בהם.
 

@@ -1,0 +1,17 @@
+# PostgreSQL מקומי לפיתוח — הרץ: docker compose up -d
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: clubing-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: clubing
+      POSTGRES_PASSWORD: clubing_local
+      POSTGRES_DB: clubing
+    ports:
+      - "5432:5432"
+    volumes:
+      - clubing_pgdata:/var/lib/postgresql/data
+
+volumes:
+  clubing_pgdata:

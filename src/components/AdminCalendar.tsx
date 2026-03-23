@@ -17,10 +17,13 @@ export function AdminCalendar({
   events,
   currentMonth,
   onMonthChange,
+  /** לינק לפרטי אירוע — ברירת מחדל אדמין */
+  eventsHrefPrefix = "/admin/events",
 }: {
   events: EventItem[];
   currentMonth: Date;
   onMonthChange: (d: Date) => void;
+  eventsHrefPrefix?: string;
 }) {
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
@@ -49,14 +52,14 @@ export function AdminCalendar({
   for (let i = 1; i <= daysInMonth; i++) days.push(i);
 
   return (
-    <div className="bg-[#111111] border border-[#d4af37]/30 rounded-2xl p-6">
-      <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
-        <h2 className="text-lg font-semibold text-white">לוח שנה שנתי</h2>
+    <div className="rounded-2xl border border-[#d4af37]/30 bg-zinc-950/55 p-6 shadow-[0_8px_32px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-white/[0.04] backdrop-blur-xl">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <h2 className="text-lg font-semibold text-gradient-gold">לוח שנה שנתי</h2>
         <div className="flex items-center gap-2">
           <select
             value={year}
             onChange={(e) => onMonthChange(new Date(parseInt(e.target.value), month))}
-            className="bg-[#0a0a0a] border border-[#d4af37]/40 rounded-lg px-3 py-2 text-white text-sm"
+            className="rounded-lg border border-[#d4af37]/35 bg-black/50 px-3 py-2 text-sm text-white backdrop-blur-sm focus:border-[#d4af37] focus:outline-none focus:ring-2 focus:ring-[#d4af37]/20"
           >
             {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map((y) => (
               <option key={y} value={y}>
@@ -65,17 +68,19 @@ export function AdminCalendar({
             ))}
           </select>
           <button
+            type="button"
             onClick={prevMonth}
-            className="w-9 h-9 rounded-lg bg-[#111111] border border-[#d4af37]/40 hover:border-[#d4af37]/70 text-white flex items-center justify-center"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#d4af37]/35 bg-zinc-950/60 text-white transition hover:border-[#d4af37]"
           >
             ←
           </button>
-          <span className="text-white font-medium min-w-[120px] text-center">
+          <span className="min-w-[120px] text-center font-medium text-zinc-200">
             {currentMonth.toLocaleDateString("he-IL", { month: "long" })}
           </span>
           <button
+            type="button"
             onClick={nextMonth}
-            className="w-9 h-9 rounded-lg bg-[#111111] border border-[#d4af37]/40 hover:border-[#d4af37]/70 text-white flex items-center justify-center"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#d4af37]/35 bg-zinc-950/60 text-white transition hover:border-[#d4af37]"
           >
             →
           </button>
@@ -107,16 +112,16 @@ export function AdminCalendar({
               key={day}
               className={`aspect-square rounded-lg p-1 flex flex-col items-center justify-center min-h-[48px] ${
                 hasEvents ? "bg-[#d4af37]/20 border border-[#d4af37]/50" : "bg-[#111111]/80"
-              } ${today ? "ring-2 ring-[#d4af37]" : ""}`}
+              } ${today ? "ring-2 ring-[#d4af37] ring-offset-1 ring-offset-zinc-950" : ""}`}
             >
-              <span className="text-white text-sm font-medium">{day}</span>
+              <span className="text-sm font-medium text-white">{day}</span>
               {hasEvents && (
-                <div className="flex flex-col gap-0.5 mt-1 w-full overflow-hidden">
+                <div className="mt-1 flex w-full flex-col gap-0.5 overflow-hidden">
                   {dayEvents.slice(0, 2).map((e) => (
                     <Link
                       key={e.id}
-                      href={`/admin/events/${e.id}`}
-                      className="text-[10px] text-rose-400 hover:text-rose-300 truncate px-1 text-center"
+                      href={`${eventsHrefPrefix}/${e.id}`}
+                      className="truncate px-1 text-center text-[10px] text-[#f0a8a8] hover:text-[#fecaca]"
                       title={`${e.name} - ${e.reservationsCount} הזמנות`}
                     >
                       {e.name.slice(0, 8)}…

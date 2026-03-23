@@ -99,7 +99,7 @@ AUTH_INSTAGRAM_SECRET=xxxxx
 
 ### Vercel (פרודקשן — https://clubbing-two.vercel.app)
 
-1. [Vercel Dashboard](https://vercel.com) → הפרויקט **clubbing**
+1. [Vercel Dashboard](https://vercel.com) → הפרויקט **Clubing**
 2. **Settings** → **Environment Variables**
 3. הוסף את המשתנים הבאים (Production, Preview, Development):
 

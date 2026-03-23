@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 
 const ADMIN_USER = (process.env.ADMIN_USERNAME || "admin").trim();
 const ADMIN_PASS = (process.env.ADMIN_PASSWORD || "admin").trim();
-const ADMIN_COOKIE = "clubbing_admin";
+const ADMIN_COOKIE = "clubing_admin";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
 export function verifyAdminCredentials(username: string, password: string): boolean {
@@ -10,7 +10,7 @@ export function verifyAdminCredentials(username: string, password: string): bool
 }
 
 export async function setAdminSession(): Promise<void> {
-  const secret = process.env.ADMIN_SECRET ?? "clubbing-admin-dev-secret";
+  const secret = process.env.ADMIN_SECRET ?? "clubing-admin-dev-secret";
   const token = Buffer.from(`${secret}:${Date.now()}`).toString("base64");
   const cookieStore = await cookies();
   cookieStore.set(ADMIN_COOKIE, token, {
@@ -26,7 +26,7 @@ export async function isAdmin(): Promise<boolean> {
   const cookieStore = await cookies();
   const token = cookieStore.get(ADMIN_COOKIE)?.value;
   if (!token) return false;
-  const secret = process.env.ADMIN_SECRET ?? "clubbing-admin-dev-secret";
+  const secret = process.env.ADMIN_SECRET ?? "clubing-admin-dev-secret";
   try {
     const decoded = Buffer.from(token, "base64").toString();
     return decoded.startsWith(`${secret}:`);

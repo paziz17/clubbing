@@ -51,6 +51,8 @@ model User {
   name              String?
   email             String?   @unique
   emailVerified     DateTime?
+  passwordHash      String?   // התחברות מייל+סיסמה (לא OAuth)
+  phone             String?
   image             String?   // תמונת פרופיל מ-OAuth
   age               Int?
   location          String?

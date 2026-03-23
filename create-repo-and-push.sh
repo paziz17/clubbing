@@ -5,7 +5,7 @@
 set -e
 cd "$(dirname "$0")"
 
-REPO_NAME="clubbing"
+REPO_NAME="clubing"
 GITHUB_USER="paziz17"
 
 echo "=== יצירת ריפו ב-GitHub ==="

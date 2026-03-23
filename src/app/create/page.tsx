@@ -2,11 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { ClubingPageShell } from "@/components/ClubingPageShell";
+import { ClubingHeading } from "@/components/ClubingHeading";
+import { clubingGlassCard, clubingGoldCta, clubingInput, clubingMutedLink } from "@/lib/clubing-ui";
+
+const input = clubingInput;
+const textareaClass = `${clubingInput} resize-none`;
 
 export default function CreateEventPage() {
-  const router = useRouter();
   const { user } = useAuth();
   const [name, setName] = useState("");
   const [date, setDate] = useState("");
@@ -21,10 +25,12 @@ export default function CreateEventPage() {
 
   if (user?.isGuest) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center px-6">
-        <p className="text-zinc-400 mb-4">יצירת אירוע זמינה למשתמשים רשומים בלבד</p>
-        <Link href="/auth" className="text-[#d4af37]">התחבר</Link>
-      </div>
+      <ClubingPageShell contentClassName="flex min-h-screen flex-col items-center justify-center px-6 text-center">
+        <p className="mb-4 text-zinc-400">יצירת אירוע זמינה למשתמשים רשומים בלבד</p>
+        <Link href="/auth" className="font-medium text-[#e8c96b] hover:text-[#f0d78c]">
+          התחבר
+        </Link>
+      </ClubingPageShell>
     );
   }
 
@@ -42,8 +48,11 @@ export default function CreateEventPage() {
         description,
         ticketLink,
         phone: phone || undefined,
-        tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
-        createdById: user?.id,
+        tags: tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean),
+        createdById: user?.isDeveloper ? undefined : user?.id,
       }),
     });
     if (res.ok) setSubmitted(true);
@@ -51,43 +60,38 @@ export default function CreateEventPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center px-6">
-        <p className="text-2xl mb-2">✅</p>
-        <p className="text-white font-semibold mb-2">האירוע נשלח לאישור</p>
-        <p className="text-zinc-500 text-sm mb-6">תקבל עדכון כשהמנהל יאשר</p>
-        <Link href="/results" className="text-[#d4af37]">חזרה לאירועים</Link>
-      </div>
+      <ClubingPageShell contentClassName="flex min-h-screen flex-col items-center justify-center px-6 text-center">
+        <p className="mb-2 text-2xl">✅</p>
+        <p className="mb-2 font-semibold text-white">האירוע נשלח לאישור</p>
+        <p className="mb-6 text-sm text-zinc-500">תקבל עדכון כשהמנהל יאשר</p>
+        <Link href="/results" className="font-medium text-[#e8c96b] transition hover:text-[#f0d78c]">
+          חזרה לאירועים
+        </Link>
+      </ClubingPageShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] px-6 py-8">
-      <Link href="/results" className="text-[#d4af37] mb-6 inline-block">← חזרה</Link>
-      <h1 className="text-2xl font-bold text-[#d4af37] mb-8">יצירת אירוע</h1>
+    <ClubingPageShell contentClassName="px-6 py-8">
+      <Link href="/results" className={`mb-6 inline-block text-sm ${clubingMutedLink}`}>
+        ← חזרה
+      </Link>
+      <ClubingHeading size="lg" className="mb-8">
+        יצירת אירוע
+      </ClubingHeading>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className={`mx-auto max-w-lg space-y-4 p-6 ${clubingGlassCard}`}>
         <input
           type="text"
           placeholder="שם האירוע"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
-          className="w-full px-4 py-3 bg-[#111111] border border-[#d4af37]/40 rounded-xl text-white placeholder-zinc-500"
+          className={input}
         />
         <div className="flex gap-2">
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            required
-            className="flex-1 px-4 py-3 bg-[#111111] border border-[#d4af37]/40 rounded-xl text-white"
-          />
-          <input
-            type="time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            className="w-32 px-4 py-3 bg-[#111111] border border-[#d4af37]/40 rounded-xl text-white"
-          />
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required className={`flex-1 ${input}`} />
+          <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className={`w-36 ${input}`} />
         </div>
         <input
           type="text"
@@ -95,50 +99,47 @@ export default function CreateEventPage() {
           value={location}
           onChange={(e) => setLocation(e.target.value)}
           required
-          className="w-full px-4 py-3 bg-[#111111] border border-[#d4af37]/40 rounded-xl text-white placeholder-zinc-500"
+          className={input}
         />
         <input
           type="text"
           placeholder="כתובת"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
-          className="w-full px-4 py-3 bg-[#111111] border border-[#d4af37]/40 rounded-xl text-white placeholder-zinc-500"
+          className={input}
         />
         <textarea
           placeholder="תיאור קצר"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
-          className="w-full px-4 py-3 bg-[#111111] border border-[#d4af37]/40 rounded-xl text-white placeholder-zinc-500 resize-none"
+          className={textareaClass}
         />
         <input
           type="url"
           placeholder="קישור לרכישת כרטיסים / RSVP"
           value={ticketLink}
           onChange={(e) => setTicketLink(e.target.value)}
-          className="w-full px-4 py-3 bg-[#111111] border border-[#d4af37]/40 rounded-xl text-white placeholder-zinc-500"
+          className={input}
         />
         <input
           type="tel"
           placeholder="טלפון לתקשורת"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          className="w-full px-4 py-3 bg-[#111111] border border-[#d4af37]/40 rounded-xl text-white placeholder-zinc-500"
+          className={input}
         />
         <input
           type="text"
           placeholder="תיוגים (מופרדים בפסיק): House, 21+, Rooftop"
           value={tags}
           onChange={(e) => setTags(e.target.value)}
-          className="w-full px-4 py-3 bg-[#111111] border border-[#d4af37]/40 rounded-xl text-white placeholder-zinc-500"
+          className={input}
         />
-        <button
-          type="submit"
-          className="w-full py-4 bg-[#d4af37] hover:bg-[#f0d78c] text-[#0a0a0a] rounded-xl font-semibold"
-        >
+        <button type="submit" className={clubingGoldCta}>
           פרסם אירוע
         </button>
       </form>
-    </div>
+    </ClubingPageShell>
   );
 }

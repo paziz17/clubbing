@@ -3,9 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
+import { ClubingPageShell } from "@/components/ClubingPageShell";
+import { ClubingHeading } from "@/components/ClubingHeading";
+import { clubingMutedLink } from "@/lib/clubing-ui";
 
 export default function ProfilePage() {
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
   const [syncing, setSyncing] = useState(false);
 
   const handleSyncProfile = async () => {
@@ -21,46 +26,57 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] px-6 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-xl font-bold text-[#d4af37]">פרופיל</h1>
-        <Link href="/results" className="text-[#d4af37] text-sm hover:text-[#f0d78c] transition">← חזרה</Link>
+    <ClubingPageShell contentClassName="px-6 py-8">
+      <div className="mb-8 flex items-center justify-between">
+        <ClubingHeading size="lg">{t("profile.title")}</ClubingHeading>
+        <Link href="/results" className={`text-sm ${clubingMutedLink}`}>
+          {t("profile.back")}
+        </Link>
       </div>
 
-      <div className="flex flex-col items-center mb-8">
-        <div className="w-24 h-24 rounded-full bg-[#111111] border border-[#d4af37]/40 flex items-center justify-center text-4xl mb-4 overflow-hidden">
+      <div className="mb-8 flex flex-col items-center">
+        <div className="mb-4 flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border border-[#d4af37]/40 bg-zinc-950/60 text-4xl shadow-[0_0_32px_rgba(212,175,55,0.15)] backdrop-blur-sm">
           {user?.profilePhotoUrl ? (
-            <img src={user.profilePhotoUrl} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            <img
+              src={user.profilePhotoUrl}
+              alt=""
+              className="h-full w-full object-cover"
+              referrerPolicy="no-referrer"
+            />
           ) : (
-            <span className="text-4xl">👤</span>
+            <span>👤</span>
           )}
         </div>
-        {!user?.isGuest && !user?.profilePhotoUrl && (
+        {!user?.isGuest && !user?.isDeveloper && !user?.profilePhotoUrl && (
           <button
+            type="button"
             onClick={handleSyncProfile}
             disabled={syncing}
-            className="mt-2 text-sm text-[#d4af37]/80 hover:text-[#d4af37] disabled:opacity-50"
+            className="mt-2 text-sm text-[#d4af37]/85 transition hover:text-[#f0d78c] disabled:opacity-50"
           >
-            {syncing ? "מסנכרן..." : "משוך תמונת פרופיל מ-Google"}
+            {syncing ? t("profile.syncing") : t("profile.syncPhoto")}
           </button>
         )}
-        <h2 className="text-[#d4af37] font-semibold">{user?.name || "משתמש"}</h2>
-        {user?.isGuest && <span className="text-[#d4af37]/60 text-sm">אורח</span>}
+        <h2 className="mt-2 bg-gradient-to-b from-[#f5e6a8] via-[#d4af37] to-[#9a7320] bg-clip-text font-semibold text-transparent">
+          {user?.name || t("profile.user")}
+        </h2>
+        {user?.isGuest && <span className="text-sm text-zinc-500">{t("profile.guest")}</span>}
+        {user?.isDeveloper && <span className="text-sm text-amber-500/90">{t("profile.developer")}</span>}
         {!user?.isGuest && (user?.firstName || user?.lastName || user?.email) && (
-          <div className="mt-4 w-full max-w-sm space-y-2 text-right">
+          <div className="mt-4 w-full max-w-sm space-y-2 text-start">
             {user.firstName && (
-              <p className="text-zinc-300 text-sm">
-                <span className="text-zinc-500">שם פרטי:</span> {user.firstName}
+              <p className="text-sm text-zinc-300">
+                <span className="text-zinc-500">{t("profile.firstName")}</span> {user.firstName}
               </p>
             )}
             {user.lastName && (
-              <p className="text-zinc-300 text-sm">
-                <span className="text-zinc-500">שם משפחה:</span> {user.lastName}
+              <p className="text-sm text-zinc-300">
+                <span className="text-zinc-500">{t("profile.lastName")}</span> {user.lastName}
               </p>
             )}
             {user.email && (
-              <p className="text-zinc-300 text-sm">
-                <span className="text-zinc-500">אימייל:</span> {user.email}
+              <p className="text-sm text-zinc-300">
+                <span className="text-zinc-500">{t("profile.email")}</span> {user.email}
               </p>
             )}
           </div>
@@ -70,24 +86,25 @@ export default function ProfilePage() {
       <div className="space-y-4">
         <Link
           href="/results"
-          className="block p-4 bg-[#111111] border border-[#d4af37]/40 rounded-xl text-[#d4af37] hover:border-[#d4af37]/70 transition"
+          className={`block rounded-2xl border border-[#d4af37]/35 bg-zinc-950/45 p-4 font-medium text-[#e8c96b] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-md transition hover:border-[#d4af37]/65 hover:shadow-[0_0_24px_rgba(212,175,55,0.12)]`}
         >
-          אירועים מועדפים
+          {t("profile.favorites")}
         </Link>
         <Link
           href="/create"
-          className="block p-4 bg-[#111111] border border-[#d4af37]/40 rounded-xl text-[#d4af37] hover:border-[#d4af37]/70 transition"
+          className={`block rounded-2xl border border-[#d4af37]/35 bg-zinc-950/45 p-4 font-medium text-[#e8c96b] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-md transition hover:border-[#d4af37]/65 hover:shadow-[0_0_24px_rgba(212,175,55,0.12)]`}
         >
-          אירועים שיצרתי
+          {t("profile.created")}
         </Link>
       </div>
 
       <button
+        type="button"
         onClick={logout}
-        className="w-full mt-8 py-3 border border-[#d4af37]/50 text-[#d4af37]/70 rounded-xl hover:text-[#d4af37] hover:border-[#d4af37]/70 transition"
+        className="mt-8 w-full rounded-xl border border-[#d4af37]/40 py-3 text-[#d4af37]/90 transition hover:border-[#d4af37] hover:text-[#f0d78c]"
       >
-        התנתק
+        {t("profile.logout")}
       </button>
-    </div>
+    </ClubingPageShell>
   );
 }

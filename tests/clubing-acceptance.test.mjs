@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Clubbing — בדיקת קבלה
+ * Clubing — בדיקת קבלה
  * בודק את המערכת לפי אפיון גרסה 1.0
  *
  * הרצה: npm run test
@@ -35,7 +35,7 @@ async function fetchJson(url, opts = {}) {
 }
 
 async function runTests() {
-  console.log("\n=== Clubbing — בדיקת קבלה ===\n");
+  console.log("\n=== Clubing — בדיקת קבלה ===\n");
 
   let eventId;
 

@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ClubingPageShell } from "@/components/ClubingPageShell";
+import { ClubingHeading } from "@/components/ClubingHeading";
+import { clubingGlassCard, clubingGoldCta, clubingInput, clubingMutedLink } from "@/lib/clubing-ui";
 
 export default function VenueLoginPage() {
   const router = useRouter();
@@ -35,55 +38,57 @@ export default function VenueLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center px-6">
-      <div className="w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-[#d4af37] text-center mb-2">CRM מועדון</h1>
-        <p className="text-zinc-500 text-sm text-center mb-6">
-          דמו: democlub/demo123 | theblock/block123
-        </p>
+    <ClubingPageShell contentClassName="flex flex-col items-center justify-center px-6 py-12">
+      <div className={`w-full max-w-sm space-y-6 p-7 ${clubingGlassCard}`}>
+        <div className="text-center">
+          <ClubingHeading size="lg" className="mb-2 block">
+            CRM מועדון
+          </ClubingHeading>
+          <p className="text-sm text-zinc-500">
+            דמו: <span className="text-zinc-400">goldroom</span> / <span className="text-zinc-400">club123</span>
+            {" · "}
+            <span className="text-zinc-400">basementjaffa</span> / <span className="text-zinc-400">club123</span>
+          </p>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-zinc-400 text-sm mb-1">שם המועדון</label>
+            <label className="mb-1 block text-sm text-zinc-400">שם המועדון</label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-[#111111] border border-[#d4af37]/40 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#d4af37]/50 focus:border-[#d4af37]/70"
-              placeholder="democlub"
+              className={clubingInput}
+              placeholder="goldroom"
             />
           </div>
           <div>
-            <label className="block text-zinc-400 text-sm mb-1">סיסמה (שם המועדון)</label>
+            <label className="mb-1 block text-sm text-zinc-400">סיסמה (שם המועדון)</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-[#111111] border border-[#d4af37]/40 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#d4af37]/50 focus:border-[#d4af37]/70"
+              className={clubingInput}
               placeholder="••••••••"
             />
           </div>
-          {error && <p className="text-[#d4af37] text-sm">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-[#d4af37] hover:bg-[#f0d78c] disabled:opacity-50 text-[#0a0a0a] rounded-xl font-semibold transition"
-          >
+          {error && <p className="text-sm text-amber-300">{error}</p>}
+          <button type="submit" disabled={loading} className={clubingGoldCta}>
             {loading ? "מתחבר..." : "התחבר"}
           </button>
         </form>
 
-        <div className="mt-6 space-y-2 text-center">
-          <Link href="/admin/login" className="block text-zinc-500 text-sm hover:text-white transition">
+        <div className="space-y-2 text-center text-sm">
+          <Link href="/admin/login" className={`block ${clubingMutedLink}`}>
             מנהל מערכת (admin) — כל המועדונים
           </Link>
-          <Link href="/results" className="block text-zinc-500 text-sm hover:text-white transition">
+          <Link href="/results" className={`block ${clubingMutedLink}`}>
             ← חזרה לאתר
           </Link>
         </div>
       </div>
-    </div>
+    </ClubingPageShell>
   );
 }

@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ClubingPageShell } from "@/components/ClubingPageShell";
+import { ClubingHeading } from "@/components/ClubingHeading";
+import { clubingGlassCard, clubingGoldCta, clubingInput, clubingMutedLink } from "@/lib/clubing-ui";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -35,48 +38,61 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center px-6">
-      <div className="w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-[#d4af37] text-center mb-2">כניסת בעלי מועדונים</h1>
-        <p className="text-zinc-500 text-sm text-center mb-8">התחבר לניהול ההזמנות</p>
+    <ClubingPageShell contentClassName="flex flex-col items-center justify-center px-6 py-12">
+      <div className={`w-full max-w-sm space-y-6 p-7 ${clubingGlassCard}`}>
+        <div className="text-center">
+          <ClubingHeading size="lg" className="mb-2 block">
+            כניסת מנהל מערכת
+          </ClubingHeading>
+          <p className="text-sm text-zinc-500">
+            CRM מלא — כל המועדונים, האירועים וההזמנות במקום אחד
+          </p>
+          <p className="mt-2 text-xs leading-relaxed text-zinc-600">
+            דמו מקומי: <span className="text-zinc-400">admin</span> / <span className="text-zinc-400">admin</span>
+            <br />
+            בייצור חובה להגדיר <span className="text-zinc-500">ADMIN_USERNAME</span>,{" "}
+            <span className="text-zinc-500">ADMIN_PASSWORD</span> ו־<span className="text-zinc-500">ADMIN_SECRET</span>
+          </p>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-zinc-400 text-sm mb-1">שם משתמש</label>
+            <label className="mb-1 block text-sm text-zinc-400">שם משתמש</label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-[#111111] border border-[#d4af37]/40 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#d4af37]/50 focus:border-[#d4af37]/70"
+              className={clubingInput}
               placeholder="admin"
             />
           </div>
           <div>
-            <label className="block text-zinc-400 text-sm mb-1">סיסמה</label>
+            <label className="mb-1 block text-sm text-zinc-400">סיסמה</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-[#111111] border border-[#d4af37]/40 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#d4af37]/50 focus:border-[#d4af37]/70"
+              className={clubingInput}
               placeholder="••••••••"
             />
           </div>
-          {error && <p className="text-[#d4af37] text-sm">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-[#d4af37] hover:bg-[#f0d78c] disabled:opacity-50 text-[#0a0a0a] rounded-xl font-semibold transition"
-          >
+          {error && <p className="text-sm text-amber-300">{error}</p>}
+          <button type="submit" disabled={loading} className={clubingGoldCta}>
             {loading ? "מתחבר..." : "התחבר"}
           </button>
         </form>
 
-        <Link href="/results" className="block text-center text-zinc-500 text-sm mt-6 hover:text-white transition">
-          ← חזרה לאתר
-        </Link>
+        <div className="space-y-2 text-center text-sm">
+          <Link href="/venue/login" className={`block ${clubingMutedLink}`}>
+            כניסת מועדון בודד — רק האירועים שלי
+          </Link>
+          <Link href="/results" className={`block ${clubingMutedLink}`}>
+            ← חזרה לאתר
+          </Link>
+        </div>
       </div>
-    </div>
+    </ClubingPageShell>
   );
 }

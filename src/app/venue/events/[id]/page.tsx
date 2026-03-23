@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { ClubingPageShell } from "@/components/ClubingPageShell";
+import { ClubingHeading } from "@/components/ClubingHeading";
+import { clubingGlassPanel, clubingMutedLink } from "@/lib/clubing-ui";
 
 interface Reservation {
   id: string;
@@ -48,37 +51,39 @@ export default function VenueEventDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <div className="animate-spin w-12 h-12 border-2 border-[#d4af37] border-t-transparent rounded-full" />
-      </div>
+      <ClubingPageShell contentClassName="flex min-h-screen items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-2 border-[#d4af37] border-t-transparent" />
+      </ClubingPageShell>
     );
   }
 
   if (!event) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <p className="text-[#d4af37]">אירוע לא נמצא</p>
-      </div>
+      <ClubingPageShell contentClassName="flex min-h-screen items-center justify-center">
+        <p className="text-[#e8c96b]">אירוע לא נמצא</p>
+      </ClubingPageShell>
     );
   }
 
   const totalPeople = event.reservations.reduce((s, r) => s + r.numPeople, 0);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] px-4 py-8">
-      <div className="max-w-3xl mx-auto">
-        <Link href="/venue" className="text-zinc-500 text-sm hover:text-white mb-6 inline-block">
+    <ClubingPageShell contentClassName="px-4 py-8">
+      <div className="mx-auto max-w-3xl">
+        <Link href="/venue" className={`mb-6 inline-block text-sm ${clubingMutedLink}`}>
           ← חזרה ל-CRM
         </Link>
 
-        <div className="bg-[#111111] border border-[#d4af37]/30 rounded-2xl overflow-hidden mb-8">
+        <div className={`mb-8 overflow-hidden ${clubingGlassPanel}`}>
           {event.imageUrl && (
-            <div className="aspect-video bg-[#111111] border border-[#d4af37]/20">
-              <img src={event.imageUrl} alt={event.name} className="w-full h-full object-cover" />
+            <div className="aspect-video border-b border-[#d4af37]/20 bg-zinc-950">
+              <img src={event.imageUrl} alt={event.name} className="h-full w-full object-cover" />
             </div>
           )}
           <div className="p-6">
-            <h1 className="text-2xl font-bold text-white mb-2">{event.name}</h1>
+            <ClubingHeading size="lg" className="mb-2 block">
+              {event.name}
+            </ClubingHeading>
             <div className="flex flex-wrap gap-4 text-zinc-400 text-sm mb-4">
               <span>📅 {new Date(event.date).toLocaleDateString("he-IL")} • {event.time}</span>
               <span>📍 {event.address || event.location}</span>
@@ -86,23 +91,23 @@ export default function VenueEventDetailPage() {
             </div>
             {event.description && <p className="text-zinc-500 text-sm mb-4">{event.description}</p>}
             <div className="flex gap-4">
-              <div className="px-4 py-2 bg-[#111111] border border-[#d4af37]/20 rounded-lg">
-                <span className="text-zinc-500 text-xs">הזמנות</span>
-                <p className="text-white font-bold">{event.reservations.length}</p>
+              <div className="rounded-lg border border-[#d4af37]/25 bg-black/40 px-4 py-2">
+                <span className="text-xs text-zinc-500">הזמנות</span>
+                <p className="font-bold text-white">{event.reservations.length}</p>
               </div>
-              <div className="px-4 py-2 bg-[#111111] border border-[#d4af37]/20 rounded-lg">
-                <span className="text-zinc-500 text-xs">אנשים</span>
-                <p className="text-white font-bold">{totalPeople}</p>
+              <div className="rounded-lg border border-[#d4af37]/25 bg-black/40 px-4 py-2">
+                <span className="text-xs text-zinc-500">אנשים</span>
+                <p className="font-bold text-white">{totalPeople}</p>
               </div>
             </div>
           </div>
         </div>
 
-        <h2 className="text-lg font-semibold text-white mb-4">פרטי ההזמנות</h2>
+        <h2 className="mb-4 text-lg font-semibold text-gradient-gold">פרטי ההזמנות</h2>
         {event.reservations.length === 0 ? (
-          <p className="text-zinc-500 text-center py-12">אין הזמנות עדיין</p>
+          <p className="py-12 text-center text-zinc-500">אין הזמנות עדיין</p>
         ) : (
-          <div className="bg-[#111111] border border-[#d4af37]/30 rounded-xl overflow-hidden">
+          <div className={`overflow-hidden ${clubingGlassPanel}`}>
             <div className="overflow-x-auto">
               <table className="w-full text-right">
                 <thead>
@@ -138,6 +143,6 @@ export default function VenueEventDetailPage() {
           </div>
         )}
       </div>
-    </div>
+    </ClubingPageShell>
   );
 }

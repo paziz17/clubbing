@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { WhatsAppIcon, SMSIcon, AppleMapsIcon, GoogleMapsIcon, WazeIcon, LocationPinIcon } from "@/components/SocialIcons";
 import { appUrl } from "@/lib/app-url";
+import { ClubingPageShell } from "@/components/ClubingPageShell";
+import { ClubingHeading } from "@/components/ClubingHeading";
+import { clubingGlassCard, clubingGoldCta, clubingInput } from "@/lib/clubing-ui";
 
 interface Event {
   id: string;
@@ -21,8 +24,13 @@ interface Event {
   tags: string[];
 }
 
+const fallbackImg = "https://images.unsplash.com/photo-1764510376258-2c9978ec3e4e?w=800&h=600&fit=crop";
+
+const reservationStorageKey = (eventId: string) => `clubing:reservation:${eventId}`;
+
 export default function EventPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params.id as string;
   const [event, setEvent] = useState<Event | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -30,7 +38,7 @@ export default function EventPage() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [over18, setOver18] = useState(false);
-  const [reserveStatus, setReserveStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [reserveStatus, setReserveStatus] = useState<"idle" | "loading" | "error">("idle");
 
   useEffect(() => {
     setLoaded(false);
@@ -51,17 +59,19 @@ export default function EventPage() {
 
   if (!loaded) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
-        <div className="animate-spin w-12 h-12 border-2 border-[#d4af37] border-t-transparent rounded-full" />
-      </div>
+      <ClubingPageShell contentClassName="flex min-h-screen items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-2 border-[#d4af37] border-t-transparent" />
+      </ClubingPageShell>
     );
   }
   if (!event) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a0a] gap-4">
+      <ClubingPageShell contentClassName="flex min-h-screen flex-col items-center justify-center gap-4">
         <p className="text-zinc-500">אירוע לא נמצא</p>
-        <Link href="/results" className="text-[#d4af37] hover:text-[#f0d78c] transition">← חזרה לתוצאות</Link>
-      </div>
+        <Link href="/results" className="text-[#e8c96b] transition hover:text-[#f0d78c]">
+          ← חזרה לתוצאות
+        </Link>
+      </ClubingPageShell>
     );
   }
 
@@ -98,13 +108,28 @@ export default function EventPage() {
           over18,
         }),
       });
-      const data = await r.json();
       if (r.ok) {
-        setReserveStatus("success");
+        const ref = `CLB-${Date.now().toString(36).toUpperCase()}`;
+        try {
+          sessionStorage.setItem(
+            reservationStorageKey(id),
+            JSON.stringify({
+              numPeople: parseInt(numPeople, 10) || 1,
+              phone: phone.trim(),
+              email: email.trim(),
+              at: Date.now(),
+              ref,
+            })
+          );
+        } catch {
+          /* private mode / quota */
+        }
         setNumPeople("2");
         setPhone("");
         setEmail("");
         setOver18(false);
+        setReserveStatus("idle");
+        router.push(`/events/${id}/reserved`);
       } else {
         setReserveStatus("error");
       }
@@ -114,163 +139,196 @@ export default function EventPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]">
-      <header className="flex justify-between items-center p-4 border-b border-[#d4af37]/20">
-        <Link href="/results" className="w-10 h-10 bg-[#111111] border border-[#d4af37]/40 rounded-full flex items-center justify-center text-white hover:border-[#d4af37]/70 transition">
-          ←
-        </Link>
-        <span className="text-zinc-500 text-sm">פרטי אירוע</span>
+    <ClubingPageShell>
+      <header className="bg-black px-4 pb-5 pt-4">
+        <div className="relative flex min-h-[2.75rem] items-center justify-center">
+          <Link
+            href="/results"
+            className="absolute start-0 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-[#d4af37]/40 bg-zinc-950/60 text-white transition hover:border-[#d4af37] hover:shadow-[0_0_20px_rgba(212,175,55,0.15)]"
+          >
+            ←
+          </Link>
+          <div className="flex w-full flex-col items-center px-12">
+            <ClubingHeading
+              as="h1"
+              size="md"
+              className="w-full text-center leading-snug"
+            >
+              {event.name}
+            </ClubingHeading>
+            <div
+              aria-hidden
+              className="mt-2.5 h-px w-full max-w-[min(100%,11rem)] rounded-full bg-gradient-to-r from-transparent via-[#e8c96b]/90 to-transparent shadow-[0_0_8px_rgba(212,175,55,0.28)]"
+            />
+          </div>
+        </div>
       </header>
 
-      <div className="p-4">
-        <div className="w-full max-w-md mx-auto aspect-[4/3] rounded-2xl overflow-hidden bg-zinc-900 border border-[#d4af37]/20 mb-6">
+      <div className="mx-auto max-w-md p-4">
+        <div className="mb-6 aspect-[4/3] w-full overflow-hidden rounded-2xl border border-[#d4af37]/25 bg-zinc-900 shadow-[0_8px_40px_rgba(0,0,0,0.4)]">
           <img
-            src={event.imageUrl || "https://images.unsplash.com/photo-1764510376258-2c9978ec3e4e?w=800&h=600&fit=crop"}
+            src={event.imageUrl || fallbackImg}
             alt={event.name}
-            className="w-full h-full object-cover"
+            className="h-full w-full object-cover"
             onError={(ev) => {
-              (ev.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1764510376258-2c9978ec3e4e?w=800&h=600&fit=crop";
+              (ev.target as HTMLImageElement).src = fallbackImg;
             }}
           />
         </div>
 
-        <div>
-        <h1 className="text-2xl font-bold text-[#d4af37]">{event.name}</h1>
-        <div className="flex gap-2 mt-2 flex-wrap">
-          {event.tags.map((t) => (
-            <span key={t} className="px-3 py-1 bg-[#d4af37]/20 border border-[#d4af37]/40 rounded-full text-sm text-zinc-300">
-              {t}
+        <div className="mt-2 flex flex-wrap gap-2">
+          {event.tags.map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full border border-[#d4af37]/35 bg-[#d4af37]/10 px-3 py-1 text-sm text-[#f0d78c]/95"
+            >
+              {tag}
             </span>
           ))}
         </div>
 
         <div className="mt-6 space-y-4 text-zinc-300">
-          <p>📅 {new Date(event.date).toLocaleDateString("he-IL")} • {event.time}</p>
-          <div className="flex items-center gap-2 flex-wrap">
+          <p>
+            📅 {new Date(event.date).toLocaleDateString("he-IL")} • {event.time}
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5">
-              <LocationPinIcon className="w-4 h-4 text-[#d4af37] shrink-0" />
+              <LocationPinIcon className="h-4 w-4 shrink-0 text-[#d4af37]" />
               {event.address || event.location}
             </span>
             <div className="flex gap-1">
-              <a href={appleMapsUrl} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg hover:bg-zinc-700" title="נווט באפל">
-                <AppleMapsIcon className="w-5 h-5 text-white" />
+              <a
+                href={appleMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg p-1.5 transition hover:bg-zinc-800"
+                title="נווט באפל"
+              >
+                <AppleMapsIcon className="h-5 w-5 text-white" />
               </a>
-              <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg hover:bg-zinc-700" title="נווט בגוגל">
-                <GoogleMapsIcon className="w-5 h-5" />
+              <a
+                href={mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg p-1.5 transition hover:bg-zinc-800"
+                title="נווט בגוגל"
+              >
+                <GoogleMapsIcon className="h-5 w-5" />
               </a>
-              <a href={wazeUrl} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg hover:bg-zinc-700" title="נווט ב-Waze">
-                <WazeIcon className="w-5 h-5 text-[#33CCFF]" />
+              <a
+                href={wazeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg p-1.5 transition hover:bg-zinc-800"
+                title="נווט ב-Waze"
+              >
+                <WazeIcon className="h-5 w-5 text-[#33CCFF]" />
               </a>
             </div>
           </div>
           {event.phone && (
-            <a href={`tel:${event.phone.replace(/\D/g, "")}`} className="block text-[#d4af37] hover:text-[#f0d78c] transition">
+            <a
+              href={`tel:${event.phone.replace(/\D/g, "")}`}
+              className="block text-[#e8c96b] transition hover:text-[#f0d78c]"
+            >
               📞 {event.phone}
             </a>
           )}
           {event.ageRestriction && <p>🔞 {event.ageRestriction}</p>}
         </div>
 
-        {event.description && (
-          <p className="mt-6 text-zinc-400">{event.description}</p>
-        )}
+        {event.description && <p className="mt-6 text-zinc-400">{event.description}</p>}
 
         <div className="mt-8 space-y-3">
-          {reserveStatus === "success" && (
-            <div className="py-4 px-4 bg-[#d4af37]/20 border border-[#d4af37]/50 rounded-xl text-[#d4af37] text-center">
-              ✅ ההזמנה נשלחה בהצלחה!
+          <form onSubmit={handleReserve} className={`space-y-4 p-5 ${clubingGlassCard}`}>
+            <h3 className="font-semibold text-white">הזמן מקום</h3>
+            <div>
+              <label className="mb-1 block text-sm text-zinc-400">כמה אנשים</label>
+              <input
+                type="number"
+                min={1}
+                max={20}
+                value={numPeople}
+                onChange={(e) => setNumPeople(e.target.value)}
+                required
+                className={clubingInput}
+              />
             </div>
-          )}
-          <form onSubmit={handleReserve} className="p-4 bg-[#111111] border border-[#d4af37]/30 rounded-xl space-y-4">
-              <h3 className="text-white font-semibold">הזמן מקום</h3>
-              <div>
-                <label className="block text-zinc-400 text-sm mb-1">כמה אנשים</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="20"
-                  value={numPeople}
-                  onChange={(e) => setNumPeople(e.target.value)}
-                  required
-                  className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#d4af37]/40 rounded-xl text-white focus:border-[#d4af37]/70 focus:ring-1 focus:ring-[#d4af37]/30"
-                />
-              </div>
-              <div>
-                <label className="block text-zinc-400 text-sm mb-1">טלפון</label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  required
-                  placeholder="050-1234567"
-                  className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#d4af37]/40 rounded-xl text-white placeholder-zinc-500 focus:border-[#d4af37]/70"
-                />
-              </div>
-              <div>
-                <label className="block text-zinc-400 text-sm mb-1">מייל</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  placeholder="email@example.com"
-                  className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#d4af37]/40 rounded-xl text-white placeholder-zinc-500 focus:border-[#d4af37]/70"
-                />
-              </div>
-              <label className="flex items-center gap-3 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={over18}
-                  onChange={(e) => setOver18(e.target.checked)}
-                  required
-                  className="w-5 h-5 rounded border-[#d4af37]/40 bg-[#0a0a0a] text-[#d4af37] focus:ring-[#d4af37]"
-                />
-                <span className="text-zinc-300">אני מאשר/ת שמעל גיל 18</span>
-              </label>
-              <div className="flex gap-2">
-                <button
-                  type="submit"
-                  disabled={!over18 || reserveStatus === "loading"}
-                  className="flex-1 py-3 bg-[#d4af37] hover:bg-[#f0d78c] disabled:opacity-50 text-[#0a0a0a] rounded-xl font-semibold transition"
-                >
-                  {reserveStatus === "loading" ? "שולח..." : "שלח הזמנה"}
-                </button>
-              </div>
-            </form>
+            <div>
+              <label className="mb-1 block text-sm text-zinc-400">טלפון</label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+                placeholder="050-1234567"
+                className={clubingInput}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm text-zinc-400">מייל</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="email@example.com"
+                className={clubingInput}
+              />
+            </div>
+            <label className="flex cursor-pointer select-none items-center gap-3">
+              <input
+                type="checkbox"
+                checked={over18}
+                onChange={(e) => setOver18(e.target.checked)}
+                required
+                className="h-5 w-5 rounded border-[#d4af37]/40 bg-black/50 text-[#d4af37] focus:ring-[#d4af37]"
+              />
+              <span className="text-zinc-300">אני מאשר/ת שמעל גיל 18</span>
+            </label>
+            <button
+              type="submit"
+              disabled={!over18 || reserveStatus === "loading"}
+              className={`${clubingGoldCta} flex-1`}
+            >
+              {reserveStatus === "loading" ? "שולח..." : "שלח הזמנה"}
+            </button>
+          </form>
           {event.ticketLink && !event.ticketLink.includes("example.com") && (
             <a
               href={event.ticketLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full py-4 bg-[#d4af37] hover:bg-[#f0d78c] text-[#0a0a0a] text-center rounded-xl font-semibold transition"
+              className={`block w-full py-4 text-center ${clubingGoldCta}`}
             >
               רכישת כרטיסים
             </a>
           )}
           <div className="space-y-2">
-            <p className="text-zinc-500 text-sm">שתף חבר</p>
+            <p className="text-sm text-zinc-500">את מי לעדכן?</p>
             <div className="flex gap-2">
               <a
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 py-3 border border-zinc-700 text-zinc-400 rounded-xl hover:text-white hover:border-[#25D366] hover:bg-[#25D366]/10 transition flex items-center justify-center gap-2"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#d4af37]/25 bg-zinc-950/45 py-3 text-zinc-400 backdrop-blur-sm transition hover:border-[#25D366] hover:bg-[#25D366]/10 hover:text-white"
               >
-                <WhatsAppIcon className="w-6 h-6" />
+                <WhatsAppIcon className="h-6 w-6" />
                 וואטסאפ
               </a>
               <a
                 href={smsUrl}
-                className="flex-1 py-3 border border-[#d4af37]/40 text-zinc-400 rounded-xl hover:text-white hover:border-[#d4af37]/70 transition flex items-center justify-center gap-2"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#d4af37]/35 py-3 text-zinc-400 transition hover:border-[#d4af37] hover:text-white"
               >
-                <SMSIcon className="w-6 h-6" />
+                <SMSIcon className="h-6 w-6" />
                 SMS
               </a>
             </div>
           </div>
         </div>
       </div>
-      </div>
-    </div>
+    </ClubingPageShell>
   );
 }

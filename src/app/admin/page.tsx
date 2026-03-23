@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AdminCalendar } from "@/components/AdminCalendar";
+import { ClubingPageShell } from "@/components/ClubingPageShell";
+import { ClubingHeading } from "@/components/ClubingHeading";
+import { clubingGlassPanel, clubingListRow, clubingMutedLink } from "@/lib/clubing-ui";
 
 interface EventItem {
   id: string;
@@ -63,44 +66,41 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <div className="animate-spin w-12 h-12 border-2 border-[#d4af37] border-t-transparent rounded-full" />
-      </div>
+      <ClubingPageShell contentClassName="flex min-h-screen items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-2 border-[#d4af37] border-t-transparent" />
+      </ClubingPageShell>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-6">
-        <p className="text-[#d4af37]">{error}</p>
-      </div>
+      <ClubingPageShell contentClassName="flex min-h-screen items-center justify-center px-6">
+        <p className="text-[#e8c96b]">{error}</p>
+      </ClubingPageShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold text-white">CRM – ניהול מועדונים</h1>
-          <button
-            onClick={handleLogout}
-            className="text-zinc-500 text-sm hover:text-white transition"
-          >
+    <ClubingPageShell contentClassName="px-4 py-8">
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-8 flex items-center justify-between">
+          <ClubingHeading size="lg">CRM – ניהול מועדונים</ClubingHeading>
+          <button type="button" onClick={handleLogout} className={`text-sm ${clubingMutedLink}`}>
             התנתק
           </button>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-[#111111] border border-[#d4af37]/30 rounded-2xl p-6">
-            <p className="text-zinc-500 text-sm mb-1">סה״כ הזמנות</p>
+        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className={`p-6 ${clubingGlassPanel}`}>
+            <p className="mb-1 text-sm text-zinc-500">סה״כ הזמנות</p>
             <p className="text-3xl font-bold text-white">{totalReservations}</p>
           </div>
-          <div className="bg-[#111111] border border-[#d4af37]/30 rounded-2xl p-6">
-            <p className="text-zinc-500 text-sm mb-1">סה״כ אנשים</p>
+          <div className={`p-6 ${clubingGlassPanel}`}>
+            <p className="mb-1 text-sm text-zinc-500">סה״כ אנשים</p>
             <p className="text-3xl font-bold text-white">{totalPeople}</p>
           </div>
-          <div className="bg-[#111111] border border-[#d4af37]/30 rounded-2xl p-6">
-            <p className="text-zinc-500 text-sm mb-1">סה״כ מועדונים</p>
+          <div className={`p-6 ${clubingGlassPanel}`}>
+            <p className="mb-1 text-sm text-zinc-500">סה״כ מועדונים</p>
             <p className="text-3xl font-bold text-white">{totalVenues}</p>
           </div>
         </div>
@@ -115,9 +115,9 @@ export default function AdminPage() {
 
         {recentReservations.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-lg font-semibold text-white mb-4">הזמנות אחרונות</h2>
-            <div className="bg-[#111111] border border-[#d4af37]/30 rounded-xl overflow-hidden">
-              <div className="divide-y divide-[#d4af37]/20 max-h-48 overflow-y-auto">
+            <h2 className="mb-4 text-lg font-semibold text-gradient-gold">הזמנות אחרונות</h2>
+            <div className={`overflow-hidden ${clubingGlassPanel}`}>
+              <div className="max-h-48 divide-y divide-[#d4af37]/20 overflow-y-auto">
                 {recentReservations.slice(0, 10).map((r) => (
                   <Link
                     key={r.id}
@@ -140,16 +140,16 @@ export default function AdminPage() {
           </div>
         )}
 
-        <h2 className="text-lg font-semibold text-white mb-4">כל המועדונים והאירועים</h2>
+        <h2 className="mb-4 text-lg font-semibold text-gradient-gold">כל המועדונים והאירועים</h2>
         <div className="space-y-3">
           {events.length === 0 ? (
-            <p className="text-zinc-500 text-center py-12">אין אירועים במערכת</p>
+            <p className="py-12 text-center text-zinc-500">אין אירועים במערכת</p>
           ) : (
             events.map((e) => (
               <Link
                 key={e.id}
                 href={`/admin/events/${e.id}`}
-                className="block bg-[#111111] border border-[#d4af37]/30 rounded-xl p-4 hover:border-[#d4af37]/50 transition"
+                className={`block p-4 ${clubingListRow}`}
               >
                 <div className="flex gap-4 items-center">
                   {e.imageUrl && (
@@ -177,13 +177,10 @@ export default function AdminPage() {
           )}
         </div>
 
-        <Link
-          href="/results"
-          className="block text-center text-zinc-500 text-sm mt-8 hover:text-white transition"
-        >
+        <Link href="/results" className={`mt-8 block text-center text-sm ${clubingMutedLink}`}>
           ← חזרה לאתר
         </Link>
       </div>
-    </div>
+    </ClubingPageShell>
   );
 }

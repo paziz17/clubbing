@@ -1,5 +1,7 @@
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import bcrypt from "bcryptjs";
+import Credentials from "next-auth/providers/credentials";
 import Facebook from "next-auth/providers/facebook";
 import Google from "next-auth/providers/google";
 import Instagram from "next-auth/providers/instagram";
@@ -42,6 +44,35 @@ if (process.env.AUTH_INSTAGRAM_ID && process.env.AUTH_INSTAGRAM_SECRET) {
     })
   );
 }
+
+providers.push(
+  Credentials({
+    id: "credentials",
+    name: "credentials",
+    credentials: {
+      email: { label: "Email", type: "email" },
+      password: { label: "Password", type: "password" },
+    },
+    async authorize(credentials) {
+      const email = String(credentials?.email ?? "")
+        .toLowerCase()
+        .trim();
+      const password = String(credentials?.password ?? "");
+      if (!email || !password) return null;
+      const user = await prisma.user.findUnique({ where: { email } });
+      if (!user?.passwordHash) return null;
+      const match = await bcrypt.compare(password, user.passwordHash);
+      if (!match) return null;
+      if (!user.emailVerified) return null;
+      return {
+        id: user.id,
+        email: user.email ?? "",
+        name: user.name,
+        image: user.image,
+      };
+    },
+  })
+);
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,

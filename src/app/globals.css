@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0a;
-  --foreground: #d4af37;
-  --card: #111111;
+  --background: #000000;
+  --foreground: #e8c96b;
+  --card: #0a0a0a;
   --gold: #d4af37;
   --gold-light: #f0d78c;
   --gold-dim: rgba(212, 175, 55, 0.3);
@@ -17,15 +17,16 @@
 
 body {
   background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-montserrat), system-ui, sans-serif;
+  color: #d4d4d8;
+  font-family: var(--font-clubing), system-ui, "Segoe UI", sans-serif;
 }
 
 .text-gold {
   color: var(--gold);
 }
+/* גרדיאנט זהב אנכי — שפה ויזואלית אחידה */
 .text-gradient-gold {
-  background: linear-gradient(135deg, #d4af37, #f0d78c);
+  background: linear-gradient(180deg, #f5e6a8 0%, #d4af37 48%, #9a7320 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -36,3 +37,76 @@ body {
 .bg-gold {
   background-color: var(--gold);
 }
+
+/* עמוד interests — כניסה עדינה לצ'יפים */
+@keyframes interests-chip-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.interests-chip-in {
+  animation: interests-chip-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+}
+
+/* מעבר ספלאש → התחברות */
+@keyframes clubing-auth-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+    filter: brightness(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: brightness(1);
+  }
+}
+
+.clubing-auth-enter {
+  animation: clubing-auth-enter 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clubing-auth-enter {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* הזמנה נשלחה — V ירוק מהבהב */
+@keyframes reserve-success-check-blink {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: brightness(1) drop-shadow(0 0 6px rgba(34, 197, 94, 0.65));
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(1.06);
+    filter: brightness(1.2) drop-shadow(0 0 14px rgba(74, 222, 128, 0.95));
+  }
+}
+
+.reserve-success-check {
+  animation: reserve-success-check-blink 1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reserve-success-check {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+

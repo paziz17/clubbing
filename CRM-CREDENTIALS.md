@@ -1,4 +1,4 @@
-# פרטי התחברות ל-CRM — Clubbing
+# פרטי התחברות ל-CRM — Clubing
 
 > **כתובת האתר:** https://clubbing-two.vercel.app
 
@@ -16,21 +16,23 @@
 
 ## מועדוני דמו (CRM לכל מועדון)
 
-### Demo Club
+### Gold Room TLV
 
 | שדה | ערך |
 |-----|-----|
 | **קישור** | https://clubbing-two.vercel.app/venue/login |
-| **שם משתמש** | `democlub` |
-| **סיסמה** | `demo123` |
+| **שם משתמש** | `goldroom` |
+| **סיסמה** | `club123` |
 
-### The Block
+### Basement Jaffa
 
 | שדה | ערך |
 |-----|-----|
 | **קישור** | https://clubbing-two.vercel.app/venue/login |
-| **שם משתמש** | `theblock` |
-| **סיסמה** | `block123` |
+| **שם משתמש** | `basementjaffa` |
+| **סיסמה** | `club123` |
+
+(ישנם גם כינויים ישנים: `democlub`/`demo123`, `theblock`/`block123`.)
 
 ---
 

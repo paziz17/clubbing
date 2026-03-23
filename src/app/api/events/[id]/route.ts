@@ -12,10 +12,15 @@ export async function GET(
   if (demo) return NextResponse.json(demo);
 
   try {
-    const event = await prisma.event.findUnique({ where: { id } });
-    if (!event) return NextResponse.json({ error: "לא נמצא" }, { status: 404 });
+    const row = await prisma.event.findUnique({
+      where: { id },
+      include: { venue: { select: { name: true } } },
+    });
+    if (!row) return NextResponse.json({ error: "לא נמצא" }, { status: 404 });
+    const { venue, ...event } = row;
     return NextResponse.json({
       ...event,
+      venueName: venue?.name ?? null,
       tags: JSON.parse(event.tags || "[]"),
       date: event.date.toISOString(),
     });

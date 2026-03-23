@@ -1,11 +1,5 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# מונוריפו — אפליקציית NightLife Loyalty
-/nightlife-loyalty/node_modules
-/nightlife-loyalty/.next
-/nightlife-loyalty/.env
-/nightlife-loyalty/.vercel
-
 # dependencies
 /node_modules
 /.pnp
@@ -29,10 +23,10 @@
 # misc
 .DS_Store
 *.pem
-client_secret*.json
 
-# database
+# sqlite (מקומי בלבד — בפרודקשן Postgres וכו׳)
 *.db
+prisma/dev.db
 prisma/*.db
 
 # debug
@@ -43,8 +37,6 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
-!.env.example
-.env.vercel
 
 # vercel
 .vercel

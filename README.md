@@ -2,6 +2,26 @@
 
 אפליקציה לגילוי אירועים, מסיבות ומועדונים בהתאם לטעם האישי. גרסה 1.0
 
+## מונוריפו (שני פרויקטים באותו מאגר)
+
+| תיקייה | תיאור |
+|--------|--------|
+| **שורש המאגר** (`./`) | אפליקציית **Clubing** (Next.js) — גילוי אירועים, CRM, התחברות |
+| **`nightlife-loyalty/`** | אפליקציית **NightLife Loyalty** — נאמנות מועדונים, Pass, ארנק, דשבורד (Next.js נפרד) |
+
+**הרצה מקומית של Loyalty:**
+
+```bash
+cd nightlife-loyalty
+cp .env.example .env   # והתאם DATABASE_URL / JWT_SECRET
+npm install
+npx prisma db push
+npm run db:seed
+npm run dev              # פורט 3000 — עצור את Clubing אם רץ על אותו פורט
+```
+
+**Vercel:** לפרויקט שני צור Deployment נפרד ובחר **Root Directory** = `nightlife-loyalty`, עם `DATABASE_URL` ו־`JWT_SECRET` (בייצור מומלץ Postgres במקום SQLite).
+
 ## הרצה
 
 ```bash

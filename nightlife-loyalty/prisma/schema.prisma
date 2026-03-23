@@ -1,0 +1,212 @@
+// NightLife Loyalty Platform - MVP Schema
+// Based on SRS Document v1.0
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  active
+  blocked
+}
+
+enum PassStatus {
+  created
+  checked_in
+  expired
+  canceled
+}
+
+enum LedgerType {
+  EARN
+  REDEEM
+  ADJUST
+  EXPIRE
+}
+
+enum StaffRole {
+  owner
+  manager
+  host
+  bar
+}
+
+enum UserTier {
+  Light
+  Regular
+  Heavy
+  VIP
+}
+
+model User {
+  id              String    @id @default(uuid())
+  phone           String    @unique
+  name            String
+  email           String?
+  birthdate       DateTime
+  gender          String?
+  city            String?
+  profilePhotoUrl String?
+  status          UserStatus @default(active)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  passes          Pass[]
+  visits          Visit[]
+  transactions    Transaction[]
+  creditLedger    CreditLedger[]
+  clubStaff       ClubStaff[]
+  vouchers        Voucher[]
+}
+
+model Club {
+  id              String   @id @default(uuid())
+  name            String
+  location        String?
+  earnRate        Float    @default(0.05)  // 5%
+  expirationDays Int      @default(30)
+  minRedeem       Int?
+  tierThresholds  String?  // JSON
+  createdAt       DateTime @default(now())
+
+  passes          Pass[]
+  visits          Visit[]
+  transactions    Transaction[]
+  clubStaff       ClubStaff[]
+  creditLedger    CreditLedger[]
+}
+
+model ClubStaff {
+  id        String    @id @default(uuid())
+  userId    String
+  clubId    String
+  role      StaffRole
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  club Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  transactions Transaction[]
+
+  @@unique([userId, clubId])
+}
+
+model Pass {
+  id          String     @id @default(uuid())
+  clubId      String
+  userId      String
+  visitDate   DateTime
+  startTime   DateTime
+  endTime     DateTime
+  status      PassStatus @default(created)
+  qrTokenHash String     // SHA-256 hash only
+  createdAt   DateTime   @default(now())
+
+  club   Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  visit  Visit?
+}
+
+model Visit {
+  id           String    @id @default(uuid())
+  passId       String    @unique
+  clubId       String
+  userId       String
+  checkInTime  DateTime  @default(now())
+  checkoutTime DateTime?
+
+  pass         Pass          @relation(fields: [passId], references: [id], onDelete: Cascade)
+  club         Club          @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+}
+
+model Transaction {
+  id               String   @id @default(uuid())
+  visitId          String?
+  clubId           String
+  userId           String
+  amount           Float    // positive
+  receiptId        String?
+  createdByStaffId String?
+  createdAt        DateTime @default(now())
+
+  visit  Visit?    @relation(fields: [visitId], references: [id], onDelete: SetNull)
+  club   Club      @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  staff  ClubStaff? @relation(fields: [createdByStaffId], references: [id], onDelete: SetNull)
+}
+
+model CreditLedger {
+  id             String     @id @default(uuid())
+  userId         String
+  clubId         String
+  type           LedgerType
+  amount         Int        // positive for EARN/ADJUST, negative for REDEEM/EXPIRE
+  balanceAfter   Int?       // snapshot
+  expirationDate DateTime?
+  meta           String?    // JSON: campaign_id, note, etc.
+  createdAt       DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  club Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
+}
+
+model Voucher {
+  id        String   @id @default(uuid())
+  userId    String
+  clubId    String
+  code      String   @unique
+  credits   Int
+  used      Boolean  @default(false)
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Campaign {
+  id          String   @id @default(uuid())
+  clubId      String
+  name        String
+  filters     String   // JSON
+  action      String   // grant_bonus_credits | send_message
+  actionMeta  String?  // JSON: credits amount, message, etc.
+  runCount    Int      @default(0)
+  createdAt   DateTime @default(now())
+  runAt       DateTime?
+}
+
+model UserBalance {
+  id        String   @id @default(uuid())
+  userId    String
+  clubId    String
+  balance   Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, clubId])
+}
+
+model OtpAttempt {
+  id        String   @id @default(uuid())
+  phone     String
+  code      String
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  userId    String?
+  clubId    String?
+  meta      String?  // JSON
+  createdAt DateTime @default(now())
+}

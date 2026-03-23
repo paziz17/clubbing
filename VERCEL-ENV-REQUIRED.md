@@ -25,6 +25,7 @@
 
 | משתנה | שימוש |
 |-------|--------|
+| `NEXT_PUBLIC_DEV_LOGIN` | `true` — כפתור «כניסה בתור מפתח» גם מחוץ ל־`*.vercel.app`. `false` — לכבות גם ב־Vercel (ב־`*.vercel.app` הכפתור מופיע אוטומטית בלי המשתנה) |
 | `AUTH_FACEBOOK_ID`, `AUTH_FACEBOOK_SECRET` | התחברות עם Facebook |
 | `AUTH_INSTAGRAM_ID`, `AUTH_INSTAGRAM_SECRET` | התחברות עם Instagram |
 | `FACEBOOK_ACCESS_TOKEN`, `FACEBOOK_PAGE_IDS` | סנכרון אירועים מ-Facebook |

@@ -8,7 +8,7 @@ import { FacebookIcon, GoogleIcon, InstagramIcon } from "@/components/SocialIcon
 import { ClubingHeroBackground } from "@/components/ClubingHeroBackground";
 import { ClubingHeading } from "@/components/ClubingHeading";
 import { clubingChoiceButton, clubingGlassCard, clubingGoldCta, clubingInput } from "@/lib/clubing-ui";
-import { isDevLoginEnabled } from "@/lib/dev-login";
+import { isDevLoginAllowedOnHost, isDevLoginEnabled } from "@/lib/dev-login";
 import { consumePostAuthRedirect } from "@/lib/post-auth-redirect";
 
 type Flow = "choose" | "existing" | "new" | "verify";
@@ -56,7 +56,13 @@ function AuthInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { signInWithProvider, signInWithEmailPassword, loginDeveloper } = useAuth();
-  const devLoginEnabled = isDevLoginEnabled();
+  const [devLoginEnabled, setDevLoginEnabled] = useState(isDevLoginEnabled());
+
+  useEffect(() => {
+    if (devLoginEnabled) return;
+    if (typeof window === "undefined") return;
+    if (isDevLoginAllowedOnHost(window.location.hostname)) setDevLoginEnabled(true);
+  }, [devLoginEnabled]);
   const { t } = useLanguage();
   const [flow, setFlow] = useState<Flow>("choose");
   const [providersReady, setProvidersReady] = useState<boolean | null>(null);

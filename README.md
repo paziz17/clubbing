@@ -30,6 +30,42 @@ npm run db:seed   # יצירת אירועי דמו
 npm run dev       # http://localhost:3000
 ```
 
+## אפליקציות נייטיב (iPhone ו־Android) — Capacitor
+
+במאגר קיימות תיקיות **`ios/`** ו־**`android/`**: מעטפת **אפליקציה אמיתית** שטוענת את אותו אתר מהשרת (ברירת מחדל: `https://clubbing-two.vercel.app`).  
+אין שכפול לוגיקה — זה WebView מלא מסך מול ה-Next.js ב-Vercel; אפשר לפרסם ב-**App Store** ו-**Google Play** אחרי חתימה והגשה.
+
+**דרישות:** macOS עם **Xcode** (לאייפון), **Android Studio** + JDK (לאנדרואיד).
+
+```bash
+npm install
+npm run mobile:sync          # מעתיק את www + מגדיר את capacitor.config
+npm run mobile:open:ios      # פותח Xcode — בחר מכשיר/Simulator ולחץ Run
+npm run mobile:open:android  # פותח Android Studio — Gradle Sync ואז Run
+```
+
+**פיתוח מול שרת מקומי** (אותה רשת Wi‑Fi כמו הטלפון):
+
+```bash
+# בטרמינל אחר: npm run dev
+export CAP_SERVER_URL="http://YOUR_LAN_IP:3000"
+export CAP_ALLOW_CLEARTEXT="true"   # HTTP מקומי בלי SSL
+npm run mobile:sync
+```
+
+עריכת כתובת השרת הקבועה: קובץ `capacitor.config.ts` (משתנה `CAP_SERVER_URL` או ברירת מחדל בקוד).
+
+## אפליקציית ווב על המסך הבית (PWA) — ללא חנות
+
+האתר מוגדר גם כ־**PWA**: התקנה מהדפדפן בלי App Store / Play.
+
+| פלטפורמה | איך |
+|----------|-----|
+| **Android (Chrome)** | תפריט ⋮ → **התקן אפליקציה** / **Add to Home screen**. |
+| **iPhone (Safari)** | שיתוף ↑ → **הוסף למסך הבית**. |
+
+קובץ `public/sw.js` + `PwaRegister`; אייקונים ב־`public/icons/`.
+
 ## התחברות אמיתית (OAuth)
 
 כדי להפעיל התחברות עם Facebook, Google או Instagram, הוסף ל-`.env`:

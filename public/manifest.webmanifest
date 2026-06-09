@@ -1,0 +1,41 @@
+{
+  "name": "CLUBBING — Tel Aviv Nightlife",
+  "short_name": "CLUBBING",
+  "description": "פלטפורמת חיי הלילה — אירועים, כרטיסים, Club-it loyalty",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#06060A",
+  "theme_color": "#D4AF37",
+  "lang": "he",
+  "dir": "rtl",
+  "scope": "/",
+  "categories": ["entertainment", "lifestyle"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "אירועי הערב",
+      "short_name": "הערב",
+      "url": "/results",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Club-it Wallet",
+      "short_name": "Wallet",
+      "url": "/club-it/wallet"
+    }
+  ]
+}

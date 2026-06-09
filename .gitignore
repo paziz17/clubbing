@@ -1,0 +1,17 @@
+node_modules/
+.next/
+out/
+build/
+.vercel/
+.env
+.env.local
+.env.production
+*.log
+.DS_Store
+android/
+ios/
+*.apk
+*.aab
+.idea/
+.vscode/
+prisma/migrations/

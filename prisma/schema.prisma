@@ -1,0 +1,681 @@
+// CLUBBING — Prisma schema (v1.3, May 2026) · LOCAL-ONLY SQLite
+// No external services required. DB file lives at prisma/dev.db.
+//
+// Enums and string arrays are represented as plain strings (CSV) since
+// SQLite via Prisma doesn't support them natively. TypeScript types are
+// defined in src/lib/enums.ts and runtime-validated where needed.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+//  IDENTITY  (NextAuth-compatible + Venue staff)
+// ============================================================
+
+model User {
+  id                String   @id @default(cuid())
+  email             String?  @unique
+  emailVerified     DateTime?
+  name              String?
+  image             String?
+  phone             String?  @unique
+  // role: BLINER | VENUE_OWNER | BAR_STAFF | ADMIN
+  role              String   @default("BLINER")
+  // gender: MALE | FEMALE | OTHER | UNSPECIFIED
+  gender            String   @default("UNSPECIFIED")
+  birthDate         DateTime?
+  city              String?
+  instagramHandle   String?
+  isGuest           Boolean  @default(false)
+  // preferencesJson stored as JSON string
+  preferencesJson   String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  accounts          Account[]
+  sessions          Session[]
+  clubItCard        ClubItCard?
+  reservations      Reservation[]
+  transactions      Transaction[]
+  reviews           VenueReview[]
+  checkIns          CheckIn[]
+  exclusiveApps     ExclusiveApplication[]
+  artistFollows     ArtistFollow[]
+  foodOrders        FoodOrder[]
+  venuesOwned       Venue[]    @relation("VenueOwner")
+  campaignsSent     Campaign[] @relation("CampaignAuthor")
+
+  @@index([phone])
+  @@index([role])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================================
+//  VENUE  +  CRM
+// ============================================================
+
+model Venue {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  name          String
+  username      String   @unique
+  passwordHash  String
+  description   String?
+  address       String
+  city          String
+  lat           Float?
+  lng           Float?
+  logoUrl       String?
+  coverUrl      String?
+  isExclusive   Boolean  @default(false)
+  kitchenEnabled Boolean @default(false)
+  ownerId       String?
+  owner         User?    @relation("VenueOwner", fields: [ownerId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  totpSecret    String?  // TOTP 2FA secret (base32)
+  totpEnabled   Boolean  @default(false)
+  phone         String?  // phone number for SMS OTP (e.g. +972501234567)
+  smsOtpEnabled Boolean  @default(false)
+
+  events        Event[]
+  reservations  Reservation[]
+  transactions  Transaction[]
+  reviews       VenueReview[]
+  checkIns      CheckIn[]
+  exclusiveApps ExclusiveApplication[]
+  campaigns     Campaign[]
+  settings      VenueSettings?
+  foodMenu      FoodMenuItem[]
+  foodOrders    FoodOrder[]
+  artistEvents  Event[]  @relation("VenueArtistEvents")
+  balances      UserBalance[]
+  vouchers      Voucher[]
+  employees     Employee[]
+  shifts        Shift[]
+  suppliers     Supplier[]
+  inventory     InventoryItem[]
+  stockMovements StockMovement[]
+
+  @@index([city])
+  @@index([slug])
+}
+
+model VenueSettings {
+  id                       String   @id @default(cuid())
+  venueId                  String   @unique
+  venue                    Venue    @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  // creditRatePerTier stored as JSON string: { REGULAR:0.02, ... }
+  creditRatePerTier        String   @default("{\"REGULAR\":0.02,\"SILVER\":0.03,\"GOLD\":0.04,\"PLATINUM\":0.05}")
+  creditExpiryDays         Int      @default(365)
+  minRedemptionAgorot      Int      @default(5000)
+  silverThresholdAgorot    Int      @default(50000)
+  goldThresholdAgorot      Int      @default(200000)
+  platinumThresholdAgorot  Int      @default(500000)
+  updatedAt                DateTime @updatedAt
+}
+
+// ============================================================
+//  EVENTS
+// ============================================================
+
+model Event {
+  id                String      @id @default(cuid())
+  venueId           String
+  venue             Venue       @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  artistVenueId     String?
+  venueArtists      Venue?      @relation("VenueArtistEvents", fields: [artistVenueId], references: [id])
+  artistId          String?
+  artist            Artist?     @relation(fields: [artistId], references: [id])
+  name              String
+  description       String?
+  startsAt          DateTime
+  endsAt            DateTime?
+  // type: PARTY | LIVE | COCKTAILS | AFTERHOURS
+  type              String      @default("PARTY")
+  // CSV: "techno,house,..."
+  genres            String      @default("")
+  // CSV: "AGE_18_21,AGE_21_25,..."
+  ageBands          String      @default("")
+  area              String?
+  imageUrl          String?
+  basePriceAgorot   Int         @default(0)
+  capacity          Int         @default(0)
+  // status: DRAFT | PUBLISHED | ENDED
+  status            String      @default("DRAFT")
+  exclusive         Boolean     @default(false)
+  // CSV
+  tags              String      @default("")
+  lat               Float?
+  lng               Float?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  tickets           TicketType[]
+  reservations      Reservation[]
+  exclusiveApps     ExclusiveApplication[]
+  reviews           VenueReview[]
+  shifts            Shift[]
+
+  @@index([venueId])
+  @@index([status, startsAt])
+  @@index([startsAt])
+}
+
+model TicketType {
+  id              String   @id @default(cuid())
+  eventId         String
+  event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  kind            String   // STANDARD | VIP | EARLY_BIRD
+  label           String
+  priceAgorot     Int
+  benefitsJson    String?
+  stock           Int?
+  sold            Int      @default(0)
+  active          Boolean  @default(true)
+
+  reservations    Reservation[]
+}
+
+// ============================================================
+//  RESERVATIONS / TICKETS
+// ============================================================
+
+model Reservation {
+  id              String      @id @default(cuid())
+  ticketCode      String      @unique @default(cuid())
+  qrCode          String?
+  userId          String?
+  user            User?       @relation(fields: [userId], references: [id])
+  guestName       String?
+  guestPhone      String?
+  guestEmail      String?
+  venueId         String
+  venue           Venue       @relation(fields: [venueId], references: [id])
+  eventId         String
+  event           Event       @relation(fields: [eventId], references: [id])
+  ticketTypeId    String?
+  ticketType      TicketType? @relation(fields: [ticketTypeId], references: [id])
+  quantity        Int         @default(1)
+  amountAgorot    Int
+  feeAgorot       Int         @default(0)
+  vatAgorot       Int         @default(0)
+  totalAgorot     Int
+  // status: PENDING | PAID | FAILED | REFUNDED | CANCELLED
+  status          String      @default("PENDING")
+  // paymentMethod: STRIPE_CARD | APPLE_PAY | GOOGLE_PAY | CLUB_IT | CREDITS | MIXED | DEMO
+  paymentMethod   String?
+  paymentRef      String?
+  creditsEarned   Int         @default(0)
+  creditsSpent    Int         @default(0)
+  skippedAuth     Boolean     @default(false)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  transaction     Transaction?
+
+  @@index([userId])
+  @@index([eventId])
+  @@index([status])
+}
+
+// ============================================================
+//  CLUB-IT  —  LOYALTY  PROGRAMME
+// ============================================================
+
+model ClubItCard {
+  id              String      @id @default(cuid())
+  userId          String      @unique
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cardNumberLast4 String
+  stripeCardId    String?
+  displayName     String
+  // tier: REGULAR | SILVER | GOLD | PLATINUM
+  tier            String      @default("REGULAR")
+  totalSpentAgorot Int        @default(0)
+  issuedAt        DateTime    @default(now())
+  isActive        Boolean     @default(true)
+
+  balances        UserBalance[]
+  ledger          CreditLedger[]
+  tierEvents      TierEvent[]
+  vouchers        Voucher[]
+
+  @@index([tier])
+}
+
+model UserBalance {
+  id                String   @id @default(cuid())
+  cardId            String
+  card              ClubItCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  venueId           String
+  venue             Venue    @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  creditsBalance    Int      @default(0)
+  creditsAccrued    Int      @default(0)
+  creditsRedeemed   Int      @default(0)
+  updatedAt         DateTime @updatedAt
+
+  @@unique([cardId, venueId])
+}
+
+model CreditLedger {
+  id              String      @id @default(cuid())
+  cardId          String
+  card            ClubItCard  @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  venueId         String
+  // kind: EARN_PURCHASE | EARN_BUMP | REDEEM_BAR | REDEEM_FOOD | EXPIRE | ADJUST
+  kind            String
+  amount          Int
+  ref             String?
+  note            String?
+  createdAt       DateTime    @default(now())
+
+  @@index([cardId, createdAt])
+}
+
+model TierEvent {
+  id          String      @id @default(cuid())
+  cardId      String
+  card        ClubItCard  @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  fromTier    String
+  toTier      String
+  createdAt   DateTime    @default(now())
+}
+
+// ============================================================
+//  VOUCHERS
+// ============================================================
+
+model Voucher {
+  id            String      @id @default(cuid())
+  code          String      @unique
+  cardId        String
+  card          ClubItCard  @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  venueId       String
+  venue         Venue       @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  amountAgorot  Int
+  // status: ACTIVE | REDEEMED | EXPIRED | CANCELLED
+  status        String      @default("ACTIVE")
+  qrPayload     String
+  expiresAt     DateTime
+  redeemedAt    DateTime?
+  redeemedBy    String?
+  createdAt     DateTime    @default(now())
+
+  @@index([venueId, status])
+}
+
+// ============================================================
+//  TRANSACTIONS  (unified ledger for CRM)
+// ============================================================
+
+model Transaction {
+  id                 String       @id @default(cuid())
+  reservationId      String?      @unique
+  reservation        Reservation? @relation(fields: [reservationId], references: [id])
+  userId             String?
+  user               User?        @relation(fields: [userId], references: [id])
+  venueId            String
+  venue              Venue        @relation(fields: [venueId], references: [id])
+  amountAgorot       Int
+  creditsDelta       Int          @default(0)
+  paymentMethod      String       @default("DEMO")
+  paymentProvider    String?
+  externalRef        String?
+  status             String       @default("PAID")
+  createdAt          DateTime     @default(now())
+
+  @@index([venueId, createdAt])
+}
+
+// ============================================================
+//  CAMPAIGNS  (Club Bot — WhatsApp)
+// ============================================================
+
+model Campaign {
+  id           String       @id @default(cuid())
+  venueId      String
+  venue        Venue        @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  authorId     String?
+  author       User?        @relation("CampaignAuthor", fields: [authorId], references: [id])
+  // kind: CHASER_50 | FREE_ENTRY_WOMEN | FREE_FIRST_DRINK_WOMEN_18 | CUSTOM
+  kind         String
+  message      String
+  // audience: ALL_MEMBERS | WOMEN_ONLY | MEN_ONLY | SILVER_AND_UP
+  audience     String
+  recipients   Int          @default(0)
+  delivered    Int          @default(0)
+  // status: DRAFT | SENDING | SENT | FAILED
+  status       String       @default("DRAFT")
+  templateMeta String?
+  createdAt    DateTime     @default(now())
+  sentAt       DateTime?
+
+  @@index([venueId])
+}
+
+// ============================================================
+//  REVIEWS  (Part IV — venue rating → CRM)
+// ============================================================
+
+model VenueReview {
+  id          String     @id @default(cuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id])
+  venueId     String
+  venue       Venue      @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  eventId     String?
+  event       Event?     @relation(fields: [eventId], references: [id])
+  stars       Int
+  // categories stored as JSON string: { ambiance, music, service, value, bars }
+  categories  String     @default("{}")
+  comment     String?
+  // crmStatus: UNREAD | READ | HANDLED
+  crmStatus   String     @default("UNREAD")
+  createdAt   DateTime   @default(now())
+
+  @@index([venueId, createdAt])
+}
+
+// ============================================================
+//  BUMP — "I'M HERE" check-in
+// ============================================================
+
+model CheckIn {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  venueId         String
+  venue           Venue    @relation(fields: [venueId], references: [id])
+  lat             Float
+  lng             Float
+  buddyCount      Int      @default(0)
+  creditsEarned   Int      @default(0)
+  createdAt       DateTime @default(now())
+
+  @@index([venueId, createdAt])
+  @@index([userId, createdAt])
+}
+
+// ============================================================
+//  EXCLUSIVE  CLUB
+// ============================================================
+
+model ExclusiveApplication {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  venueId         String
+  venue           Venue    @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  eventId         String?
+  event           Event?   @relation(fields: [eventId], references: [id])
+  snapshotName    String
+  snapshotCity    String?
+  snapshotAge     Int?
+  snapshotImage   String?
+  snapshotInstagram String?
+  // status: PENDING | APPROVED | REJECTED | EXPIRED
+  status          String   @default("PENDING")
+  rejectionReason String?
+  appliedAt       DateTime @default(now())
+  decidedAt       DateTime?
+  decidedBy       String?
+
+  @@unique([userId, eventId])
+  @@index([venueId, status])
+}
+
+// ============================================================
+//  ARTISTS  +  FOLLOWS
+// ============================================================
+
+model Artist {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  bio         String?
+  imageUrl    String?
+  // CSV
+  genres      String   @default("")
+  // JSON: { instagram, spotify, soundcloud, youtube }
+  links       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  events      Event[]
+  followers   ArtistFollow[]
+
+  @@index([slug])
+}
+
+model ArtistFollow {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  artistId    String
+  artist      Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, artistId])
+}
+
+// ============================================================
+//  KITCHEN  (Part IV)
+// ============================================================
+
+model FoodMenuItem {
+  id              String   @id @default(cuid())
+  venueId         String
+  venue           Venue    @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  name            String
+  description     String?
+  // category: PIZZA | STARTER | MAIN | DRINK | DESSERT
+  category        String
+  priceAgorot     Int
+  prepMinutes     Int      @default(15)
+  imageUrl        String?
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  orderItems      FoodOrderItem[]
+  ingredients     MenuItemIngredient[]
+
+  @@index([venueId, active])
+}
+
+model FoodOrder {
+  id              String        @id @default(cuid())
+  pickupCode      String        @unique
+  userId          String?
+  user            User?         @relation(fields: [userId], references: [id])
+  venueId         String
+  venue           Venue         @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  // items snapshot JSON
+  items           String
+  subtotalAgorot  Int
+  creditsApplied  Int           @default(0)
+  cardChargedAgorot Int         @default(0)
+  paymentMethod   String        @default("STRIPE_CARD")
+  // status: PENDING | PREPARING | READY | COLLECTED | CANCELLED
+  status          String        @default("PENDING")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  orderItems      FoodOrderItem[]
+
+  @@index([venueId, status])
+}
+
+model FoodOrderItem {
+  id              String         @id @default(cuid())
+  orderId         String
+  order           FoodOrder      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  itemId          String
+  item            FoodMenuItem   @relation(fields: [itemId], references: [id])
+  qty             Int
+  unitPriceAgorot Int
+}
+
+// ============================================================
+//  STAFF  +  SHIFTS  (employee scheduling)
+// ============================================================
+
+model Employee {
+  id               String   @id @default(cuid())
+  venueId          String
+  venue            Venue    @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  name             String
+  phone            String?
+  email            String?
+  // role: MANAGER | BARTENDER | WAITER | SECURITY | KITCHEN | HOST | DJ | CLEANING | OTHER
+  role             String   @default("WAITER")
+  hourlyWageAgorot Int      @default(4000)
+  color            String   @default("#D4AF37")
+  active           Boolean  @default(true)
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  shifts           Shift[]
+
+  @@index([venueId, active])
+}
+
+model Shift {
+  id               String    @id @default(cuid())
+  venueId          String
+  venue            Venue     @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  employeeId       String
+  employee         Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  eventId          String?
+  event            Event?    @relation(fields: [eventId], references: [id])
+  role             String
+  startsAt         DateTime
+  endsAt           DateTime
+  // status: SCHEDULED | CONFIRMED | COMPLETED | NO_SHOW | CANCELLED
+  status           String    @default("SCHEDULED")
+  clockInAt        DateTime?
+  clockOutAt       DateTime?
+  breakMinutes     Int       @default(0)
+  hourlyWageAgorot Int       @default(4000)
+  notes            String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([venueId, startsAt])
+  @@index([employeeId, startsAt])
+}
+
+// ============================================================
+//  WAREHOUSE / INVENTORY  (smart auto-stock)
+// ============================================================
+
+model Supplier {
+  id          String   @id @default(cuid())
+  venueId     String
+  venue       Venue    @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  name        String
+  phone       String?
+  email       String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items       InventoryItem[]
+
+  @@index([venueId])
+}
+
+model InventoryItem {
+  id              String    @id @default(cuid())
+  venueId         String
+  venue           Venue     @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  name            String
+  // category: ALCOHOL | BEER | WINE | SOFT_DRINK | MIXER | FOOD | PRODUCE | MEAT | DAIRY | SUPPLIES | CLEANING | OTHER
+  category        String    @default("OTHER")
+  // unit: BOTTLE | CAN | LITER | KG | GRAM | UNIT | BOX | PACK
+  unit            String    @default("UNIT")
+  stockQty        Float     @default(0)
+  parLevel        Float     @default(0)
+  reorderQty      Float     @default(0)
+  unitCostAgorot  Int       @default(0)
+  supplierId      String?
+  supplier        Supplier? @relation(fields: [supplierId], references: [id])
+  sku             String?
+  active          Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  movements       StockMovement[]
+  menuLinks       MenuItemIngredient[]
+
+  @@index([venueId, category])
+}
+
+model StockMovement {
+  id          String        @id @default(cuid())
+  venueId     String
+  venue       Venue         @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  itemId      String
+  item        InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  // type: IN | OUT | ADJUST | WASTE | SALE_AUTO
+  type        String
+  qty         Float
+  reason      String?
+  ref         String?
+  createdAt   DateTime      @default(now())
+
+  @@index([itemId, createdAt])
+  @@index([venueId, createdAt])
+}
+
+model MenuItemIngredient {
+  id              String        @id @default(cuid())
+  menuItemId      String
+  menuItem        FoodMenuItem  @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  inventoryItemId String
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  qtyPerUnit      Float
+
+  @@unique([menuItemId, inventoryItemId])
+}

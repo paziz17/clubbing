@@ -1,0 +1,24 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [staging]
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging (51.84.188.55)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 51.84.188.55
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/ubuntu/app
+            git pull origin staging
+            npm ci --prefer-offline
+            npm run build
+            pm2 restart clubbing-staging --update-env || pm2 start npm --name "clubbing-staging" -- start -- -p 3000
+            pm2 save

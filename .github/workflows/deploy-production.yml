@@ -23,7 +23,7 @@ jobs:
             --region il-central-1 \
             --instance-ids i-07305ce7425865c83 \
             --document-name "AWS-RunShellScript" \
-            --parameters 'commands=["cd /home/ubuntu/app && git pull origin main && bash /home/ubuntu/deploy.sh"]' \
+            --parameters 'commands=["sudo -u ubuntu bash -c \"cd /home/ubuntu/app && git pull origin main && bash /home/ubuntu/deploy.sh\""]' \
             --query 'Command.CommandId' --output text)
           echo "CRM deploy command: $CMD_ID"
           aws ssm wait command-executed \
@@ -41,7 +41,7 @@ jobs:
             --region il-central-1 \
             --instance-ids i-075649e10e9cdd7ea \
             --document-name "AWS-RunShellScript" \
-            --parameters 'commands=["cd /home/ubuntu/app && git pull origin main && bash /home/ubuntu/deploy.sh"]' \
+            --parameters 'commands=["sudo -u ubuntu bash -c \"cd /home/ubuntu/app && git pull origin main && bash /home/ubuntu/deploy.sh\""]' \
             --query 'Command.CommandId' --output text)
           echo "APP deploy command: $CMD_ID"
           aws ssm wait command-executed \
@@ -59,7 +59,7 @@ jobs:
             --region il-central-1 \
             --instance-ids i-0a0702e0d5c0c118f \
             --document-name "AWS-RunShellScript" \
-            --parameters 'commands=["cd /home/ubuntu/website && git pull origin main && bash /home/ubuntu/deploy.sh"]' \
+            --parameters 'commands=["sudo -u ubuntu bash -c \"cd /home/ubuntu/website && git pull origin main && bash /home/ubuntu/deploy.sh\""]' \
             --query 'Command.CommandId' --output text)
           echo "WEB deploy command: $CMD_ID"
           aws ssm wait command-executed \

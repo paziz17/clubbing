@@ -23,17 +23,12 @@ jobs:
             --region il-central-1 \
             --instance-ids i-07305ce7425865c83 \
             --document-name "AWS-RunShellScript" \
-            --parameters 'commands=["sudo -u ubuntu bash -c \"cd /home/ubuntu/app && git pull origin main && bash /home/ubuntu/deploy.sh\""]' \
+            --parameters commands=["sudo -u ubuntu /home/ubuntu/ssm-deploy.sh"] \
             --query 'Command.CommandId' --output text)
-          echo "CRM deploy command: $CMD_ID"
-          aws ssm wait command-executed \
-            --command-id "$CMD_ID" \
-            --instance-id i-07305ce7425865c83
-          aws ssm get-command-invocation \
-            --command-id "$CMD_ID" \
-            --instance-id i-07305ce7425865c83 \
-            --query '{Status:Status,Output:StandardOutputContent}' \
-            --output table
+          echo "CRM deploy: $CMD_ID"
+          aws ssm wait command-executed --command-id "$CMD_ID" --instance-id i-07305ce7425865c83
+          aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id i-07305ce7425865c83 \
+            --query '{Status:Status,Output:StandardOutputContent}' --output table
 
       - name: Deploy App (i-075649e10e9cdd7ea)
         run: |
@@ -41,17 +36,12 @@ jobs:
             --region il-central-1 \
             --instance-ids i-075649e10e9cdd7ea \
             --document-name "AWS-RunShellScript" \
-            --parameters 'commands=["sudo -u ubuntu bash -c \"cd /home/ubuntu/app && git pull origin main && bash /home/ubuntu/deploy.sh\""]' \
+            --parameters commands=["sudo -u ubuntu /home/ubuntu/ssm-deploy.sh"] \
             --query 'Command.CommandId' --output text)
-          echo "APP deploy command: $CMD_ID"
-          aws ssm wait command-executed \
-            --command-id "$CMD_ID" \
-            --instance-id i-075649e10e9cdd7ea
-          aws ssm get-command-invocation \
-            --command-id "$CMD_ID" \
-            --instance-id i-075649e10e9cdd7ea \
-            --query '{Status:Status,Output:StandardOutputContent}' \
-            --output table
+          echo "APP deploy: $CMD_ID"
+          aws ssm wait command-executed --command-id "$CMD_ID" --instance-id i-075649e10e9cdd7ea
+          aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id i-075649e10e9cdd7ea \
+            --query '{Status:Status,Output:StandardOutputContent}' --output table
 
       - name: Deploy Website (i-0a0702e0d5c0c118f)
         run: |
@@ -59,14 +49,9 @@ jobs:
             --region il-central-1 \
             --instance-ids i-0a0702e0d5c0c118f \
             --document-name "AWS-RunShellScript" \
-            --parameters 'commands=["sudo -u ubuntu bash -c \"cd /home/ubuntu/website && git pull origin main && bash /home/ubuntu/deploy.sh\""]' \
+            --parameters commands=["sudo -u ubuntu /home/ubuntu/ssm-deploy.sh"] \
             --query 'Command.CommandId' --output text)
-          echo "WEB deploy command: $CMD_ID"
-          aws ssm wait command-executed \
-            --command-id "$CMD_ID" \
-            --instance-id i-0a0702e0d5c0c118f
-          aws ssm get-command-invocation \
-            --command-id "$CMD_ID" \
-            --instance-id i-0a0702e0d5c0c118f \
-            --query '{Status:Status,Output:StandardOutputContent}' \
-            --output table
+          echo "WEB deploy: $CMD_ID"
+          aws ssm wait command-executed --command-id "$CMD_ID" --instance-id i-0a0702e0d5c0c118f
+          aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id i-0a0702e0d5c0c118f \
+            --query '{Status:Status,Output:StandardOutputContent}' --output table

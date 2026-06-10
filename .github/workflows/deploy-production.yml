@@ -6,47 +6,67 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy-crm:
-    name: Deploy CRM (51.16.173.19)
+  deploy:
+    name: Deploy to all production servers
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          host: 51.16.173.19
-          username: ubuntu
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /home/ubuntu/app
-            git pull origin main
-            bash /home/ubuntu/deploy.sh
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: il-central-1
 
-  deploy-app:
-    name: Deploy App (16.164.48.68)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: 16.164.48.68
-          username: ubuntu
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /home/ubuntu/app
-            git pull origin main
-            bash /home/ubuntu/deploy.sh
+      - name: Deploy CRM (i-07305ce7425865c83)
+        run: |
+          CMD_ID=$(aws ssm send-command \
+            --region il-central-1 \
+            --instance-ids i-07305ce7425865c83 \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=["cd /home/ubuntu/app && git pull origin main && bash /home/ubuntu/deploy.sh"]' \
+            --query 'Command.CommandId' --output text)
+          echo "CRM deploy command: $CMD_ID"
+          aws ssm wait command-executed \
+            --command-id "$CMD_ID" \
+            --instance-id i-07305ce7425865c83
+          aws ssm get-command-invocation \
+            --command-id "$CMD_ID" \
+            --instance-id i-07305ce7425865c83 \
+            --query '{Status:Status,Output:StandardOutputContent}' \
+            --output table
 
-  deploy-web:
-    name: Deploy Website (51.85.29.74)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: 51.85.29.74
-          username: ubuntu
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /home/ubuntu/website
-            git pull origin main
-            bash /home/ubuntu/deploy.sh
+      - name: Deploy App (i-075649e10e9cdd7ea)
+        run: |
+          CMD_ID=$(aws ssm send-command \
+            --region il-central-1 \
+            --instance-ids i-075649e10e9cdd7ea \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=["cd /home/ubuntu/app && git pull origin main && bash /home/ubuntu/deploy.sh"]' \
+            --query 'Command.CommandId' --output text)
+          echo "APP deploy command: $CMD_ID"
+          aws ssm wait command-executed \
+            --command-id "$CMD_ID" \
+            --instance-id i-075649e10e9cdd7ea
+          aws ssm get-command-invocation \
+            --command-id "$CMD_ID" \
+            --instance-id i-075649e10e9cdd7ea \
+            --query '{Status:Status,Output:StandardOutputContent}' \
+            --output table
+
+      - name: Deploy Website (i-0a0702e0d5c0c118f)
+        run: |
+          CMD_ID=$(aws ssm send-command \
+            --region il-central-1 \
+            --instance-ids i-0a0702e0d5c0c118f \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=["cd /home/ubuntu/website && git pull origin main && bash /home/ubuntu/deploy.sh"]' \
+            --query 'Command.CommandId' --output text)
+          echo "WEB deploy command: $CMD_ID"
+          aws ssm wait command-executed \
+            --command-id "$CMD_ID" \
+            --instance-id i-0a0702e0d5c0c118f
+          aws ssm get-command-invocation \
+            --command-id "$CMD_ID" \
+            --instance-id i-0a0702e0d5c0c118f \
+            --query '{Status:Status,Output:StandardOutputContent}' \
+            --output table

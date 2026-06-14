@@ -1,89 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
-import { db } from "@/lib/db";
 import { getAdminSession } from "@/lib/admin-session";
+import { db } from "@/lib/db";
+import bcrypt from "bcryptjs";
 
-async function guard() {
-  return getAdminSession();
-}
-
-// GET — list every venue (CRM) with high-level counts for the platform table.
 export async function GET() {
-  if (!(await guard()))
+  if (!(await getAdminSession()))
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const venues = await db.venue.findMany({
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      username: true,
-      city: true,
-      address: true,
-      logoUrl: true,
-      _count: {
-        select: {
-          events: true,
-          reservations: true,
-          transactions: true,
-          reviews: true,
-        },
-      },
+    include: {
+      _count: { select: { events: true, reservations: true, transactions: true, reviews: true } },
     },
+    orderBy: { name: "asc" },
   });
-
   return NextResponse.json({ venues });
 }
 
-// POST — provision a brand-new CRM (venue + master OWNER credentials + settings).
 export async function POST(req: NextRequest) {
-  if (!(await guard()))
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  if (!(await getAdminSession()))
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = await req.json().catch(() => null);
-  if (!body)
-    return NextResponse.json({ ok: false, error: "גוף בקשה שגוי" }, { status: 400 });
+  const { name, slug, username, password, logoUrl, address, city } = await req.json();
+  if (!name || !slug || !username || !password)
+    return NextResponse.json({ error: "שדות חובה חסרים" }, { status: 400 });
 
-  const name = String(body.name ?? "").trim();
-  const slug = String(body.slug ?? "").trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
-  const username = String(body.username ?? "").trim();
-  const password = String(body.password ?? "");
-  const city = String(body.city ?? "").trim();
-  const address = String(body.address ?? "").trim();
-  const logoUrl = String(body.logoUrl ?? "").trim() || null;
+  const exists = await db.venue.findFirst({ where: { OR: [{ slug }, { username }] } });
+  if (exists)
+    return NextResponse.json({ error: "Slug או שם משתמש כבר קיים" }, { status: 409 });
 
-  if (!name || !slug || !username || password.length < 6) {
-    return NextResponse.json(
-      { ok: false, error: "חסרים שדות חובה (שם, subdomain, משתמש, סיסמה 6+ תווים)" },
-      { status: 400 }
-    );
-  }
-
-  const [slugTaken, userTaken] = await Promise.all([
-    db.venue.findUnique({ where: { slug }, select: { id: true } }),
-    db.venue.findUnique({ where: { username }, select: { id: true } }),
-  ]);
-  if (slugTaken)
-    return NextResponse.json({ ok: false, error: "ה-subdomain כבר תפוס" }, { status: 409 });
-  if (userTaken)
-    return NextResponse.json({ ok: false, error: "שם המשתמש כבר תפוס" }, { status: 409 });
-
-  const passwordHash = await bcrypt.hash(password, 10);
-
+  const passwordHash = await bcrypt.hash(password, 12);
   const venue = await db.venue.create({
     data: {
-      name,
-      slug,
-      username,
-      passwordHash,
-      city: city || "—",
-      address: address || "—",
-      logoUrl,
-      settings: { create: {} },
+      name, slug, username, passwordHash,
+      logoUrl: logoUrl || null,
+      address: address || slug,
+      city: city || "ישראל",
     },
-    select: { id: true, slug: true, name: true },
   });
-
-  return NextResponse.json({ ok: true, venue });
+  return NextResponse.json({ ok: true, venueId: venue.id });
 }

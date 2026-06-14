@@ -1,10 +1,9 @@
-import { requireVenueSession } from "@/lib/venue-session";
+import { requireVenue } from "@/lib/venue-session";
 import { db } from "@/lib/db";
 import { SettingsForm } from "./settings-form";
-import TwoFactorCard from "./two-factor-card";
 
 export default async function SettingsPage() {
-  const { venue, role } = await requireVenueSession();
+  const venue = await requireVenue();
   let settings = await db.venueSettings.findUnique({ where: { venueId: venue.id } });
   if (!settings) {
     settings = await db.venueSettings.create({
@@ -40,14 +39,6 @@ export default async function SettingsPage() {
         settings={JSON.parse(JSON.stringify(settings))}
         tierCounts={counts}
       />
-
-      {role === "OWNER" && (
-        <div>
-          <h2 className="font-display text-2xl text-ink mb-1 mt-4">אבטחה</h2>
-          <p className="text-sm text-ink-muted mb-4">הגדרות אבטחה לחשבון הבעלים.</p>
-          <TwoFactorCard initialEnabled={venue.totpEnabled} />
-        </div>
-      )}
     </div>
   );
 }

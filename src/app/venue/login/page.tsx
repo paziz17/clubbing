@@ -3,15 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Lock, User, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { Lock, User, Eye, EyeOff } from "lucide-react";
 
 export default function VenueLoginPage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
-  const [twofa, setTwofa] = useState(false);
-  const [totpCode, setTotpCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -22,20 +20,12 @@ export default function VenueLoginPage() {
     const res = await fetch("/api/venue/login", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ username, password, totpCode: twofa ? totpCode : undefined }),
+      body: JSON.stringify({ username, password }),
     });
     const data = await res.json();
     setLoading(false);
-    if (data.ok) {
-      router.push(data.redirect ?? "/venue");
-      return;
-    }
-    if (data.twofa) {
-      setTwofa(true);
-      setError(data.error ?? null);
-      return;
-    }
-    setError(data.error ?? "שגיאת התחברות — בדוק פרטים");
+    if (data.ok) router.push(data.redirect ?? "/venue");
+    else setError(data.error ?? "שגיאת התחברות — בדוק פרטים");
   }
 
   return (
@@ -136,26 +126,6 @@ export default function VenueLoginPage() {
               </div>
             </div>
 
-            {/* 2FA code (shown only when the venue has 2FA enabled) */}
-            {twofa && (
-              <div>
-                <label className="block text-xs font-medium text-ink-muted mb-2">קוד אימות דו-שלבי</label>
-                <div className="relative">
-                  <ShieldCheck className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gold pointer-events-none" />
-                  <input
-                    value={totpCode}
-                    onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    className="input pr-10 tracking-[0.4em] text-center font-mono"
-                    placeholder="000000"
-                    inputMode="numeric"
-                    autoFocus
-                    required
-                  />
-                </div>
-                <p className="text-[11px] text-ink-dim mt-1.5">הזן את הקוד מאפליקציית האימות שלך</p>
-              </div>
-            )}
-
             {error && (
               <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-danger/10 border border-danger/30 text-danger text-sm">
                 <span className="w-1.5 h-1.5 rounded-full bg-danger flex-shrink-0" />
@@ -167,7 +137,7 @@ export default function VenueLoginPage() {
               disabled={loading}
               className="btn-gold w-full h-11 text-sm font-semibold"
             >
-              {loading ? "מתחבר..." : twofa ? "אמת והיכנס" : "כניסה למערכת"}
+              {loading ? "מתחבר..." : "כניסה למערכת"}
             </button>
           </form>
 

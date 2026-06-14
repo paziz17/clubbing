@@ -1,32 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminSession, destroyAdminSession } from "@/lib/admin-session";
+import { createAdminSession } from "@/lib/admin-session";
+import { verifyTotpToken } from "@/lib/totp";
 
-// Platform super-admin login. The password is configured via the
-// ADMIN_PASSWORD env var on the CRM server. No DB row is required.
 export async function POST(req: NextRequest) {
-  const expected = process.env.ADMIN_PASSWORD;
-  if (!expected) {
-    return NextResponse.json(
-      { ok: false, error: "פאנל-העל לא הוגדר (ADMIN_PASSWORD חסר)" },
-      { status: 503 }
-    );
+  const { username, password, totpToken } = await req.json();
+
+  const validUser = process.env.SUPER_ADMIN_USERNAME ?? "admin";
+  const validPass = process.env.SUPER_ADMIN_PASSWORD ?? "Clubbing2026!";
+  const totpSecret = process.env.SUPER_ADMIN_TOTP_SECRET;
+
+  if (username !== validUser || password !== validPass) {
+    return NextResponse.json({ ok: false, error: "פרטי גישה שגויים" }, { status: 401 });
   }
 
-  const { password } = await req.json().catch(() => ({ password: "" }));
-  if (!password || typeof password !== "string") {
-    return NextResponse.json({ ok: false, error: "חסרה סיסמה" }, { status: 400 });
-  }
-
-  // Constant-time-ish comparison to avoid trivial timing leaks.
-  if (password.length !== expected.length || password !== expected) {
-    return NextResponse.json({ ok: false, error: "סיסמה שגויה" }, { status: 401 });
+  // ── Google Authenticator (TOTP) ──
+  if (totpSecret) {
+    if (!totpToken) return NextResponse.json({ ok: false, needsTotp: true });
+    if (!verifyTotpToken(totpSecret, totpToken)) {
+      return NextResponse.json({ ok: false, error: "קוד אימות שגוי" }, { status: 401 });
+    }
   }
 
   await createAdminSession();
-  return NextResponse.json({ ok: true });
-}
-
-export async function DELETE() {
-  await destroyAdminSession();
   return NextResponse.json({ ok: true });
 }

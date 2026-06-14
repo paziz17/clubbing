@@ -17,17 +17,26 @@ export async function POST(req: Request) {
   const rawBody = await req.text();
 
   let event: Stripe.Event;
-  try {
-    if (secret && sig) {
-      event = stripe.webhooks.constructEvent(rawBody, sig, secret);
-    } else {
-      // No signing secret configured (e.g. early POC) — parse without verifying.
-      // Set STRIPE_WEBHOOK_SECRET in production to enable signature checks.
-      event = JSON.parse(rawBody) as Stripe.Event;
+  if (secret) {
+    // A signing secret is configured — always require a valid signature.
+    if (!sig) {
+      return NextResponse.json({ error: "Missing signature" }, { status: 400 });
     }
-  } catch (err) {
-    console.error("Stripe webhook signature verification failed:", err);
-    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+    try {
+      event = stripe.webhooks.constructEvent(rawBody, sig, secret);
+    } catch (err) {
+      console.error("Stripe webhook signature verification failed:", err);
+      return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+    }
+  } else {
+    // No signing secret configured (early POC only). Parsing is unverified, so
+    // confirmation also relies on the success-page reconciliation as the source
+    // of truth. Set STRIPE_WEBHOOK_SECRET to enable signature verification.
+    try {
+      event = JSON.parse(rawBody) as Stripe.Event;
+    } catch {
+      return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    }
   }
 
   try {

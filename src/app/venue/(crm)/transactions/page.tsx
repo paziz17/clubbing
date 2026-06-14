@@ -2,6 +2,7 @@ import { requireVenue } from "@/lib/venue-session";
 import { db } from "@/lib/db";
 import { formatILS, formatCredits, formatDateHe, formatTimeHe } from "@/lib/utils";
 import { CreditCard, TrendingUp, Coins, ArrowDownLeft } from "lucide-react";
+import { ExportCsvButton, type CsvRow } from "./export-csv-button";
 
 export default async function TransactionsPage() {
   const venue = await requireVenue();
@@ -21,6 +22,19 @@ export default async function TransactionsPage() {
     STRIPE_CARD: "כרטיס אשראי", APPLE_PAY: "Apple Pay", GOOGLE_PAY: "Google Pay",
     CLUB_IT: "Club-It", CREDITS: "קרדיטים", MIXED: "משולב", DEMO: "דמו",
   };
+  const statusLabel: Record<string, string> = {
+    PAID: "שולם", PENDING: "ממתין", FAILED: "נכשל", REFUNDED: "הוחזר",
+  };
+
+  const csvRows: CsvRow[] = txns.map((t) => ({
+    date: `${formatDateHe(t.createdAt)} ${formatTimeHe(t.createdAt)}`,
+    customer: t.user?.name ?? "אורח",
+    event: t.reservation?.event.name ?? "—",
+    method: methodLabel[t.paymentMethod] ?? t.paymentMethod,
+    amount: (t.amountAgorot / 100).toFixed(2),
+    credits: String(t.creditsDelta),
+    status: statusLabel[t.status] ?? t.status,
+  }));
 
   return (
     <div className="min-h-screen">
@@ -29,7 +43,7 @@ export default async function TransactionsPage() {
           <h1 className="text-xl font-semibold text-ink">עסקאות ותשלומים</h1>
           <p className="text-xs text-ink-muted mt-0.5">{txns.length} רשומות</p>
         </div>
-        <button className="btn-ghost h-9 px-4 text-sm">ייצוא CSV</button>
+        <ExportCsvButton rows={csvRows} />
       </header>
 
       <div className="crm-page-body">

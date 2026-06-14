@@ -10,17 +10,84 @@ interface Props {
   searchParams: Promise<Record<string, string | undefined>>;
 }
 
+// Maps a discover-wizard genre id to the genre tokens that may appear on an
+// event's `genres` CSV (mixed Hebrew/English). Used for soft matching.
+const GENRE_ALIASES: Record<string, string[]> = {
+  pub_rock: ["rock", "blues", "פאב", "פאב/רוק"],
+  lounge: ["lounge", "chill", "chillout", "לאונג'"],
+  nature: ["nature", "טבע", "trance", "טראנס"],
+  mizrahi: ["מזרחית", "ים-תיכוני", "ים תיכוני", "mizrahi"],
+  hiphop: ["hip-hop", "hiphop", "hip hop", "rap", "ראפ", "היפ הופ"],
+  pop: ["pop", "פופ"],
+  "80s": ["80s", "retro", "רטרו", "שנות ה-80"],
+  techno: ["techno", "house", "electronic", "edm", "טכנו"],
+};
+
+function timingRange(timing?: string): { gte: Date; lte?: Date } {
+  const now = new Date();
+  if (timing === "tonight") {
+    const end = new Date(now);
+    end.setHours(23, 59, 59, 999);
+    return { gte: now, lte: end };
+  }
+  if (timing === "week") {
+    const end = new Date(now);
+    end.setDate(end.getDate() + 7);
+    return { gte: now, lte: end };
+  }
+  if (timing === "weekend") {
+    // Next Friday 00:00 → Saturday 23:59 (Israeli weekend)
+    const start = new Date(now);
+    const day = start.getDay(); // 0=Sun … 5=Fri 6=Sat
+    const daysUntilFri = (5 - day + 7) % 7;
+    start.setDate(start.getDate() + daysUntilFri);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1); // Saturday
+    end.setHours(23, 59, 59, 999);
+    return { gte: start < now ? now : start, lte: end };
+  }
+  return { gte: now };
+}
+
 export default async function ResultsPage({ searchParams }: Props) {
   const params = await searchParams;
-  const events = await db.event.findMany({
+
+  // Fetch a generous window of upcoming published events, then filter
+  // in-memory. Filters are applied defensively: if a filter eliminates
+  // every result we fall back to the broader list so the user never lands
+  // on an empty screen because of data/label mismatches.
+  const range = timingRange(params.timing);
+  const allUpcoming = await db.event.findMany({
     where: {
       status: "PUBLISHED",
       startsAt: { gte: new Date() },
     },
     include: { venue: true },
     orderBy: { startsAt: "asc" },
-    take: 30,
+    take: 100,
   });
+
+  // Timing filter (with fallback)
+  const byTiming = allUpcoming.filter(
+    (e) => e.startsAt >= range.gte && (!range.lte || e.startsAt <= range.lte)
+  );
+  let events = byTiming.length > 0 ? byTiming : allUpcoming;
+
+  // Genre filter (soft, with fallback)
+  const selectedGenres = (params.genres?.split(",") ?? []).filter(Boolean);
+  if (selectedGenres.length > 0) {
+    const tokens = selectedGenres.flatMap(
+      (id) => GENRE_ALIASES[id] ?? [id]
+    ).map((t) => t.toLowerCase());
+    const byGenre = events.filter((e) => {
+      const g = (e.genres ?? "").toLowerCase();
+      return tokens.some((t) => g.includes(t));
+    });
+    if (byGenre.length > 0) events = byGenre;
+  }
+
+  events = events.slice(0, 30);
 
   const vibe = [
     "🌙",

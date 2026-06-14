@@ -53,10 +53,10 @@ export default function VenueLoginPage() {
           </div>
           <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto text-right">
             {[
-              { n: "9", l: "אירועים פעילים" },
-              { n: "12", l: "לקוחות רשומים" },
-              { n: "4★", l: "דירוג ממוצע" },
-              { n: "CRM", l: "מלא ומקיף" },
+              { n: "🎟️", l: "מכירת כרטיסים ו-QR" },
+              { n: "👥", l: "ניהול לקוחות ונאמנות" },
+              { n: "📊", l: "דוחות בזמן אמת" },
+              { n: "📦", l: "מלאי, עובדים ומשמרות" },
             ].map((s) => (
               <div key={s.l} className="bg-bg-card/50 border border-line/50 rounded-xl p-4">
                 <div className="font-display text-2xl text-gold">{s.n}</div>

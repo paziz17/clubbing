@@ -1,9 +1,9 @@
-// CLUBBING — Prisma schema (v1.3, May 2026) · LOCAL-ONLY SQLite
-// No external services required. DB file lives at prisma/dev.db.
+// CLUBBING — Prisma schema (v1.3) · PostgreSQL (Amazon RDS)
+// Connection is configured via the DATABASE_URL environment variable.
 //
-// Enums and string arrays are represented as plain strings (CSV) since
-// SQLite via Prisma doesn't support them natively. TypeScript types are
-// defined in src/lib/enums.ts and runtime-validated where needed.
+// Enums and string arrays are represented as plain strings (CSV) for
+// portability. TypeScript types are defined in src/lib/enums.ts and
+// runtime-validated where needed.
 
 generator client {
   provider = "prisma-client-js"

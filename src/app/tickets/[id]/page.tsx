@@ -5,6 +5,7 @@ import Link from "next/link";
 import { formatDateHe, formatTimeHe, formatILS } from "@/lib/utils";
 import { Check, Calendar, MapPin, Users } from "lucide-react";
 import { RideHomeCard } from "@/components/taxi-buttons";
+import { TicketActions } from "./ticket-actions";
 
 export default async function TicketPage({
   params,
@@ -17,7 +18,7 @@ export default async function TicketPage({
   const { source } = await searchParams;
   const reservation = await db.reservation.findUnique({
     where: { id },
-    include: { event: { include: { venue: true } }, venue: true },
+    include: { event: { include: { venue: true } }, venue: true, user: true },
   });
   if (!reservation) notFound();
 
@@ -78,14 +79,10 @@ export default async function TicketPage({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 mt-3">
-          <button className="btn-ghost h-11 text-sm">
-            הוסף ל־Wallet
-          </button>
-          <button className="btn-ghost h-11 text-sm">
-            שלח למייל
-          </button>
-        </div>
+        <TicketActions
+          reservationId={reservation.id}
+          defaultEmail={reservation.user?.email ?? reservation.guestEmail}
+        />
 
         {/* Ride Home (Part IV - shown after payment) */}
         {reservation.venue.lat && reservation.venue.lng && (

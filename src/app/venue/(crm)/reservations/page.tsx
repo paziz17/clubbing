@@ -4,6 +4,7 @@ import { formatILS, formatDateHe, timeAgoHe } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ReservationsFilter } from "./filter";
+import { RefundButton } from "./refund-button";
 
 interface Props {
   searchParams: Promise<{ q?: string; status?: string }>;
@@ -57,6 +58,7 @@ export default async function ReservationsPage({ searchParams }: Props) {
                 <th className="px-5 py-3">סכום</th>
                 <th className="px-5 py-3">סטטוס</th>
                 <th className="px-5 py-3 text-left">תאריך</th>
+                <th className="px-5 py-3 text-left">פעולות</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
@@ -81,11 +83,16 @@ export default async function ReservationsPage({ searchParams }: Props) {
                   <td className="px-5 py-3 text-ink-muted text-left">
                     {timeAgoHe(r.createdAt)}
                   </td>
+                  <td className="px-5 py-3 text-left">
+                    {r.status === "PAID" && (
+                      <RefundButton reservationId={r.id} />
+                    )}
+                  </td>
                 </tr>
               ))}
               {reservations.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-5 py-12 text-center text-ink-muted">
+                  <td colSpan={7} className="px-5 py-12 text-center text-ink-muted">
                     אין הזמנות מתאימות
                   </td>
                 </tr>

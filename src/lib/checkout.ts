@@ -209,3 +209,88 @@ export async function reconcileStripeSession(
   }
   return { status: "pending" };
 }
+
+/**
+ * Full refund for a paid reservation, scoped to the owning venue.
+ *
+ * - Issues a real Stripe refund when the payment was a card charge (pi_...).
+ *   In demo / Club-it payments there is nothing to refund at Stripe, so only
+ *   the internal records are reversed.
+ * - Marks the reservation + transaction as REFUNDED.
+ * - Reverses any loyalty credits that were earned on the purchase.
+ *
+ * Idempotent: refunding an already-refunded reservation is a no-op.
+ */
+export async function refundReservation(
+  reservationId: string,
+  venueId: string
+): Promise<{ status: "refunded"; stripeRefunded: boolean }> {
+  const reservation = await db.reservation.findUnique({
+    where: { id: reservationId },
+    include: { transaction: true, user: { include: { clubItCard: true } } },
+  });
+  if (!reservation) throw new Error("Reservation not found");
+  if (reservation.venueId !== venueId) throw new Error("Forbidden");
+  if (reservation.status === "REFUNDED") {
+    return { status: "refunded", stripeRefunded: false };
+  }
+  if (reservation.status !== "PAID") {
+    throw new Error("Only paid reservations can be refunded");
+  }
+
+  // 1) Real Stripe refund when this was a card charge.
+  let stripeRefunded = false;
+  const ref = reservation.paymentRef ?? reservation.transaction?.externalRef ?? "";
+  if (stripe && ref.startsWith("pi_")) {
+    await stripe.refunds.create({ payment_intent: ref });
+    stripeRefunded = true;
+  }
+
+  // 2) Reverse internal records (and any loyalty credits earned).
+  const card = reservation.user?.clubItCard;
+  const creditsToReverse = reservation.creditsEarned;
+
+  await db.$transaction(async (tx) => {
+    await tx.reservation.update({
+      where: { id: reservationId },
+      data: { status: "REFUNDED" },
+    });
+    if (reservation.transaction) {
+      await tx.transaction.update({
+        where: { id: reservation.transaction.id },
+        data: { status: "REFUNDED" },
+      });
+    }
+    if (card && creditsToReverse > 0) {
+      const bal = await tx.userBalance.findUnique({
+        where: { cardId_venueId: { cardId: card.id, venueId } },
+      });
+      const deduct = Math.min(creditsToReverse, bal?.creditsBalance ?? 0);
+      await tx.creditLedger.create({
+        data: {
+          cardId: card.id,
+          venueId,
+          kind: "ADJUST",
+          amount: -creditsToReverse,
+          ref: reservationId,
+          note: "Refund reversal",
+        },
+      });
+      if (bal) {
+        await tx.userBalance.update({
+          where: { cardId_venueId: { cardId: card.id, venueId } },
+          data: {
+            creditsBalance: { decrement: deduct },
+            creditsAccrued: { decrement: creditsToReverse },
+          },
+        });
+      }
+      await tx.clubItCard.update({
+        where: { id: card.id },
+        data: { totalSpentAgorot: { decrement: reservation.totalAgorot } },
+      });
+    }
+  });
+
+  return { status: "refunded", stripeRefunded };
+}

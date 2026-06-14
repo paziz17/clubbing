@@ -13,7 +13,7 @@ export default async function TransactionsPage() {
     take: 200,
   });
 
-  const revenue    = txns.filter(t => t.amountAgorot > 0).reduce((s, t) => s + t.amountAgorot, 0);
+  const revenue    = txns.filter(t => t.status === "PAID" && t.amountAgorot > 0).reduce((s, t) => s + t.amountAgorot, 0);
   const credEarned = txns.reduce((s, t) => s + Math.max(0, t.creditsDelta), 0);
   const credSpent  = txns.reduce((s, t) => s + Math.abs(Math.min(0, t.creditsDelta)), 0);
   const avgTxn     = txns.length ? Math.round(revenue / txns.length) : 0;
@@ -132,9 +132,10 @@ export default async function TransactionsPage() {
 
 function StatusPill({ status }: { status: string }) {
   const map: Record<string, string> = {
-    PAID:    "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-    PENDING: "bg-warn/15 text-warn border-warn/30",
-    FAILED:  "bg-danger/15 text-danger border-danger/30",
+    PAID:     "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+    PENDING:  "bg-warn/15 text-warn border-warn/30",
+    FAILED:   "bg-danger/15 text-danger border-danger/30",
+    REFUNDED: "bg-purple-500/15 text-purple-400 border-purple-500/30",
   };
   const labels: Record<string, string> = { PAID: "שולם", PENDING: "ממתין", FAILED: "נכשל", REFUNDED: "הוחזר" };
   return (

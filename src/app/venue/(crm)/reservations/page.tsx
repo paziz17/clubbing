@@ -1,4 +1,5 @@
-import { requireVenue } from "@/lib/venue-session";
+import { requireVenueSession } from "@/lib/venue-session";
+import { can } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { formatILS, formatDateHe, timeAgoHe } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
@@ -12,7 +13,8 @@ interface Props {
 
 export default async function ReservationsPage({ searchParams }: Props) {
   const { q, status } = await searchParams;
-  const venue = await requireVenue();
+  const { venue, role } = await requireVenueSession();
+  const canRefund = can(role, "refund");
 
   const where: any = { venueId: venue.id };
   if (status && status !== "all") where.status = status;
@@ -84,7 +86,7 @@ export default async function ReservationsPage({ searchParams }: Props) {
                     {timeAgoHe(r.createdAt)}
                   </td>
                   <td className="px-5 py-3 text-left">
-                    {r.status === "PAID" && (
+                    {canRefund && r.status === "PAID" && (
                       <RefundButton reservationId={r.id} />
                     )}
                   </td>

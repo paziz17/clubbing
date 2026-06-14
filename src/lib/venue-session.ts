@@ -1,11 +1,16 @@
 /**
- * Separate, lightweight session for the venue CRM (independent of bliner NextAuth).
+ * Separate, lightweight session for the venue CRM (independent of the bliner NextAuth).
  * Uses a signed JWT in an HttpOnly cookie ("venue_session").
+ *
+ * Supports two login identities:
+ *  - Venue master login (legacy)  -> role OWNER, no userId.
+ *  - VenueUser team account        -> role from the user record + userId.
  */
 
 import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 import { db } from "./db";
+import { normalizeRole, can, type Capability, type Role } from "./rbac";
 
 const COOKIE_NAME = "venue_session";
 const SECRET = new TextEncoder().encode(
@@ -15,12 +20,25 @@ const SECRET = new TextEncoder().encode(
 interface VenuePayload {
   venueId: string;
   username: string;
+  userId?: string | null;
+  role?: string;
+  displayName?: string;
   iat?: number;
   exp?: number;
 }
 
-export async function createVenueSession(venueId: string, username: string) {
-  const token = await new SignJWT({ venueId, username } as any)
+export async function createVenueSession(
+  venueId: string,
+  username: string,
+  opts?: { userId?: string | null; role?: string; displayName?: string }
+) {
+  const token = await new SignJWT({
+    venueId,
+    username,
+    userId: opts?.userId ?? null,
+    role: normalizeRole(opts?.role ?? "OWNER"),
+    displayName: opts?.displayName ?? username,
+  } as any)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("30d")
@@ -53,13 +71,49 @@ export async function getVenueFromCookie(): Promise<VenuePayload | null> {
   }
 }
 
+/** Role of the current session. Legacy tokens (no role) are treated as OWNER. */
+export async function getSessionRole(): Promise<Role> {
+  const s = await getVenueFromCookie();
+  return normalizeRole(s?.role ?? "OWNER");
+}
+
+export interface VenueSessionContext {
+  venue: NonNullable<Awaited<ReturnType<typeof loadVenue>>>;
+  role: Role;
+  userId: string | null;
+  displayName: string;
+}
+
+async function loadVenue(venueId: string) {
+  return db.venue.findUnique({ where: { id: venueId }, include: { settings: true } });
+}
+
+/** Returns the venue (unchanged signature). Throws UNAUTHORIZED when not logged in. */
 export async function requireVenue() {
   const session = await getVenueFromCookie();
   if (!session) throw new Error("UNAUTHORIZED");
-  const venue = await db.venue.findUnique({
-    where: { id: session.venueId },
-    include: { settings: true },
-  });
+  const venue = await loadVenue(session.venueId);
   if (!venue) throw new Error("UNAUTHORIZED");
   return venue;
+}
+
+/** Returns the full session context (venue + role + identity). */
+export async function requireVenueSession(): Promise<VenueSessionContext> {
+  const session = await getVenueFromCookie();
+  if (!session) throw new Error("UNAUTHORIZED");
+  const venue = await loadVenue(session.venueId);
+  if (!venue) throw new Error("UNAUTHORIZED");
+  return {
+    venue,
+    role: normalizeRole(session.role ?? "OWNER"),
+    userId: session.userId ?? null,
+    displayName: session.displayName ?? venue.name,
+  };
+}
+
+/** Requires the current session to hold a capability. Throws FORBIDDEN otherwise. */
+export async function requireCapability(cap: Capability) {
+  const ctx = await requireVenueSession();
+  if (!can(ctx.role, cap)) throw new Error("FORBIDDEN");
+  return ctx;
 }

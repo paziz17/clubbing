@@ -1,4 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
+import { jwtVerify } from "jose";
+import { capabilityForPath, can, defaultLandingFor } from "@/lib/rbac";
+
+const VENUE_SECRET = new TextEncoder().encode(
+  process.env.VENUE_SESSION_SECRET ?? process.env.NEXTAUTH_SECRET ?? "dev-secret-clubbing"
+);
+
+// RBAC gate for CRM *pages* (APIs enforce server-side via requireCapability).
+// Blocks a logged-in team member from opening a page their role can't access
+// (e.g. a DOOR user navigating directly to /venue/transactions).
+async function rbacRedirect(req: NextRequest, pathname: string): Promise<NextResponse | null> {
+  if (pathname === "/venue/login" || pathname.startsWith("/api/")) return null;
+  if (pathname !== "/venue" && !pathname.startsWith("/venue/")) return null;
+  const token = req.cookies.get("venue_session")?.value;
+  if (!token) return null; // no session -> let the layout redirect to login
+  let role = "OWNER";
+  try {
+    const { payload } = await jwtVerify(token, VENUE_SECRET);
+    role = ((payload as any).role as string) || "OWNER";
+  } catch {
+    return null;
+  }
+  const cap = capabilityForPath(pathname);
+  if (cap && !can(role, cap)) {
+    const url = req.nextUrl.clone();
+    url.pathname = defaultLandingFor(role);
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+  return null;
+}
 
 // Per-server role isolation.
 // Each server builds with its own APP_ROLE in .env:
@@ -34,10 +65,16 @@ function isCrmPage(p: string): boolean {
   return p === "/venue" || p.startsWith("/venue/");
 }
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  if (isAlwaysAllowed(pathname) || !ROLE) return NextResponse.next();
+  if (isAlwaysAllowed(pathname)) return NextResponse.next();
+
+  // App-level RBAC gating for CRM pages (independent of per-server ROLE).
+  const rbac = await rbacRedirect(req, pathname);
+  if (rbac) return rbac;
+
+  if (!ROLE) return NextResponse.next();
 
   if (ROLE === "crm") {
     // Allow CRM pages + all venue APIs. Block every mobile-app surface.

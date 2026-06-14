@@ -135,9 +135,28 @@ model Venue {
   suppliers     Supplier[]
   inventory     InventoryItem[]
   stockMovements StockMovement[]
+  crmUsers      VenueUser[]
 
   @@index([city])
   @@index([slug])
+}
+
+// CRM team accounts with role-based access (RBAC).
+// role: OWNER | MANAGER | STAFF | DOOR
+model VenueUser {
+  id           String    @id @default(cuid())
+  venueId      String
+  venue        Venue     @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  name         String
+  username     String    @unique
+  passwordHash String
+  role         String    @default("STAFF")
+  active       Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([venueId])
 }
 
 model VenueSettings {

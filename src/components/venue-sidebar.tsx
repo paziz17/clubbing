@@ -21,14 +21,17 @@ import {
   CalendarClock,
   Boxes,
   ScanLine,
+  UsersRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { can, normalizeRole, ROLE_LABELS, type Capability } from "@/lib/rbac";
 
 interface Item {
   href: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   badge?: string;
+  cap?: Capability;
 }
 
 interface Group {
@@ -39,12 +42,17 @@ interface Group {
 export function VenueSidebar({
   venueName,
   kitchenEnabled,
+  role = "OWNER",
+  displayName,
 }: {
   venueName: string;
   kitchenEnabled?: boolean;
+  role?: string;
+  displayName?: string;
 }) {
   const path = usePathname();
   const router = useRouter();
+  const roleNorm = normalizeRole(role);
 
   const initials = venueName
     .split(" ")
@@ -53,50 +61,56 @@ export function VenueSidebar({
     .join("")
     .toUpperCase();
 
-  const groups: Group[] = [
+  const rawGroups: Group[] = [
     {
       title: "ראשי",
       items: [
-        { href: "/venue", label: "דשבורד", icon: LayoutDashboard },
-        { href: "/venue/live", label: "ערב חי", icon: Radio },
-        { href: "/venue/scan", label: "סריקת כניסה", icon: ScanLine },
-        { href: "/venue/events", label: "אירועים", icon: Calendar },
+        { href: "/venue", label: "דשבורד", icon: LayoutDashboard, cap: "dashboard" },
+        { href: "/venue/live", label: "ערב חי", icon: Radio, cap: "live" },
+        { href: "/venue/scan", label: "סריקת כניסה", icon: ScanLine, cap: "scan" },
+        { href: "/venue/events", label: "אירועים", icon: Calendar, cap: "events" },
       ],
     },
     {
       title: "ניהול לקוחות",
       items: [
-        { href: "/venue/reservations", label: "הזמנות", icon: Ticket },
-        { href: "/venue/customers", label: "לקוחות ודרגות", icon: Users },
-        { href: "/venue/transactions", label: "תשלומים", icon: CreditCard },
-        { href: "/venue/campaigns", label: "Club Bot · WhatsApp", icon: MessageCircle },
+        { href: "/venue/reservations", label: "הזמנות", icon: Ticket, cap: "reservations" },
+        { href: "/venue/customers", label: "לקוחות ודרגות", icon: Users, cap: "customers" },
+        { href: "/venue/transactions", label: "תשלומים", icon: CreditCard, cap: "transactions" },
+        { href: "/venue/campaigns", label: "Club Bot · WhatsApp", icon: MessageCircle, cap: "campaigns" },
       ],
     },
     {
       title: "מועדון ובמה",
       items: [
-        { href: "/venue/reviews", label: "דירוגים וביקורות", icon: Star },
-        { href: "/venue/artists", label: "אומנים", icon: Music2 },
-        { href: "/venue/selection", label: "סלקציה · Exclusive", icon: ShieldCheck },
+        { href: "/venue/reviews", label: "דירוגים וביקורות", icon: Star, cap: "reviews" },
+        { href: "/venue/artists", label: "אומנים", icon: Music2, cap: "artists" },
+        { href: "/venue/selection", label: "סלקציה · Exclusive", icon: ShieldCheck, cap: "selection" },
         ...(kitchenEnabled
-          ? [{ href: "/venue/food", label: "מטבח וזמנות", icon: ChefHat } as Item]
+          ? [{ href: "/venue/food", label: "מטבח וזמנות", icon: ChefHat, cap: "food" } as Item]
           : []),
       ],
     },
     {
       title: "תפעול",
       items: [
-        { href: "/venue/staff", label: "משמרות עובדים", icon: CalendarClock },
-        { href: "/venue/inventory", label: "מחסן חכם", icon: Boxes },
+        { href: "/venue/staff", label: "משמרות עובדים", icon: CalendarClock, cap: "staff" },
+        { href: "/venue/inventory", label: "מחסן חכם", icon: Boxes, cap: "inventory" },
       ],
     },
     {
       title: "מערכת",
       items: [
-        { href: "/venue/settings", label: "הגדרות", icon: Settings },
+        { href: "/venue/users", label: "משתמשים והרשאות", icon: UsersRound, cap: "users" },
+        { href: "/venue/settings", label: "הגדרות", icon: Settings, cap: "settings" },
       ],
     },
   ];
+
+  // Show only items the current role is allowed to access; drop empty groups.
+  const groups: Group[] = rawGroups
+    .map((g) => ({ ...g, items: g.items.filter((it) => !it.cap || can(roleNorm, it.cap)) }))
+    .filter((g) => g.items.length > 0);
 
   function isActive(href: string) {
     if (href === "/venue") return path === "/venue";
@@ -118,7 +132,10 @@ export function VenueSidebar({
           </div>
           <div className="min-w-0">
             <div className="font-semibold text-ink text-sm truncate">{venueName}</div>
-            <div className="text-xs text-ink-muted">פאנל ניהול</div>
+            <div className="text-xs text-ink-muted truncate">
+              {displayName && displayName !== venueName ? displayName : "פאנל ניהול"}
+              <span className="text-gold"> · {ROLE_LABELS[roleNorm]}</span>
+            </div>
           </div>
         </div>
       </div>

@@ -24,7 +24,7 @@ export default function VenueLoginPage() {
     });
     const data = await res.json();
     setLoading(false);
-    if (data.ok) router.push("/venue");
+    if (data.ok) router.push(data.redirect ?? "/venue");
     else setError(data.error ?? "שגיאת התחברות — בדוק פרטים");
   }
 

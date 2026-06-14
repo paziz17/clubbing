@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
+import { reconcileStripeSession } from "@/lib/checkout";
 import { makeQrDataUrl } from "@/lib/qr";
 import Link from "next/link";
 import { formatDateHe, formatTimeHe, formatILS } from "@/lib/utils";
@@ -12,10 +13,17 @@ export default async function TicketPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ source?: string }>;
+  searchParams: Promise<{ source?: string; session_id?: string }>;
 }) {
   const { id } = await params;
-  const { source } = await searchParams;
+  const { source, session_id } = await searchParams;
+
+  // When returning from Stripe Checkout, reconcile the payment so the
+  // reservation is marked PAID even if the webhook hasn't arrived yet.
+  if (session_id) {
+    await reconcileStripeSession(id, session_id);
+  }
+
   const reservation = await db.reservation.findUnique({
     where: { id },
     include: { event: { include: { venue: true } }, venue: true, user: true },

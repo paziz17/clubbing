@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { createCheckoutSession } from "./stripe";
+import { createCheckoutSession, stripe } from "./stripe";
 import { accrueCreditsForPurchase } from "./credits";
 import type { PaymentMethod } from "@/lib/enums";
 
@@ -92,6 +92,12 @@ export async function finalizeStripePayment(
   });
   if (!reservation) throw new Error("Reservation not found");
 
+  // Idempotent: if it's already paid we don't create a duplicate transaction.
+  // (The webhook and the success-page reconciliation can both fire.)
+  if (reservation.status === "PAID") {
+    return { reservationId, status: "paid" as const, alreadyPaid: true };
+  }
+
   await db.$transaction(async (tx) => {
     await tx.reservation.update({
       where: { id: reservationId },
@@ -165,4 +171,41 @@ export async function finalizeClubItPayment(reservationId: string) {
     tier: accrual.tier,
     tierChanged: accrual.tierChanged,
   };
+}
+
+/**
+ * Reconcile a reservation against its Stripe Checkout Session.
+ *
+ * Called from the success page (and usable as a fallback when no webhook is
+ * configured — ideal for a free Stripe Test-Mode POC). Safe + idempotent:
+ * only finalizes when Stripe reports the session as paid, and skips if the
+ * reservation is already PAID.
+ */
+export async function reconcileStripeSession(
+  reservationId: string,
+  sessionId: string
+): Promise<{ status: "paid" | "pending" | "skipped" }> {
+  if (!stripe || !sessionId) return { status: "skipped" };
+
+  const reservation = await db.reservation.findUnique({
+    where: { id: reservationId },
+    select: { id: true, status: true },
+  });
+  if (!reservation) return { status: "skipped" };
+  if (reservation.status === "PAID") return { status: "paid" };
+
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    if (session.payment_status === "paid") {
+      const ref =
+        (typeof session.payment_intent === "string"
+          ? session.payment_intent
+          : session.payment_intent?.id) ?? session.id;
+      await finalizeStripePayment(reservationId, ref);
+      return { status: "paid" };
+    }
+  } catch (err) {
+    console.error("Stripe reconcile failed:", err);
+  }
+  return { status: "pending" };
 }

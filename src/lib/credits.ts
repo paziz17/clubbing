@@ -136,6 +136,64 @@ export async function accrueBumpCredits({
   return { creditsEarned: credits };
 }
 
+/**
+ * Manual credit adjustment from the CRM (grant or deduct).
+ * Positive amount grants credits, negative deducts (never below zero).
+ * Recorded as an ADJUST ledger entry for audit.
+ */
+export async function adjustCredits({
+  cardId,
+  venueId,
+  amount,
+  note,
+  by,
+}: {
+  cardId: string;
+  venueId: string;
+  amount: number;
+  note?: string;
+  by?: string;
+}) {
+  if (!Number.isInteger(amount) || amount === 0) {
+    throw new Error("Invalid amount");
+  }
+
+  const balance = await db.userBalance.findUnique({
+    where: { cardId_venueId: { cardId, venueId } },
+  });
+  const current = balance?.creditsBalance ?? 0;
+
+  // Clamp deductions so the balance never goes negative.
+  const applied = amount < 0 ? -Math.min(current, -amount) : amount;
+  if (applied === 0) return { applied: 0, balance: current };
+
+  const auditNote = [note, by ? `(${by})` : null].filter(Boolean).join(" ") || undefined;
+
+  await db.$transaction([
+    db.creditLedger.create({
+      data: { cardId, venueId, kind: "ADJUST", amount: applied, note: auditNote },
+    }),
+    db.userBalance.upsert({
+      where: { cardId_venueId: { cardId, venueId } },
+      create: {
+        cardId,
+        venueId,
+        creditsBalance: Math.max(0, applied),
+        creditsAccrued: applied > 0 ? applied : 0,
+        creditsRedeemed: applied < 0 ? -applied : 0,
+      },
+      update: {
+        creditsBalance: { increment: applied },
+        ...(applied > 0
+          ? { creditsAccrued: { increment: applied } }
+          : { creditsRedeemed: { increment: -applied } }),
+      },
+    }),
+  ]);
+
+  return { applied, balance: current + applied };
+}
+
 export async function getCardBalances(cardId: string) {
   const balances = await db.userBalance.findMany({
     where: { cardId },

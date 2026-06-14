@@ -40,12 +40,13 @@ export type Capability =
   | "inventory"
   | "settings"
   | "users"
-  | "refund";
+  | "refund"
+  | "credit";
 
 const ALL: Capability[] = [
   "dashboard", "live", "scan", "events", "reservations", "customers",
   "transactions", "campaigns", "reviews", "artists", "selection", "food",
-  "staff", "inventory", "settings", "users", "refund",
+  "staff", "inventory", "settings", "users", "refund", "credit",
 ];
 
 export const ROLE_CAPS: Record<Role, Capability[]> = {

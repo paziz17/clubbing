@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { db } from "@/lib/db";
 import { formatDateHe, formatTimeHe, formatILS } from "@/lib/utils";
 import { parseCsv } from "@/lib/enums";
+import { cityMatchesArea } from "@/lib/areas";
 import { Pencil, MapPin, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -53,26 +54,39 @@ function timingRange(timing?: string): { gte: Date; lte?: Date } {
 export default async function ResultsPage({ searchParams }: Props) {
   const params = await searchParams;
 
-  // Fetch a generous window of upcoming published events, then filter
-  // in-memory. Filters are applied defensively: if a filter eliminates
-  // every result we fall back to the broader list so the user never lands
-  // on an empty screen because of data/label mismatches.
+  // Timing window is pushed into the DB query (server-side filtering) so we
+  // only fetch the relevant slice instead of every upcoming event. Filters are
+  // applied defensively: if a narrowing filter eliminates every result we fall
+  // back to the broader list so the user never lands on an empty screen.
   const range = timingRange(params.timing);
   const allUpcoming = await db.event.findMany({
     where: {
       status: "PUBLISHED",
-      startsAt: { gte: new Date() },
+      startsAt: range.lte ? { gte: range.gte, lte: range.lte } : { gte: range.gte },
     },
     include: { venue: true },
     orderBy: { startsAt: "asc" },
     take: 100,
   });
 
-  // Timing filter (with fallback)
-  const byTiming = allUpcoming.filter(
-    (e) => e.startsAt >= range.gte && (!range.lte || e.startsAt <= range.lte)
-  );
-  let events = byTiming.length > 0 ? byTiming : allUpcoming;
+  // Fallback: if the timing window is empty, widen to all upcoming events.
+  let events = allUpcoming;
+  if (events.length === 0) {
+    events = await db.event.findMany({
+      where: { status: "PUBLISHED", startsAt: { gte: new Date() } },
+      include: { venue: true },
+      orderBy: { startsAt: "asc" },
+      take: 100,
+    });
+  }
+
+  // Area filter (soft match on venue city / event area, with fallback)
+  if (params.area && params.area !== "near-me") {
+    const byArea = events.filter(
+      (e) => cityMatchesArea(params.area, e.venue.city) || cityMatchesArea(params.area, e.area)
+    );
+    if (byArea.length > 0) events = byArea;
+  }
 
   // Genre filter (soft, with fallback)
   const selectedGenres = (params.genres?.split(",") ?? []).filter(Boolean);

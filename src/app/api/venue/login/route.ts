@@ -3,9 +3,10 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { createVenueSession } from "@/lib/venue-session";
 import { defaultLandingFor, normalizeRole } from "@/lib/rbac";
+import { verifyTOTP } from "@/lib/totp";
 
 export async function POST(req: NextRequest) {
-  const { username, password } = await req.json();
+  const { username, password, totpCode } = await req.json();
   if (!username || !password) {
     return NextResponse.json(
       { ok: false, error: "missing credentials" },
@@ -45,6 +46,20 @@ export async function POST(req: NextRequest) {
   if (!valid) {
     return NextResponse.json({ ok: false, error: "סיסמה שגויה" }, { status: 401 });
   }
+
+  // Optional 2FA on the master (OWNER) login — only enforced when enabled.
+  if (venue.totpEnabled && venue.totpSecret) {
+    if (!totpCode) {
+      return NextResponse.json({ ok: false, twofa: true }, { status: 401 });
+    }
+    if (!verifyTOTP(venue.totpSecret, String(totpCode))) {
+      return NextResponse.json(
+        { ok: false, twofa: true, error: "קוד אימות שגוי" },
+        { status: 401 }
+      );
+    }
+  }
+
   await createVenueSession(venue.id, venue.username, {
     role: "OWNER",
     displayName: venue.name,

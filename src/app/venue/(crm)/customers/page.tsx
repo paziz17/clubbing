@@ -1,12 +1,15 @@
-import { requireVenue } from "@/lib/venue-session";
+import { requireVenueSession } from "@/lib/venue-session";
+import { can } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { formatILS, formatCredits } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TIER_LABEL_HE } from "@/lib/tier";
+import CreditAction from "./credit-action";
 
 export default async function CustomersPage() {
-  const venue = await requireVenue();
+  const { venue, role } = await requireVenueSession();
+  const canCredit = can(role, "credit");
 
   // Group reservations by user, joining with their Club-it card if any
   const reservations = await db.reservation.findMany({
@@ -26,6 +29,7 @@ export default async function CustomersPage() {
 
   type Row = {
     id: string;
+    cardId: string | null;
     name: string;
     contact: string;
     tier: string;
@@ -44,6 +48,7 @@ export default async function CustomersPage() {
     const cardBalance = r.user?.clubItCard?.balances[0];
     const row: Row = existing ?? {
       id: key,
+      cardId: r.user?.clubItCard?.id ?? null,
       name: r.user?.name ?? r.guestName ?? "אורח",
       contact: r.user?.phone ?? r.user?.email ?? r.guestPhone ?? r.guestEmail ?? "—",
       tier: r.user?.clubItCard?.tier ?? "STANDARD",
@@ -93,6 +98,7 @@ export default async function CustomersPage() {
               <th className="px-5 py-3">קרדיטים</th>
               <th className="px-5 py-3">נצברו · מומשו</th>
               <th className="px-5 py-3 text-left">דרגה</th>
+              {canCredit && <th className="px-5 py-3 text-left">פעולות</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
@@ -115,6 +121,15 @@ export default async function CustomersPage() {
                 <td className="px-5 py-3 text-left">
                   <TierTag tier={c.tier} />
                 </td>
+                {canCredit && (
+                  <td className="px-5 py-3 text-left">
+                    {c.cardId ? (
+                      <CreditAction cardId={c.cardId} name={c.name} balance={c.creditsBalance} />
+                    ) : (
+                      <span className="text-xs text-ink-dim">אין כרטיס</span>
+                    )}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

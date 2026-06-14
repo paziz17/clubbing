@@ -20,6 +20,7 @@ import {
   Bell,
   CalendarClock,
   Boxes,
+  ScanLine,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -58,6 +59,7 @@ export function VenueSidebar({
       items: [
         { href: "/venue", label: "דשבורד", icon: LayoutDashboard },
         { href: "/venue/live", label: "ערב חי", icon: Radio },
+        { href: "/venue/scan", label: "סריקת כניסה", icon: ScanLine },
         { href: "/venue/events", label: "אירועים", icon: Calendar },
       ],
     },

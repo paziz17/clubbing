@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     where: {
       venueId: venue.id,
       status: "PAID",
-      createdAt: { gte: dayStart },
+      checkedInAt: { gte: dayStart },
     },
   });
   const recent = await db.reservation.findMany({

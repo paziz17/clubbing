@@ -248,6 +248,9 @@ model Reservation {
   creditsEarned   Int         @default(0)
   creditsSpent    Int         @default(0)
   skippedAuth     Boolean     @default(false)
+  // Event entry / QR scan check-in
+  checkedInAt     DateTime?
+  checkedInBy     String?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
@@ -256,6 +259,7 @@ model Reservation {
   @@index([userId])
   @@index([eventId])
   @@index([status])
+  @@index([venueId, checkedInAt])
 }
 
 // ============================================================

@@ -46,7 +46,8 @@ export interface GoOutEvent {
 
 function buildImageUrl(id: string, ts: number | undefined): string | null {
   if (!id || !ts) return null;
-  return `https://images.go-out.co/${id}${ts}_coverImage.jpg`;
+  // The asset path requires the /events/ prefix; without it the CDN returns 403.
+  return `https://images.go-out.co/events/${id}${ts}_coverImage.jpg`;
 }
 
 // Markers that mean the event is NOT in Israel (go-out also lists events abroad).

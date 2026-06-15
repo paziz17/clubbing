@@ -1,9 +1,15 @@
 /**
- * go-out.co scraper — fetches Israeli party/nightlife events.
+ * go-out.co scraper — fetches Israeli party/nightlife events from all regions.
  *
- * Strategy: parse __NEXT_DATA__ from the homepage + category pages.
- * No external deps needed — plain fetch with browser-like headers.
- * Image URL formula: https://images.go-out.co/{_id}{CoverImageTimestamp}_coverImage.jpg
+ * Strategy: parse __NEXT_DATA__ from the homepage. The homepage payload holds
+ * three distinct event collections, each with a different shape:
+ *   - homePageData.firstEvents       (full shape: _id, Url, Title, Adress, MusicType…)
+ *   - homePageData.nextWeek.events   (same full shape)
+ *   - homePageData.spotLight.Events  (compact shape: link, title, Address, url…)
+ * spotLight is the geographically diverse set (Tel Aviv, Haifa, Jerusalem,
+ * Eilat, Kinneret, Herzliya…), so it is the main source of country-wide events.
+ *
+ * No external deps — plain fetch with browser-like headers.
  */
 
 const HEADERS = {
@@ -16,8 +22,8 @@ const HEADERS = {
 
 const GOOUT_BASE = "https://go-out.co";
 
-// Pages to scrape — each yields its own set of events
-const SCRAPE_PAGES = ["/", "/nightlife", "/concerts", "/festivals"];
+// Pages to scrape — each yields its own homePageData payload.
+const SCRAPE_PAGES = ["/", "/nightlife", "/concerts", "/festivals", "/sports"];
 
 export interface GoOutEvent {
   externalId: string;
@@ -43,11 +49,68 @@ function buildImageUrl(id: string, ts: number | undefined): string | null {
   return `https://images.go-out.co/${id}${ts}_coverImage.jpg`;
 }
 
+// Markers that mean the event is NOT in Israel (go-out also lists events abroad).
+const FOREIGN_MARKERS = [
+  "greece",
+  "יוון",
+  "athens",
+  "cyprus",
+  "קפריסין",
+  "portugal",
+  "spain",
+  "ספרד",
+  "italy",
+  "איטליה",
+  "germany",
+  "גרמניה",
+  "thailand",
+  "georgia",
+  "גאורגיה",
+  "egaleo",
+  "marousi",
+];
+
+function isIsraeli(addr: string): boolean {
+  if (!addr) return false;
+  const lower = addr.toLowerCase();
+  if (FOREIGN_MARKERS.some((m) => lower.includes(m))) return false;
+  if (addr.includes("ישראל") || lower.includes("israel")) return true;
+  // Fallback: well-known Israeli city tokens for addresses missing a country.
+  const cities = [
+    "tel aviv",
+    "תל אביב",
+    "jerusalem",
+    "ירושלים",
+    "haifa",
+    "חיפה",
+    "eilat",
+    "אילת",
+    "herzliya",
+    "הרצליה",
+    "kinneret",
+    "כינרת",
+    "rishon",
+    "ראשון",
+    "netanya",
+    "נתניה",
+    "beer sheva",
+    "באר שבע",
+    "ramat",
+    "רמת",
+  ];
+  return cities.some((c) => lower.includes(c));
+}
+
 function parseCity(addr: string): string {
-  // "Rothschild Blvd 19, Tel Aviv-Yafo, 6688122, Israel"
+  // "Rothschild Blvd 19, Tel Aviv-Yafo, 6688122, Israel" → "Tel Aviv-Yafo"
   const parts = addr.split(",").map((s) => s.trim());
-  if (parts.length >= 2) return parts[1].replace(/\d+/g, "").trim() || parts[0];
-  return addr;
+  const noCountry = parts.filter(
+    (p) => p && !/^israel$/i.test(p) && p !== "ישראל",
+  );
+  if (noCountry.length >= 2) {
+    return noCountry[1].replace(/\d+/g, "").trim() || noCountry[0];
+  }
+  return noCountry[0] || addr;
 }
 
 const MUSIC_TYPE_MAP: Record<string, string> = {
@@ -90,8 +153,9 @@ function extractNextData(html: string): Record<string, unknown> | null {
   }
 }
 
+/** Full-shape events: homePageData.firstEvents / nextWeek.events */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function normalizeEvent(ev: Record<string, any>): GoOutEvent | null {
+function normalizeFull(ev: Record<string, any>): GoOutEvent | null {
   const id = ev["_id"] as string;
   const urlId = ev["Url"] as string;
   if (!id || !urlId) return null;
@@ -99,27 +163,22 @@ function normalizeEvent(ev: Record<string, any>): GoOutEvent | null {
   const startsAt = new Date(ev["StartingDate"] as string);
   if (isNaN(startsAt.getTime())) return null;
 
-  // Only import Israeli events
   const addr = (ev["EnglishAddress"] || ev["Adress"] || "") as string;
-  if (!addr.toLowerCase().includes("israel") && !addr.toLowerCase().includes("tel aviv") &&
-      !addr.toLowerCase().includes("jerusalem") && !addr.toLowerCase().includes("haifa")) {
-    return null;
-  }
+  if (!isIsraeli(addr)) return null;
 
   const endsAt = ev["EndingDate"] ? new Date(ev["EndingDate"] as string) : null;
   const ts = ev["CoverImageTimestamp"] as number | undefined;
 
-  // Price from ticket list or 0
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const tickets: any[] = Array.isArray(ev["Tickets"]) ? ev["Tickets"] : [];
   const minPrice = tickets.length
-    ? Math.min(...tickets.filter((t) => t.Active).map((t) => (t.Price ?? 0)))
+    ? Math.min(...tickets.filter((t) => t.Active).map((t) => t.Price ?? 0))
     : 0;
 
   return {
     externalId: urlId,
     externalUrl: `${GOOUT_BASE}/event/${urlId}`,
-    title: (ev["Title"] as string) || "",
+    title: ((ev["Title"] as string) || "").trim(),
     description: (ev["Description"] as string) || null,
     startsAt,
     endsAt: endsAt && !isNaN(endsAt.getTime()) ? endsAt : null,
@@ -134,13 +193,43 @@ function normalizeEvent(ev: Record<string, any>): GoOutEvent | null {
   };
 }
 
+/** Compact-shape events: homePageData.spotLight.Events (country-wide set) */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function normalizeSpotlight(ev: Record<string, any>): GoOutEvent | null {
+  const link = ev["link"] as string;
+  if (!link) return null;
+
+  const startsAt = new Date(ev["StartingDate"] as string);
+  if (isNaN(startsAt.getTime())) return null;
+
+  const addr = (ev["Address"] || ev["EnglishAddress"] || ev["Adress"] || "") as string;
+  if (!isIsraeli(addr)) return null;
+
+  return {
+    externalId: link,
+    externalUrl: `${GOOUT_BASE}/event/${link}`,
+    title: ((ev["title"] as string) || (ev["Title"] as string) || "").trim(),
+    description: null,
+    startsAt,
+    endsAt: null,
+    address: addr,
+    city: parseCity(addr),
+    lat: null,
+    lng: null,
+    imageUrl: (ev["url"] as string) || (ev["thumbnail"] as string) || null,
+    genres: "",
+    minPriceAgorot: 0,
+    eventType: "מועדוני לילה",
+  };
+}
+
 // ------- core scraper -------
 
 async function scrapePage(path: string): Promise<GoOutEvent[]> {
   const url = `${GOOUT_BASE}${path}`;
   let html: string;
   try {
-    const res = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(15_000) });
+    const res = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(20_000) });
     html = await res.text();
   } catch {
     console.warn(`[goout] fetch failed for ${url}`);
@@ -152,37 +241,39 @@ async function scrapePage(path: string): Promise<GoOutEvent[]> {
 
   const pageProps = (data as { props?: { pageProps?: Record<string, unknown> } })
     ?.props?.pageProps ?? {};
-
   const hpd = pageProps["homePageData"] as Record<string, unknown> | undefined;
-  const rawEvents: Record<string, unknown>[] = [];
-
-  if (hpd && typeof hpd === "object") {
-    for (const key of ["firstEvents", "nextWeek", "spotlightEvents", "todayEvents", "weekendEvents"]) {
-      const arr = hpd[key];
-      if (Array.isArray(arr)) {
-        rawEvents.push(...(arr as Record<string, unknown>[]));
-      }
-    }
-    // spotLight can be a dict or array
-    const sl = hpd["spotLight"];
-    if (Array.isArray(sl)) rawEvents.push(...(sl as Record<string, unknown>[]));
-  }
-
-  // Some pages return events directly in pageProps
-  for (const key of ["events", "eventList", "data"]) {
-    const arr = pageProps[key];
-    if (Array.isArray(arr)) rawEvents.push(...(arr as Record<string, unknown>[]));
-  }
 
   const seen = new Set<string>();
   const result: GoOutEvent[] = [];
-  for (const raw of rawEvents) {
-    const ev = normalizeEvent(raw as Record<string, unknown>);
-    if (ev && !seen.has(ev.externalId)) {
+  const push = (ev: GoOutEvent | null) => {
+    if (ev && ev.title && !seen.has(ev.externalId)) {
       seen.add(ev.externalId);
       result.push(ev);
     }
+  };
+
+  if (hpd && typeof hpd === "object") {
+    // Full-shape collections.
+    if (Array.isArray(hpd["firstEvents"])) {
+      for (const raw of hpd["firstEvents"] as Record<string, unknown>[]) {
+        push(normalizeFull(raw));
+      }
+    }
+    const nextWeek = hpd["nextWeek"] as { events?: unknown } | undefined;
+    if (nextWeek && Array.isArray(nextWeek.events)) {
+      for (const raw of nextWeek.events as Record<string, unknown>[]) {
+        push(normalizeFull(raw));
+      }
+    }
+    // Compact spotLight collection — the diverse, country-wide set.
+    const spotLight = hpd["spotLight"] as { Events?: unknown } | undefined;
+    if (spotLight && Array.isArray(spotLight.Events)) {
+      for (const raw of spotLight.Events as Record<string, unknown>[]) {
+        push(normalizeSpotlight(raw));
+      }
+    }
   }
+
   return result;
 }
 
@@ -191,12 +282,20 @@ export async function scrapeGoOut(): Promise<{
   errors: string[];
 }> {
   const allEvents = new Map<string, GoOutEvent>();
+  // Secondary dedup across collections/pages: same title + day can appear with
+  // both a numeric Url and a slug link.
+  const byTitleDay = new Set<string>();
   const errors: string[] = [];
 
   for (const path of SCRAPE_PAGES) {
     try {
       const events = await scrapePage(path);
-      for (const ev of events) allEvents.set(ev.externalId, ev);
+      for (const ev of events) {
+        const dayKey = `${ev.title.toLowerCase()}|${ev.startsAt.toISOString().slice(0, 10)}`;
+        if (allEvents.has(ev.externalId) || byTitleDay.has(dayKey)) continue;
+        allEvents.set(ev.externalId, ev);
+        byTitleDay.add(dayKey);
+      }
       console.log(`[goout] ${path} → ${events.length} events`);
     } catch (err) {
       const msg = `scrape ${path}: ${(err as Error).message}`;

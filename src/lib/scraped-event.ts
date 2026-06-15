@@ -155,6 +155,26 @@ export function clusterEvents<T>(
   return Array.from(groups.values());
 }
 
+// Keywords that mark an event as part of the LGBTQ+ / Pride community.
+const PRIDE_KEYWORDS = [
+  "pride", "lgbt", "lgbtq", "queer", "gay", "drag", "arisa", "gogay",
+  "גאווה", "להטב", "קוויר", "דראג", "אריסה", "פרייד", "קהילה הגאה", "מסיבת גאווה",
+];
+
+/** True when the given text clearly belongs to a Pride / LGBTQ+ event. */
+export function isPrideText(text: string): boolean {
+  const t = (text || "").toLowerCase();
+  return PRIDE_KEYWORDS.some((k) => t.includes(k));
+}
+
+/** Ensure the "pride" tag is present in a genres string when applicable. */
+export function withPrideTag(genres: string, pride: boolean): string {
+  const list = (genres || "").split(",").map((s) => s.trim()).filter(Boolean);
+  const hasPride = list.includes("pride");
+  if (pride && !hasPride) list.push("pride");
+  return list.join(",");
+}
+
 export function extractNextData(html: string): Record<string, unknown> | null {
   const idx = html.indexOf('id="__NEXT_DATA__"');
   if (idx === -1) return null;

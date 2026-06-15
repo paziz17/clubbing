@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { scrapeGoOut } from "@/lib/goout-scraper";
 import { scrapeZygo } from "@/lib/zygo-scraper";
 import { scrapeAirdrop } from "@/lib/airdrop-scraper";
-import { type ScrapedEvent, clusterEvents } from "@/lib/scraped-event";
+import { type ScrapedEvent, clusterEvents, isPrideText, withPrideTag } from "@/lib/scraped-event";
 
 // All aggregated sources share one neutral "national index" venue.
 const VENUE_SLUG = "go-out-import";
@@ -62,7 +62,7 @@ function richness(opts: {
   return s * 10 + SOURCE_PRIORITY[opts.source];
 }
 
-async function upsertEvent(venueId: string, source: Source, ev: ScrapedEvent): Promise<"created" | "updated"> {
+async function upsertEvent(venueId: string, source: Source, ev: ScrapedEvent, pride: boolean): Promise<"created" | "updated"> {
   const existing = await db.event.findFirst({
     where: { source, externalId: ev.externalId },
     select: { id: true },
@@ -74,7 +74,7 @@ async function upsertEvent(venueId: string, source: Source, ev: ScrapedEvent): P
     startsAt: ev.startsAt,
     endsAt: ev.endsAt,
     type: "PARTY",
-    genres: ev.genres,
+    genres: withPrideTag(ev.genres, pride),
     area: ev.city,
     imageUrl: ev.imageUrl,
     basePriceAgorot: ev.minPriceAgorot,
@@ -166,23 +166,30 @@ export async function POST(req: NextRequest) {
   }
 
   // 2) Cross-source dedup — cluster same-event copies, keep the richest one.
+  //    A cluster is Pride if ANY copy is flagged (e.g. the airdrop /pride board)
+  //    or matches Pride keywords, so the tag survives even if another copy wins.
   const clusters = clusterEvents(combined, (c) => c.ev.title, (c) => c.ev.startsAt);
-  const winners: { source: Source; ev: ScrapedEvent }[] = [];
+  const winners: { source: Source; ev: ScrapedEvent; pride: boolean }[] = [];
   for (const cluster of clusters) {
     const best = cluster.reduce((a, b) => {
       const ra = richness({ imageUrl: a.ev.imageUrl, basePriceAgorot: a.ev.minPriceAgorot, description: a.ev.description, source: a.source });
       const rb = richness({ imageUrl: b.ev.imageUrl, basePriceAgorot: b.ev.minPriceAgorot, description: b.ev.description, source: b.source });
       return rb > ra ? b : a;
     });
-    winners.push(best);
+    const pride = cluster.some((c) =>
+      (c.ev.genres || "").toLowerCase().includes("pride") ||
+      isPrideText(`${c.ev.title} ${c.ev.genres} ${c.ev.address}`),
+    );
+    winners.push({ source: best.source, ev: best.ev, pride });
   }
 
   // 3) Upsert winners.
-  let created = 0, updated = 0;
-  for (const { source, ev } of winners) {
-    const res = await upsertEvent(venueId, source, ev);
+  let created = 0, updated = 0, prideCount = 0;
+  for (const { source, ev, pride } of winners) {
+    const res = await upsertEvent(venueId, source, ev, pride);
     if (res === "created") created++;
     else updated++;
+    if (pride) prideCount++;
   }
 
   // 4) Clean past + duplicate rows still sitting in the DB.
@@ -196,6 +203,7 @@ export async function POST(req: NextRequest) {
     unique_after_dedup: winners.length,
     created,
     updated,
+    pride: prideCount,
     duplicates_collapsed: deduped,
     elapsed_ms: elapsed,
   };

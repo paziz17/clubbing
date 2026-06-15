@@ -19,7 +19,8 @@ import {
 } from "./scraped-event";
 
 const AIRDROP_BASE = "https://airdrop.co.il";
-// events.php is the master list; city pages add geographic coverage.
+// events.php is the master list; city pages add geographic coverage;
+// /pride is the dedicated LGBTQ+ community board (events tagged as pride).
 const SCRAPE_PAGES = [
   "/events.php",
   "/tel-aviv",
@@ -28,7 +29,9 @@ const SCRAPE_PAGES = [
   "/eilat",
   "/south",
   "/kinneret",
+  "/pride",
 ];
+const PRIDE_PAGES = new Set(["/pride"]);
 
 const GENRE_MAP: Record<string, string> = {
   "טכנו ואלקטרוני": "techno",
@@ -90,7 +93,7 @@ function pick(re: RegExp, block: string): string | null {
   return m ? decodeEntities(m[1]) : null;
 }
 
-function parseCards(html: string): ScrapedEvent[] {
+function parseCards(html: string, pride = false): ScrapedEvent[] {
   const out: ScrapedEvent[] = [];
   // Split on the wcard anchor; each piece (after the first) starts inside a card.
   const blocks = html.split(/<a class="wcard glass"/i).slice(1);
@@ -129,7 +132,7 @@ function parseCards(html: string): ScrapedEvent[] {
       lat: null,
       lng: null,
       imageUrl: img ? (img.startsWith("http") ? img : `${AIRDROP_BASE}${img}`) : null,
-      genres: mapGenre(genreHe),
+      genres: [mapGenre(genreHe), pride ? "pride" : ""].filter(Boolean).join(","),
       minPriceAgorot: priceAgorot(priceText),
       eventType: "מועדוני לילה",
     });
@@ -142,7 +145,7 @@ async function scrapePage(path: string): Promise<ScrapedEvent[]> {
   try {
     const res = await fetch(url, { headers: BROWSER_HEADERS, signal: AbortSignal.timeout(20_000) });
     const html = await res.text();
-    return parseCards(html);
+    return parseCards(html, PRIDE_PAGES.has(path));
   } catch {
     console.warn(`[airdrop] fetch failed for ${url}`);
     return [];

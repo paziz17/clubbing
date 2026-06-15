@@ -6,21 +6,24 @@ import { db } from "@/lib/db";
  * Used by the marketing website and any external consumer.
  *
  * GET /api/public/events
- *   ?limit=20        (default 20, max 100)
- *   ?source=go-out   (filter by source; omit for all)
- *   ?city=תל%20אביב  (fuzzy city filter)
+ *   ?limit=20               (default 20, max 100)
+ *   ?source=go-out,zygo     (one or more sources, comma-separated; omit for all)
+ *   ?city=תל%20אביב         (fuzzy city filter)
  */
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const limit = Math.min(parseInt(searchParams.get("limit") ?? "20"), 100);
-  const source = searchParams.get("source") ?? undefined;
+  const sourceParam = searchParams.get("source") ?? undefined;
+  const sources = sourceParam
+    ? sourceParam.split(",").map((s) => s.trim()).filter(Boolean)
+    : undefined;
   const city = searchParams.get("city") ?? undefined;
 
   const events = await db.event.findMany({
     where: {
       status: "PUBLISHED",
       startsAt: { gte: new Date() },
-      ...(source ? { source } : {}),
+      ...(sources && sources.length ? { source: { in: sources } } : {}),
       ...(city ? { area: { contains: city, mode: "insensitive" } } : {}),
     },
     include: { venue: { select: { name: true, slug: true, city: true, logoUrl: true } } },

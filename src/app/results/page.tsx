@@ -164,14 +164,30 @@ export default async function ResultsPage({ searchParams }: Props) {
                   {parseCsv(event.genres).slice(0, 2).map((g) => (
                     <Badge key={g} variant="gold">{g}</Badge>
                   ))}
-                  <Badge>+21</Badge>
+                  {event.source === "go-out" ? (
+                    <Badge variant="outline" className="text-[10px] border-blue-500/40 text-blue-400">GO-OUT</Badge>
+                  ) : (
+                    <Badge>+21</Badge>
+                  )}
                 </div>
                 <div className="text-right">
                   <div className="text-xs text-ink-muted">
                     {formatDateHe(event.startsAt)} · {formatTimeHe(event.startsAt)}
                   </div>
                   <div className="text-gold font-semibold">
-                    {formatILS(event.basePriceAgorot)}
+                    {event.source === "go-out" && event.externalUrl ? (
+                      <a
+                        href={event.externalUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:underline text-xs"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {formatILS(event.basePriceAgorot)} ↗
+                      </a>
+                    ) : (
+                      formatILS(event.basePriceAgorot)
+                    )}
                   </div>
                 </div>
               </div>

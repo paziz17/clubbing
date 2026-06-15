@@ -206,6 +206,10 @@ model Event {
   tags              String      @default("")
   lat               Float?
   lng               Float?
+  // External source tracking (go-out, etc.)
+  source            String?
+  externalId        String?
+  externalUrl       String?
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
 
@@ -215,9 +219,11 @@ model Event {
   reviews           VenueReview[]
   shifts            Shift[]
 
+  @@unique([source, externalId])
   @@index([venueId])
   @@index([status, startsAt])
   @@index([startsAt])
+  @@index([source])
 }
 
 model TicketType {

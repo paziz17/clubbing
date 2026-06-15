@@ -7,17 +7,21 @@ const SOURCE = "go-out";
 const VENUE_SLUG = "go-out-import";
 const VENUE_USERNAME = "goout-import";
 
+// User-facing labels — deliberately neutral, no reference/link to the source site.
+const VENUE_NAME = "אינדקס אירועים ארצי";
+const VENUE_DESC = "אירועים מתעדכנים אוטומטית מרחבי הארץ. מוצגים לצפייה בלבד.";
+
 async function ensureVenue(): Promise<string> {
-  let venue = await db.venue.findUnique({ where: { slug: VENUE_SLUG } });
+  const venue = await db.venue.findUnique({ where: { slug: VENUE_SLUG } });
   if (!venue) {
     const passwordHash = await bcrypt.hash("goout-readonly-2026", 10);
-    venue = await db.venue.create({
+    const created = await db.venue.create({
       data: {
         slug: VENUE_SLUG,
-        name: "GO-OUT (אינדקס חיצוני)",
+        name: VENUE_NAME,
         username: VENUE_USERNAME,
         passwordHash,
-        description: "אירועים שנאספו אוטומטית מ-go-out.co. מוצגים לצפייה בלבד.",
+        description: VENUE_DESC,
         address: "תל אביב-יפו",
         city: "תל אביב-יפו",
         lat: 32.0853,
@@ -25,6 +29,14 @@ async function ensureVenue(): Promise<string> {
         isExclusive: false,
         kitchenEnabled: false,
       },
+    });
+    return created.id;
+  }
+  // Keep the label neutral even if an older record used a branded name.
+  if (venue.name !== VENUE_NAME || venue.description !== VENUE_DESC) {
+    await db.venue.update({
+      where: { id: venue.id },
+      data: { name: VENUE_NAME, description: VENUE_DESC },
     });
   }
   return venue.id;

@@ -40,7 +40,6 @@ export async function GET(req: NextRequest) {
     genres: ev.genres,
     priceILS: ev.basePriceAgorot / 100,
     source: ev.source ?? "native",
-    externalUrl: ev.externalUrl ?? null,
     appUrl: `https://app.clubbing.co.il/events/${ev.id}`,
   }));
 

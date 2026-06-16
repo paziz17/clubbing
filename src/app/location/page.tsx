@@ -18,20 +18,63 @@ export default function LocationPage() {
   const router = useRouter();
   const [status, setStatus] = useState<"idle" | "requesting" | "granted" | "denied">("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [place, setPlace] = useState<string | null>(null);
 
   // Note: the location prompt is always shown after login so the user can
   // (re)approve GPS access. Previous decision is kept only as a hint and
   // is *not* used to silently skip this screen.
 
-  function goNext() {
-    setTimeout(() => router.replace("/onboarding"), 600);
+  function goNext(delay = 600) {
+    setTimeout(() => router.replace("/onboarding"), delay);
+  }
+
+  // Resolve coordinates to a city/area and persist everything we know so the
+  // rest of the app (discover "near me", results) can use it.
+  async function resolveAndStore(lat: number, lng: number, accuracy?: number) {
+    localStorage.setItem(
+      "clubbing.lastKnownPosition",
+      JSON.stringify({ lat, lng, accuracy: accuracy ?? null, ts: Date.now() }),
+    );
+    try {
+      const r = await fetch(`/api/reverse-geocode?lat=${lat}&lng=${lng}`);
+      if (r.ok) {
+        const d = await r.json();
+        if (d.areaId) localStorage.setItem("clubbing.area", d.areaId);
+        if (d.city) localStorage.setItem("clubbing.city", d.city);
+        setPlace(d.city ?? d.areaLabel ?? null);
+      }
+    } catch {
+      /* non-fatal — coordinates are stored regardless */
+    }
+  }
+
+  // Last-resort approximate location from IP (Google Geolocation API) when the
+  // user blocks GPS, so we can still surface something relevant nearby.
+  async function tryIpFallback(): Promise<boolean> {
+    try {
+      const r = await fetch("/api/geolocate", { method: "POST" });
+      if (!r.ok) return false;
+      const d = await r.json();
+      if (typeof d.lat === "number" && typeof d.lng === "number") {
+        await resolveAndStore(d.lat, d.lng, d.accuracy);
+        return true;
+      }
+    } catch {
+      /* ignore */
+    }
+    return false;
   }
 
   function requestLocation() {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
-      setErrorMsg("המכשיר שלך אינו תומך באיתור מיקום");
-      localStorage.setItem("clubbing.locationDecision", "denied");
-      goNext();
+      setStatus("requesting");
+      setErrorMsg(null);
+      tryIpFallback().then((ok) => {
+        localStorage.setItem("clubbing.locationDecision", ok ? "granted" : "denied");
+        setStatus(ok ? "granted" : "denied");
+        if (!ok) setErrorMsg("המכשיר שלך אינו תומך באיתור מיקום");
+        goNext(ok ? 900 : 1200);
+      });
       return;
     }
 
@@ -39,19 +82,21 @@ export default function LocationPage() {
     setErrorMsg(null);
 
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const payload = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          accuracy: pos.coords.accuracy,
-          ts: Date.now(),
-        };
+      async (pos) => {
         localStorage.setItem("clubbing.locationDecision", "granted");
-        localStorage.setItem("clubbing.lastKnownPosition", JSON.stringify(payload));
+        await resolveAndStore(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
         setStatus("granted");
-        goNext();
+        goNext(900);
       },
-      (err) => {
+      async (err) => {
+        // Permission/lookup failed — try IP before giving up.
+        const ok = await tryIpFallback();
+        if (ok) {
+          localStorage.setItem("clubbing.locationDecision", "granted");
+          setStatus("granted");
+          goNext(900);
+          return;
+        }
         let msg = "לא הצלחנו לאתר את המיקום שלך";
         if (err.code === err.PERMISSION_DENIED) msg = "ההרשאה נדחתה — תוכל/י לאפשר מאוחר יותר מההגדרות";
         else if (err.code === err.TIMEOUT) msg = "הבקשה לקחה יותר מדי זמן";
@@ -179,7 +224,7 @@ export default function LocationPage() {
           )}
           {status === "granted" && (
             <p className="text-center text-xs text-gold mb-3">
-              נמצאת/ה ✓ ממשיכים…
+              {place ? `מצאנו אותך: ${place} ✓` : "נמצאת/ה ✓"} ממשיכים…
             </p>
           )}
           {errorMsg && (

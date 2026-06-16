@@ -140,6 +140,19 @@ export default function DiscoverPage() {
     const current = AREAS[areaIdx];
     if (!current) return;
     setAreaExitDir(dir);
+    // Picking "near me" without a stored fix → grab GPS now so results can use it.
+    if (dir === "up" && current.id === "near-me" && !readStoredPosition() && typeof navigator !== "undefined" && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          localStorage.setItem(
+            "clubbing.lastKnownPosition",
+            JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude, ts: Date.now() }),
+          );
+        },
+        () => {},
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 },
+      );
+    }
     setTimeout(() => {
       if (dir === "up") { setArea(current.id); setAreaExitDir(null); setStep(4); return; }
       setAreaExitDir(null);
@@ -157,7 +170,29 @@ export default function DiscoverPage() {
     if (ageBand) params.set("age", ageBand);
     if (area) params.set("area", area);
     if (t) params.set("timing", t);
+    // "Near me" needs real coordinates so results can sort by distance / area.
+    if (area === "near-me") {
+      const pos = readStoredPosition();
+      if (pos) {
+        params.set("lat", String(pos.lat));
+        params.set("lng", String(pos.lng));
+      }
+    }
     router.push(`/results?${params.toString()}`);
+  }
+
+  function readStoredPosition(): { lat: number; lng: number } | null {
+    try {
+      const raw = localStorage.getItem("clubbing.lastKnownPosition");
+      if (!raw) return null;
+      const p = JSON.parse(raw);
+      if (typeof p.lat === "number" && typeof p.lng === "number") {
+        return { lat: p.lat, lng: p.lng };
+      }
+    } catch {
+      /* ignore */
+    }
+    return null;
   }
 
   function persist(data: object) {

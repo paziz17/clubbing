@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { db } from "@/lib/db";
-import { formatDateHe, formatTimeHe, formatILS } from "@/lib/utils";
+import { formatDateHe, formatTimeHe, formatILS, distanceKm } from "@/lib/utils";
 import { parseCsv } from "@/lib/enums";
 import { cityMatchesArea } from "@/lib/areas";
+import { nearestArea } from "@/lib/geo";
 import { Pencil, MapPin, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -80,12 +81,41 @@ export default async function ResultsPage({ searchParams }: Props) {
     });
   }
 
+  // Resolve the user's GPS fix (passed for "near me") into a concrete area so
+  // the soft city filter can be applied, and remember it for distance sorting.
+  const userLat = Number(params.lat);
+  const userLng = Number(params.lng);
+  const hasCoords = Number.isFinite(userLat) && Number.isFinite(userLng);
+  let nearLabel: string | null = null;
+  let effectiveArea = params.area;
+  if (params.area === "near-me" && hasCoords) {
+    const resolved = nearestArea(userLat, userLng);
+    effectiveArea = resolved.areaId;
+    nearLabel = resolved.label;
+  }
+
   // Area filter (soft match on venue city / event area, with fallback)
-  if (params.area && params.area !== "near-me") {
+  if (effectiveArea && effectiveArea !== "near-me") {
     const byArea = events.filter(
-      (e) => cityMatchesArea(params.area, e.venue.city) || cityMatchesArea(params.area, e.area)
+      (e) => cityMatchesArea(effectiveArea, e.venue.city) || cityMatchesArea(effectiveArea, e.area)
     );
     if (byArea.length > 0) events = byArea;
+  }
+
+  // Sort by real distance when we know where the user is (venues with coords
+  // float to the top, nearest first; others keep their chronological order).
+  if (hasCoords) {
+    events = [...events].sort((a, b) => {
+      const da =
+        a.venue.lat != null && a.venue.lng != null
+          ? distanceKm({ lat: userLat, lng: userLng }, { lat: a.venue.lat, lng: a.venue.lng })
+          : Number.POSITIVE_INFINITY;
+      const dbb =
+        b.venue.lat != null && b.venue.lng != null
+          ? distanceKm({ lat: userLat, lng: userLng }, { lat: b.venue.lat, lng: b.venue.lng })
+          : Number.POSITIVE_INFINITY;
+      return da - dbb;
+    });
   }
 
   // Genre filter (soft, with fallback)
@@ -104,8 +134,8 @@ export default async function ResultsPage({ searchParams }: Props) {
   events = events.slice(0, 30);
 
   const vibe = [
-    "🌙",
-    params.area === "tel-aviv" ? "לילה תל־אביבי" : "לילה",
+    nearLabel ? "📍" : "🌙",
+    nearLabel ? `קרוב אליך · ${nearLabel}` : params.area === "tel-aviv" ? "לילה תל־אביבי" : "לילה",
     params.genres?.split(",")[0],
     params.age,
     params.type === "PARTY" ? "מסיבה" : params.type,

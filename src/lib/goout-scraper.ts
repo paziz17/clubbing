@@ -22,8 +22,10 @@ const HEADERS = {
 
 const GOOUT_BASE = "https://go-out.co";
 
-// Pages to scrape — each yields its own homePageData payload.
-const SCRAPE_PAGES = ["/", "/nightlife", "/concerts", "/festivals", "/sports"];
+// Pages to scrape. As of 2026-06 the category routes (/nightlife, /concerts,
+// /festivals, /sports) all 404; only the homepage still ships a homePageData
+// payload, and its spotLight set already spans the whole country.
+const SCRAPE_PAGES = ["/"];
 
 export interface GoOutEvent {
   externalId: string;

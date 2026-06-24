@@ -16,7 +16,10 @@ import {
 } from "./scraped-event";
 
 const ZYGO_BASE = "https://zygo.co.il";
-const SCRAPE_PAGES = ["/", "/tel-aviv", "/weekend", "/jerusalem", "/haifa", "/south"];
+// Valid routes as of 2026-06: the homepage exposes the carousels, while the
+// city/weekend pages expose a flat `events` array. The old per-city slugs
+// (/jerusalem, /haifa, /south …) now 404, so they were removed.
+const SCRAPE_PAGES = ["/", "/tel-aviv", "/weekend", "/today"];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function minTicketPriceAgorot(tickets: any): number {
@@ -38,8 +41,20 @@ function normalize(ev: Record<string, any>): ScrapedEvent | null {
   const startsAt = new Date(ev["startDate"] as string);
   if (isNaN(startsAt.getTime())) return null;
 
-  const loc = (ev["location"] || {}) as { address?: string; lat?: number; lng?: number };
-  const addr = (loc.address || "") as string;
+  // `location` is either a plain address string (city/weekend pages) or an
+  // object { address, lat, lng } (homepage carousel). Handle both shapes.
+  const locRaw = ev["location"];
+  let addr = "";
+  let lat: number | null = null;
+  let lng: number | null = null;
+  if (typeof locRaw === "string") {
+    addr = locRaw;
+  } else if (locRaw && typeof locRaw === "object") {
+    const lo = locRaw as { address?: string; lat?: number; lng?: number };
+    addr = lo.address || "";
+    lat = typeof lo.lat === "number" ? lo.lat : null;
+    lng = typeof lo.lng === "number" ? lo.lng : null;
+  }
   if (!isIsraeli(addr)) return null;
 
   return {
@@ -51,8 +66,8 @@ function normalize(ev: Record<string, any>): ScrapedEvent | null {
     endsAt: null,
     address: addr,
     city: parseCity(addr),
-    lat: typeof loc.lat === "number" ? loc.lat : null,
-    lng: typeof loc.lng === "number" ? loc.lng : null,
+    lat,
+    lng,
     imageUrl: (ev["image"] as string) || null,
     genres: "",
     minPriceAgorot: minTicketPriceAgorot(ev["tickets"]),
@@ -90,6 +105,8 @@ async function scrapePage(path: string): Promise<ScrapedEvent[]> {
   };
   collect(pageProps["mainCaruselEvents"]);
   collect(pageProps["secenderyCaruselEvents"]);
+  // City/weekend pages expose a flat `events` array (same event shape).
+  collect(pageProps["events"]);
   return out;
 }
 

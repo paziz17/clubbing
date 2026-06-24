@@ -44,6 +44,9 @@ export async function GET(req: NextRequest) {
     priceILS: ev.basePriceAgorot / 100,
     source: ev.source ?? "native",
     appUrl: `https://app.clubbing.co.il/events/${ev.id}`,
+    // Direct link to buy on the original source site (go-out / zygo / airdrop).
+    // Falls back to the in-app page for native events that have no source URL.
+    ticketUrl: ev.externalUrl ?? `https://app.clubbing.co.il/events/${ev.id}`,
   }));
 
   return NextResponse.json(

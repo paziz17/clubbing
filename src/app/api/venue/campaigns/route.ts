@@ -3,11 +3,14 @@ import { z } from "zod";
 import { requireVenue } from "@/lib/venue-session";
 import { db } from "@/lib/db";
 import { sendWhatsApp, isWhatsAppConfigured } from "@/lib/whatsapp";
+import { sendToSubscriptions, pushConfigured } from "@/lib/push";
 
 const schema = z.object({
   kind: z.enum(["CHASER_50", "FREE_ENTRY_WOMEN", "FREE_FIRST_DRINK_WOMEN_18", "CUSTOM"]),
   message: z.string().min(5),
   audience: z.enum(["ALL_MEMBERS", "WOMEN_ONLY", "MEN_ONLY", "SILVER_AND_UP"]),
+  // Send a web-push alongside WhatsApp to members who enabled notifications.
+  push: z.boolean().optional().default(true),
 });
 
 export async function POST(req: NextRequest) {
@@ -58,6 +61,27 @@ export async function POST(req: NextRequest) {
     else if ("waMeUrl" in out) fallback.push(out.waMeUrl);
   }
 
+  // Push the same message to members who turned notifications on.
+  let pushDelivered = 0;
+  if (parsed.data.push && pushConfigured()) {
+    const phones = [...new Set(recipients.map((r) => r.user!.phone!).filter(Boolean))];
+    if (phones.length) {
+      const subs = await db.pushSubscription.findMany({
+        where: { active: true, phone: { in: phones } },
+        select: { id: true, endpoint: true, p256dh: true, auth: true },
+      });
+      if (subs.length) {
+        const res = await sendToSubscriptions(subs, {
+          title: venue.name || "Clubbing",
+          body: parsed.data.message,
+          url: "https://clubbing.co.il",
+          tag: `camp-${campaign.id}`,
+        });
+        pushDelivered = res.sent;
+      }
+    }
+  }
+
   await db.campaign.update({
     where: { id: campaign.id },
     data: {
@@ -71,6 +95,7 @@ export async function POST(req: NextRequest) {
     campaignId: campaign.id,
     recipients: recipients.length,
     delivered,
+    pushDelivered,
     mode: isWhatsAppConfigured() ? "cloud-api" : "fallback",
     fallback,
   });

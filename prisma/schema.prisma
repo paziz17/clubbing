@@ -708,3 +708,49 @@ model MenuItemIngredient {
 
   @@unique([menuItemId, inventoryItemId])
 }
+
+// ============================================================
+//  WEB PUSH NOTIFICATIONS  (VAPID / service worker)
+// ============================================================
+
+// A browser push subscription. Registered from the website ("הארנק שלי")
+// and/or the app. Loosely tied to a member by phone/email so the CRM and the
+// reminder cron can target the right people without requiring a full account.
+model PushSubscription {
+  id         String    @id @default(cuid())
+  endpoint   String    @unique
+  p256dh     String
+  auth       String
+  userId     String?
+  phone      String?
+  email      String?
+  // which origin registered it (clubbing.co.il / app.clubbing.co.il)
+  origin     String?
+  userAgent  String?
+  active     Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  lastSentAt DateTime?
+
+  reminders  PushReminder[]
+
+  @@index([phone])
+  @@index([active])
+}
+
+// A scheduled "your event is tonight" reminder, registered when a user saves
+// an event with push enabled. The cron sends rows whose fireAt has passed.
+model PushReminder {
+  id             String           @id @default(cuid())
+  subscriptionId String
+  subscription   PushSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  eventKey       String
+  title          String
+  body           String?
+  url            String?
+  fireAt         DateTime
+  sentAt         DateTime?
+  createdAt      DateTime         @default(now())
+
+  @@unique([subscriptionId, eventKey])
+  @@index([fireAt, sentAt])
+}

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
-import { Plus, Minus, X, CheckCircle2, Loader2 } from "lucide-react";
+import { Plus, Minus, X, CheckCircle2, Loader2, ShoppingCart } from "lucide-react";
 import { formatILS } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -172,24 +172,26 @@ export function BarPOS({ menu }: { menu: MenuItem[] }) {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-      <div className="lg:col-span-2 space-y-8">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Menu */}
+      <div className="lg:col-span-2 space-y-10">
         {SECTIONS.map((sec) => {
           const secItems = menu.filter((m) => (m.section ?? "RESTAURANT") === sec.key);
           if (secItems.length === 0) return null;
           const cats = Array.from(new Set(secItems.map((m) => m.category)));
           return (
-            <div key={sec.key} className="space-y-4">
-              <div className="flex items-center gap-3">
-                <h2 className="font-display text-xl text-gold whitespace-nowrap">{sec.label}</h2>
-                <span className="h-px flex-1 bg-line" />
+            <section key={sec.key} className="space-y-5">
+              <div className="flex items-center gap-4">
+                <h2 className="font-display text-2xl text-gold-gradient whitespace-nowrap">{sec.label}</h2>
+                <span className="h-px flex-1 bg-gradient-to-l from-gold/40 to-transparent" />
+                <span className="chip-gold">{secItems.length}</span>
               </div>
               {cats.map((cat) => (
-                <div key={cat}>
-                  <div className="text-xs text-ink-dim uppercase tracking-widest mb-2">
+                <div key={cat} className="space-y-2.5">
+                  <div className="text-[11px] font-semibold text-ink-dim uppercase tracking-[0.2em]">
                     {CATEGORY_LABELS[cat] ?? cat}
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                     {secItems
                       .filter((m) => m.category === cat)
                       .map((m) => {
@@ -198,20 +200,30 @@ export function BarPOS({ menu }: { menu: MenuItem[] }) {
                           <button
                             key={m.id}
                             onClick={() => add(m.id)}
-                            className={`rounded-xl border p-3 text-right transition-all ${
-                              qty > 0 ? "border-gold bg-gold/10" : "border-line bg-bg-card hover:border-gold/40"
+                            className={`group relative overflow-hidden rounded-2xl border p-3.5 text-right transition-all duration-200 active:scale-[0.97] ${
+                              qty > 0
+                                ? "border-gold bg-gold/10 shadow-gold"
+                                : "border-line bg-bg-card hover:border-gold/50 hover:bg-bg-elevated hover:-translate-y-0.5"
                             }`}
                           >
-                            <div className="font-semibold text-ink text-sm">{m.name}</div>
-                            <div className="text-gold text-sm">{formatILS(m.priceAgorot)}</div>
-                            {qty > 0 && <div className="text-xs text-gold mt-1">× {qty}</div>}
+                            {qty > 0 && (
+                              <span className="absolute top-2 left-2 min-w-[22px] h-[22px] px-1 rounded-full bg-gold text-black text-xs font-bold flex items-center justify-center shadow-gold">
+                                {qty}
+                              </span>
+                            )}
+                            <div className="font-semibold text-ink text-sm leading-snug line-clamp-2 min-h-[2.5rem]">
+                              {m.name}
+                            </div>
+                            <div className="mt-2 font-display text-lg text-gold tabular-nums">
+                              {formatILS(m.priceAgorot)}
+                            </div>
                           </button>
                         );
                       })}
                   </div>
                 </div>
               ))}
-            </div>
+            </section>
           );
         })}
         {menu.length === 0 && (
@@ -219,33 +231,71 @@ export function BarPOS({ menu }: { menu: MenuItem[] }) {
         )}
       </div>
 
-      <div className="card-elevated p-4 h-fit sticky top-4">
-        <h3 className="font-semibold text-ink mb-3">עגלה</h3>
-        <div className="space-y-2 max-h-[50vh] overflow-y-auto">
-          {items.filter((m) => m.qty > 0).map((m) => (
-            <div key={m.id} className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5">
-                <button onClick={() => sub(m.id)} className="w-7 h-7 rounded-full border border-line flex items-center justify-center">
-                  <Minus className="w-3 h-3" />
-                </button>
-                <span className="w-6 text-center text-gold">{m.qty}</span>
-                <button onClick={() => add(m.id)} className="w-7 h-7 rounded-full border border-line flex items-center justify-center">
-                  <Plus className="w-3 h-3" />
-                </button>
-              </div>
-              <div className="flex-1 text-sm text-ink truncate text-right">{m.name}</div>
-              <div className="text-sm text-ink-muted">{formatILS(m.priceAgorot * m.qty)}</div>
+      {/* Cart */}
+      <div className="lg:col-span-1">
+        <div className="card-elevated relative overflow-hidden h-fit sticky top-4">
+          <span className="absolute inset-x-0 top-0 h-[2px] bg-gold-gradient" />
+          <div className="p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display text-lg text-ink flex items-center gap-2">
+                <ShoppingCart className="w-4 h-4 text-gold" /> עגלה
+              </h3>
+              {count > 0 && <span className="chip-gold">{count} פריטים</span>}
             </div>
-          ))}
-          {count === 0 && <p className="text-sm text-ink-muted text-center py-6">העגלה ריקה</p>}
+            <div className="space-y-1 max-h-[46vh] overflow-y-auto no-scrollbar -mx-1 px-1">
+              {items
+                .filter((m) => m.qty > 0)
+                .map((m) => (
+                  <div
+                    key={m.id}
+                    className="flex items-center gap-2 py-2 border-b border-line/40 last:border-0"
+                  >
+                    <div className="flex items-center gap-1 rounded-full border border-line bg-bg-soft p-0.5">
+                      <button
+                        onClick={() => sub(m.id)}
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-ink-muted hover:text-gold hover:bg-bg-elevated transition-colors"
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="w-5 text-center text-gold font-semibold text-sm tabular-nums">{m.qty}</span>
+                      <button
+                        onClick={() => add(m.id)}
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-ink-muted hover:text-gold hover:bg-bg-elevated transition-colors"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <div className="flex-1 text-sm text-ink truncate text-right">{m.name}</div>
+                    <div className="text-sm text-ink-muted whitespace-nowrap tabular-nums">
+                      {formatILS(m.priceAgorot * m.qty)}
+                    </div>
+                  </div>
+                ))}
+              {count === 0 && (
+                <div className="text-center py-10">
+                  <ShoppingCart className="w-8 h-8 text-ink-dim mx-auto mb-2 opacity-40" />
+                  <p className="text-sm text-ink-muted">העגלה ריקה</p>
+                  <p className="text-xs text-ink-dim mt-1">בחר/י פריטים מהתפריט</p>
+                </div>
+              )}
+            </div>
+            <div className="border-t border-line mt-4 pt-4 flex items-center justify-between">
+              <span className="text-ink-muted text-sm">סה״כ לתשלום</span>
+              <span className="font-display text-3xl text-gold tabular-nums">{formatILS(subtotal)}</span>
+            </div>
+            <Button
+              variant="gold"
+              className="w-full mt-4 py-3.5 text-base"
+              disabled={count === 0 || creating}
+              onClick={createOrder}
+            >
+              {creating ? "..." : "לתשלום · צור QR"}
+            </Button>
+            <p className="text-center text-[11px] text-ink-dim mt-2">
+              תשלום מאובטח · הלקוח סורק QR מהטלפון
+            </p>
+          </div>
         </div>
-        <div className="border-t border-line mt-3 pt-3 flex items-center justify-between">
-          <span className="text-ink-muted text-sm">סה״כ</span>
-          <span className="font-display text-2xl text-gold">{formatILS(subtotal)}</span>
-        </div>
-        <Button variant="gold" className="w-full mt-3" disabled={count === 0 || creating} onClick={createOrder}>
-          {creating ? "..." : "לתשלום · צור QR"}
-        </Button>
       </div>
     </div>
   );

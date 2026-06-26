@@ -91,7 +91,7 @@ export function VenueSidebar({
         { href: "/venue/selection", label: "סלקציה · Exclusive", icon: ShieldCheck, cap: "selection" },
         { href: "/venue/bar", label: "בר · מכירה מהירה", icon: Beer, cap: "bar" },
         ...(kitchenEnabled
-          ? [{ href: "/venue/food", label: "מטבח וזמנות", icon: ChefHat, cap: "food" } as Item]
+          ? [{ href: "/venue/food", label: "מטבח · מכירה מהירה", icon: ChefHat, cap: "food" } as Item]
           : []),
       ],
     },

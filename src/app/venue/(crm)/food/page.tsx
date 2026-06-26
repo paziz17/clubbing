@@ -1,33 +1,27 @@
 import { requireVenue } from "@/lib/venue-session";
 import { db } from "@/lib/db";
-import { FoodTabs } from "./tabs";
+import { BarPOS } from "../bar/bar-pos";
 
 export default async function FoodPage() {
   const venue = await requireVenue();
-  const [menu, orders] = await Promise.all([
-    db.foodMenuItem.findMany({
-      where: { venueId: venue.id },
-      orderBy: { category: "asc" },
-    }),
-    db.foodOrder.findMany({
-      where: { venueId: venue.id },
-      include: { user: true },
-      orderBy: { createdAt: "desc" },
-      take: 50,
-    }),
-  ]);
+  // Kitchen behaves exactly like the bar: a fast-sale scanning POS that lists
+  // the full menu (בר on top, מסעדה below) and pays via dynamic QR. No order
+  // list / menu-management here by request.
+  const menu = await db.foodMenuItem.findMany({
+    where: { venueId: venue.id, active: true },
+    orderBy: [{ section: "asc" }, { category: "asc" }, { name: "asc" }],
+    select: { id: true, name: true, category: true, priceAgorot: true, section: true },
+  });
 
   return (
     <div className="crm-page-body">
       <div>
-        <h1 className="font-display text-3xl text-ink">מטבח</h1>
-        <p className="text-sm text-ink-muted">תפריט והזמנות מראש מבליינים</p>
+        <h1 className="font-display text-3xl text-ink">מטבח · מכירה מהירה</h1>
+        <p className="text-sm text-ink-muted">
+          בחר/י פריטים → צור הזמנה → הלקוח סורק ומשלם מהטלפון
+        </p>
       </div>
-      <FoodTabs
-        menu={JSON.parse(JSON.stringify(menu))}
-        orders={JSON.parse(JSON.stringify(orders))}
-        venueId={venue.id}
-      />
+      <BarPOS menu={menu} />
     </div>
   );
 }

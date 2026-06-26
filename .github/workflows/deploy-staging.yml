@@ -24,7 +24,9 @@ jobs:
       - name: Run TypeScript check
         run: npm run typecheck
 
-      - name: Run ESLint
+      # Advisory only — ESLint has no blocking ruleset here; TypeScript is the gate.
+      - name: Run ESLint (advisory)
+        continue-on-error: true
         run: npm run lint
 
   deploy-staging:

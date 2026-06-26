@@ -16,9 +16,6 @@ export default async function BarPosPage() {
 
   return (
     <div className="crm-page-body">
-      <div className="text-center max-w-xl mx-auto">
-        <h1 className="font-display text-3xl sm:text-4xl text-gold-gradient leading-tight">בר ומטבח</h1>
-      </div>
       <BarPOS menu={menu} />
     </div>
   );

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Cinzel } from "next/font/google";
+import { Inter, Cinzel, Frank_Ruhl_Libre } from "next/font/google";
 import "@/styles/globals.css";
 import { Providers } from "@/components/providers";
 
@@ -14,6 +14,14 @@ const display = Cinzel({
   variable: "--font-display",
   display: "swap",
   weight: ["400", "500", "600", "700"],
+});
+
+// Elegant Hebrew serif for premium display text (venue name, etc.)
+const displayHe = Frank_Ruhl_Libre({
+  subsets: ["hebrew"],
+  variable: "--font-display-he",
+  display: "swap",
+  weight: ["500", "700", "900"],
 });
 
 export const metadata: Metadata = {
@@ -50,7 +58,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="he" dir="rtl" className={`${body.variable} ${display.variable}`}>
+    <html lang="he" dir="rtl" className={`${body.variable} ${display.variable} ${displayHe.variable}`}>
       <body>
         <Providers>{children}</Providers>
       </body>

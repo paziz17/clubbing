@@ -120,22 +120,33 @@ export function VenueSidebar({
 
   return (
     <aside className="w-64 shrink-0 border-l border-line bg-bg-soft flex flex-col h-screen sticky top-0 overflow-y-auto">
-      {/* Brand */}
-      <div className="px-5 pt-5 pb-3 text-center">
-        <div className="font-display text-gold-gradient text-xl tracking-[0.22em] opacity-80">
+      {/* ── Brand ── */}
+      <div className="px-5 pt-6 pb-4 text-center relative">
+        <div className="font-display text-gold-gradient text-xl tracking-[0.3em] leading-none">
           CLUBBING
         </div>
-        <div className="text-[10px] text-ink-dim tracking-widest uppercase mt-0.5">
-          Venue CRM v1.3
+        <div className="mt-2 flex items-center justify-center gap-2">
+          <span className="h-px w-6 bg-gradient-to-l from-gold/50 to-transparent" />
+          <span className="text-[9px] text-ink-dim tracking-[0.35em] uppercase">Venue CRM v1.3</span>
+          <span className="h-px w-6 bg-gradient-to-r from-gold/50 to-transparent" />
         </div>
       </div>
 
-      {/* Venue + role */}
-      <div className="px-5 pb-4 border-b border-line text-center">
-        <div className="font-semibold text-ink text-sm truncate">{venueName}</div>
-        <div className="text-xs text-ink-muted truncate mt-0.5">
-          {displayName && displayName !== venueName ? displayName : "פאנל ניהול"}
-          <span className="text-gold"> · {ROLE_LABELS[roleNorm]}</span>
+      {/* ── Venue plaque ── */}
+      <div className="px-4 pb-5 border-b border-line">
+        <div className="relative rounded-xl border border-gold/30 bg-gradient-to-b from-gold/[0.08] to-transparent px-4 py-3.5 text-center shadow-[0_0_28px_rgba(212,175,55,0.08)] overflow-hidden">
+          <span className="absolute inset-x-0 top-0 h-px bg-gold-gradient opacity-70" />
+          <div className="font-display-he text-lg font-bold text-ink leading-snug text-balance">
+            {venueName}
+          </div>
+          <div className="mt-1.5 inline-flex items-center gap-1.5 text-[11px] text-ink-muted">
+            <span className="truncate">
+              {displayName && displayName !== venueName ? displayName : "פאנל ניהול"}
+            </span>
+            <span className="inline-flex items-center rounded-full border border-gold/30 bg-gold/10 px-2 py-0.5 text-[10px] font-semibold text-gold">
+              {ROLE_LABELS[roleNorm]}
+            </span>
+          </div>
         </div>
       </div>
 

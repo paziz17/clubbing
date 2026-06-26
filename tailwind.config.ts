@@ -48,6 +48,7 @@ const config: Config = {
       },
       fontFamily: {
         display: ["var(--font-display)", "Cinzel", "Playfair Display", "serif"],
+        "display-he": ["var(--font-display-he)", "Frank Ruhl Libre", "Cinzel", "serif"],
         body: ["var(--font-body)", "Inter", "system-ui", "sans-serif"],
         mono: ["JetBrains Mono", "ui-monospace", "monospace"],
       },

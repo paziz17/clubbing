@@ -26,8 +26,8 @@ export default async function CrmLayout({
         displayName={displayName}
       />
 
-      {/* Scrollable main content */}
-      <main className="flex-1 min-w-0 overflow-y-auto bg-bg">
+      {/* Scrollable main content — own scroll container so in-page sticky works */}
+      <main className="flex-1 min-w-0 h-screen overflow-y-auto bg-bg">
         {children}
       </main>
     </div>

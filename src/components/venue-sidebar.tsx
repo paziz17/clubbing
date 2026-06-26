@@ -55,13 +55,6 @@ export function VenueSidebar({
   const router = useRouter();
   const roleNorm = normalizeRole(role);
 
-  const initials = venueName
-    .split(" ")
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
-
   const rawGroups: Group[] = [
     {
       title: "ראשי",
@@ -127,29 +120,22 @@ export function VenueSidebar({
 
   return (
     <aside className="w-64 shrink-0 border-l border-line bg-bg-soft flex flex-col h-screen sticky top-0 overflow-y-auto">
-      {/* Logo + venue */}
-      <div className="px-5 py-5 border-b border-line">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-gold/10 border border-gold/30 flex items-center justify-center flex-shrink-0">
-            <span className="text-gold font-display text-sm font-bold">{initials}</span>
-          </div>
-          <div className="min-w-0">
-            <div className="font-semibold text-ink text-sm truncate">{venueName}</div>
-            <div className="text-xs text-ink-muted truncate">
-              {displayName && displayName !== venueName ? displayName : "פאנל ניהול"}
-              <span className="text-gold"> · {ROLE_LABELS[roleNorm]}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Brand */}
-      <div className="px-5 py-3 border-b border-line/50 text-center">
-        <div className="font-display text-gold-gradient text-lg tracking-[0.2em] opacity-70">
+      <div className="px-5 pt-5 pb-3 text-center">
+        <div className="font-display text-gold-gradient text-xl tracking-[0.22em] opacity-80">
           CLUBBING
         </div>
         <div className="text-[10px] text-ink-dim tracking-widest uppercase mt-0.5">
           Venue CRM v1.3
+        </div>
+      </div>
+
+      {/* Venue + role */}
+      <div className="px-5 pb-4 border-b border-line text-center">
+        <div className="font-semibold text-ink text-sm truncate">{venueName}</div>
+        <div className="text-xs text-ink-muted truncate mt-0.5">
+          {displayName && displayName !== venueName ? displayName : "פאנל ניהול"}
+          <span className="text-gold"> · {ROLE_LABELS[roleNorm]}</span>
         </div>
       </div>
 

@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
 import { getVenueFromCookie } from "@/lib/venue-session";
-import { normalizeRole } from "@/lib/rbac";
+import { normalizeRole, isPosOnlyRole } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { VenueSidebar } from "@/components/venue-sidebar";
+import { PosTopbar } from "@/components/pos-topbar";
 
 export default async function CrmLayout({
   children,
@@ -15,6 +16,16 @@ export default async function CrmLayout({
   if (!venue) redirect("/venue/login");
   const role = normalizeRole(session.role ?? "OWNER");
   const displayName = session.displayName ?? venue.name;
+
+  // Bartenders / waiters get a stripped POS-only shell — no CRM sidebar.
+  if (isPosOnlyRole(role)) {
+    return (
+      <div className="crm-container flex flex-col h-screen" dir="rtl">
+        <PosTopbar venueName={venue.name} displayName={displayName} role={role} />
+        <main className="flex-1 min-w-0 overflow-y-auto bg-bg">{children}</main>
+      </div>
+    );
+  }
 
   return (
     <div className="crm-container flex min-h-screen" dir="rtl">

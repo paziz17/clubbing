@@ -8,9 +8,9 @@
  *  - DOOR    — entry only (scan + live view).
  */
 
-export type Role = "OWNER" | "MANAGER" | "STAFF" | "DOOR" | "BAR";
+export type Role = "OWNER" | "MANAGER" | "STAFF" | "DOOR" | "BAR" | "WAITER";
 
-export const ROLES: Role[] = ["OWNER", "MANAGER", "STAFF", "DOOR", "BAR"];
+export const ROLES: Role[] = ["OWNER", "MANAGER", "STAFF", "DOOR", "BAR", "WAITER"];
 
 export const ROLE_LABELS: Record<Role, string> = {
   OWNER: "בעלים",
@@ -18,6 +18,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   STAFF: "צוות",
   DOOR: "כניסה/דלת",
   BAR: "ברמן/ית",
+  WAITER: "מלצר/ית",
 };
 
 /**
@@ -59,10 +60,18 @@ export const ROLE_CAPS: Record<Role, Capability[]> = {
     "dashboard", "live", "scan", "events", "reservations", "promoters", "customers",
     "reviews", "artists", "selection", "food", "bar", "staff", "inventory",
   ],
-  // Bartender session: fast-sale interface only (no CRM data exposure).
+  // Bartender / waiter sessions: fast-sale "בר ומטבח" POS only (no CRM data).
   BAR: ["bar"],
+  WAITER: ["bar", "food"],
   DOOR: ["live", "scan"],
 };
+
+// Roles that get the stripped-down POS-only shell (no full CRM sidebar).
+export const POS_ONLY_ROLES: Role[] = ["BAR", "WAITER"];
+
+export function isPosOnlyRole(role: string | null | undefined): boolean {
+  return (POS_ONLY_ROLES as string[]).includes(normalizeRole(role));
+}
 
 export function normalizeRole(role?: string | null): Role {
   const r = (role || "").toUpperCase();
@@ -78,7 +87,7 @@ export function can(role: string | null | undefined, cap: Capability): boolean {
 export function defaultLandingFor(role: string | null | undefined): string {
   const r = normalizeRole(role);
   if (r === "DOOR") return "/venue/scan";
-  if (r === "BAR") return "/venue/bar";
+  if (r === "BAR" || r === "WAITER") return "/venue/bar";
   return "/venue";
 }
 

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
-import { reconcileStripeSession } from "@/lib/checkout";
+import { reconcileGrowProcess, issueTicketInstances } from "@/lib/checkout";
 import { makeQrDataUrl } from "@/lib/qr";
 import Link from "next/link";
 import { formatDateHe, formatTimeHe, formatILS } from "@/lib/utils";
@@ -13,16 +13,15 @@ export default async function TicketPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ source?: string; session_id?: string }>;
+  searchParams: Promise<{ source?: string }>;
 }) {
   const { id } = await params;
-  const { source, session_id } = await searchParams;
+  const { source } = await searchParams;
 
-  // When returning from Stripe Checkout, reconcile the payment so the
-  // reservation is marked PAID even if the webhook hasn't arrived yet.
-  if (session_id) {
-    await reconcileStripeSession(id, session_id);
-  }
+  // Grow's success redirect carries no transaction details, so reconcile here
+  // as a fallback (no-ops unless this is a pending Grow reservation) — the
+  // server-to-server webhook is the primary confirmation path.
+  await reconcileGrowProcess(id);
 
   const reservation = await db.reservation.findUnique({
     where: { id },
@@ -30,7 +29,18 @@ export default async function TicketPage({
   });
   if (!reservation) notFound();
 
-  const qr = await makeQrDataUrl(reservation.ticketCode);
+  // One QR per seat. Ensure instances exist for paid orders (idempotent),
+  // then render each. Falls back to the order code for unpaid/legacy rows.
+  let instances: { code: string; seat: number; status: string }[] = [];
+  if (reservation.status === "PAID") {
+    instances = await issueTicketInstances(reservation.id);
+  }
+  if (instances.length === 0) {
+    instances = [{ code: reservation.ticketCode, seat: 1, status: "VALID" }];
+  }
+  const qrs = await Promise.all(
+    instances.map(async (t) => ({ ...t, qr: await makeQrDataUrl(t.code) }))
+  );
   const usedClubIt = source === "club-it" || reservation.paymentMethod === "CLUB_IT";
 
   return (
@@ -50,41 +60,50 @@ export default async function TicketPage({
         </p>
       </div>
 
-      {/* Digital ticket */}
+      {/* Digital ticket(s) — one QR per seat */}
       <div className="px-5">
         <div className="card-elevated overflow-hidden">
-          <div className="bg-gold/10 border-b border-gold/30 px-5 py-3 flex items-center justify-between">
-            <span className="text-xs uppercase tracking-widest text-gold">כרטיס דיגיטלי</span>
-            <span className="font-mono text-xs text-ink-muted">
-              {reservation.ticketCode.slice(0, 8).toUpperCase()}
-            </span>
+          <div className="p-5 space-y-3 text-sm border-b border-line">
+            <Row icon={<Calendar className="w-4 h-4" />}>
+              <div className="font-semibold text-ink">{reservation.event.name}</div>
+              <div className="text-ink-muted">
+                {formatDateHe(reservation.event.startsAt)} · {formatTimeHe(reservation.event.startsAt)}
+              </div>
+            </Row>
+            <Row icon={<MapPin className="w-4 h-4" />}>
+              <div className="font-semibold text-ink">{reservation.venue.name}</div>
+              <div className="text-ink-muted">{reservation.venue.address}</div>
+            </Row>
+            <Row icon={<Users className="w-4 h-4" />}>
+              <div className="text-ink">{reservation.quantity} {reservation.quantity === 1 ? "אדם" : "אנשים"}</div>
+            </Row>
           </div>
-          <div className="p-5">
-            <div className="flex justify-center mb-5">
-              <img
-                src={qr}
-                alt="QR"
-                width={240}
-                height={240}
-                className="rounded-lg border border-gold/20 bg-bg p-2"
-              />
+          {qrs.map((t) => (
+            <div key={t.code} className="p-5 border-b border-line last:border-b-0">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs uppercase tracking-widest text-gold">
+                  כרטיס {t.seat} מתוך {reservation.quantity}
+                </span>
+                <span className="font-mono text-xs text-ink-muted">
+                  {t.code.slice(0, 8).toUpperCase()}
+                </span>
+              </div>
+              <div className="flex justify-center">
+                <img
+                  src={t.qr}
+                  alt={`QR ${t.seat}`}
+                  width={220}
+                  height={220}
+                  className={`rounded-lg border border-gold/20 bg-bg p-2 ${
+                    t.status === "CHECKED_IN" ? "opacity-40 grayscale" : ""
+                  }`}
+                />
+              </div>
+              {t.status === "CHECKED_IN" && (
+                <p className="text-center text-xs text-ink-muted mt-2">כרטיס זה כבר נוצל ✓</p>
+              )}
             </div>
-            <div className="space-y-3 text-sm">
-              <Row icon={<Calendar className="w-4 h-4" />}>
-                <div className="font-semibold text-ink">{reservation.event.name}</div>
-                <div className="text-ink-muted">
-                  {formatDateHe(reservation.event.startsAt)} · {formatTimeHe(reservation.event.startsAt)}
-                </div>
-              </Row>
-              <Row icon={<MapPin className="w-4 h-4" />}>
-                <div className="font-semibold text-ink">{reservation.venue.name}</div>
-                <div className="text-ink-muted">{reservation.venue.address}</div>
-              </Row>
-              <Row icon={<Users className="w-4 h-4" />}>
-                <div className="text-ink">{reservation.quantity} {reservation.quantity === 1 ? "אדם" : "אנשים"}</div>
-              </Row>
-            </div>
-          </div>
+          ))}
         </div>
 
         <TicketActions

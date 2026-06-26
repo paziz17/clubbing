@@ -10,7 +10,7 @@ export function RefundButton({ reservationId }: { reservationId: string }) {
 
   async function refund() {
     const ok = window.confirm(
-      "לבצע החזר כספי מלא להזמנה זו?\nהלקוח יזוכה דרך Stripe וקרדיטים שנצברו על הרכישה יבוטלו. לא ניתן לבטל פעולה זו."
+      "לבצע החזר כספי מלא להזמנה זו?\nהלקוח יזוכה דרך Grow וקרדיטים שנצברו על הרכישה יבוטלו. לא ניתן לבטל פעולה זו."
     );
     if (!ok) return;
     setLoading(true);

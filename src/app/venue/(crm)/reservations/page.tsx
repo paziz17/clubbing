@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ReservationsFilter } from "./filter";
 import { RefundButton } from "./refund-button";
+import { ApprovalActions } from "./approval-actions";
 
 interface Props {
   searchParams: Promise<{ q?: string; status?: string }>;
@@ -86,6 +87,9 @@ export default async function ReservationsPage({ searchParams }: Props) {
                     {timeAgoHe(r.createdAt)}
                   </td>
                   <td className="px-5 py-3 text-left">
+                    {r.status === "PENDING_APPROVAL" && (
+                      <ApprovalActions reservationId={r.id} />
+                    )}
                     {canRefund && r.status === "PAID" && (
                       <RefundButton reservationId={r.id} />
                     )}
@@ -108,17 +112,24 @@ export default async function ReservationsPage({ searchParams }: Props) {
 }
 
 function statusVariant(s: string): "success" | "warn" | "danger" | "default" {
-  return s === "PAID"
-    ? "success"
-    : s === "PENDING"
-    ? "warn"
-    : s === "FAILED"
-    ? "danger"
-    : "default";
+  if (s === "PAID") return "success";
+  if (s === "PENDING_APPROVAL" || s === "PENDING_PAYMENT" || s === "PENDING") return "warn";
+  if (s === "FAILED" || s === "REJECTED" || s === "EXPIRED") return "danger";
+  return "default";
 }
 
 function statusLabel(s: string) {
   return (
-    { PAID: "שולם", PENDING: "ממתין", FAILED: "נכשל", REFUNDED: "הוחזר", CANCELLED: "בוטל" }[s] ?? s
+    {
+      PENDING_APPROVAL: "ממתין לאישור",
+      PENDING_PAYMENT: "ממתין לתשלום",
+      PAID: "שולם",
+      PENDING: "ממתין",
+      FAILED: "נכשל",
+      REJECTED: "נדחה",
+      EXPIRED: "פג תוקף",
+      REFUNDED: "הוחזר",
+      CANCELLED: "בוטל",
+    }[s] ?? s
   );
 }

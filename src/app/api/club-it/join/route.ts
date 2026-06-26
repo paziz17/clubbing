@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { issueClubItCard } from "@/lib/stripe";
+import { issueClubItCard } from "@/lib/club-it-card";
 import { z } from "zod";
 
 const schema = z.object({
@@ -43,13 +43,12 @@ export async function POST(req: NextRequest) {
       userId,
       displayName: parsed.data.name.toUpperCase(),
       cardNumberLast4: issued.last4,
-      stripeCardId: issued.cardId,
+      virtualCardId: issued.cardId,
     },
   });
 
   return NextResponse.json({
     cardId: card.id,
     last4: card.cardNumberLast4,
-    demo: issued.demo,
   });
 }

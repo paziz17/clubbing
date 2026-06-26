@@ -16,6 +16,15 @@ export type Gender = (typeof Genders)[number];
 export const EventStatuses = ["DRAFT", "PUBLISHED", "ENDED"] as const;
 export type EventStatus = (typeof EventStatuses)[number];
 
+// Ticket approval policy: AUTO routes straight to payment; MANUAL holds the
+// order in Pending_Approval until the organizer approves/rejects (selection).
+export const EventApprovalPolicies = ["AUTO", "MANUAL"] as const;
+export type EventApprovalPolicy = (typeof EventApprovalPolicies)[number];
+
+export function asApprovalPolicy(value: string | null | undefined): EventApprovalPolicy {
+  return value === "MANUAL" ? "MANUAL" : "AUTO";
+}
+
 export const EventTypes = ["PARTY", "LIVE", "COCKTAILS", "AFTERHOURS"] as const;
 export type EventType = (typeof EventTypes)[number];
 
@@ -23,17 +32,40 @@ export const AgeBands = ["AGE_18_21", "AGE_21_25", "AGE_25_30", "AGE_30_40", "AG
 export type AgeBand = (typeof AgeBands)[number];
 
 // ----- Reservations / Payments -----
+// Order life-cycle (per platform spec):
+//   PENDING_APPROVAL → (PENDING_PAYMENT | REJECTED)
+//   PENDING_PAYMENT  → (PAID | EXPIRED)
+//   PAID             → (CHECKED_IN via checkedInAt | REFUNDED)
+//   REJECTED/CANCELLED/EXPIRED → terminal
+// Legacy values (PENDING/FAILED) kept for backward-compatibility with old rows.
 export const ReservationStatuses = [
+  "PENDING_APPROVAL",
+  "PENDING_PAYMENT",
   "PENDING",
   "PAID",
   "FAILED",
+  "REJECTED",
+  "EXPIRED",
   "REFUNDED",
   "CANCELLED",
 ] as const;
 export type ReservationStatus = (typeof ReservationStatuses)[number];
 
+// Per-ticket instance (one QR per seat).
+export const TicketInstanceStatuses = ["VALID", "CHECKED_IN", "VOID"] as const;
+export type TicketInstanceStatus = (typeof TicketInstanceStatuses)[number];
+
+/** Statuses for which the locked ticket stock should be considered "released". */
+export const RELEASED_RESERVATION_STATUSES: readonly ReservationStatus[] = [
+  "REJECTED",
+  "EXPIRED",
+  "CANCELLED",
+  "REFUNDED",
+  "FAILED",
+];
+
 export const PaymentMethods = [
-  "STRIPE_CARD",
+  "GROW",
   "APPLE_PAY",
   "GOOGLE_PAY",
   "CLUB_IT",
@@ -107,6 +139,15 @@ export const FoodOrderStatuses = [
   "CANCELLED",
 ] as const;
 export type FoodOrderStatus = (typeof FoodOrderStatuses)[number];
+
+// ----- Bar POS -----
+export const BarOrderStatuses = [
+  "PENDING_PAYMENT",
+  "PAID",
+  "CANCELLED",
+  "EXPIRED",
+] as const;
+export type BarOrderStatus = (typeof BarOrderStatuses)[number];
 
 // ----- Helpers for SQLite-stored CSV arrays -----
 export const parseCsv = (s: string | null | undefined): string[] =>

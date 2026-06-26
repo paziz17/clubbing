@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
   const creditsApplied = Math.min(body.creditsApplied ?? 0, subtotal);
   const cardCharge = subtotal - creditsApplied;
 
-  let paymentMethod: PaymentMethod = "STRIPE_CARD";
+  let paymentMethod: PaymentMethod = "GROW";
   if (creditsApplied === subtotal) paymentMethod = "CREDITS";
   else if (creditsApplied > 0) paymentMethod = "MIXED";
 

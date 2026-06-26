@@ -31,6 +31,7 @@ export function CheckoutFlow({ event }: { event: Event }) {
   const [age18, setAge18] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const ticket = event.tickets.find((t) => t.id === ticketId);
   const unit = ticket?.priceAgorot ?? event.basePriceAgorot;
@@ -54,7 +55,9 @@ export function CheckoutFlow({ event }: { event: Event }) {
         }),
       });
       const json = await res.json();
-      if (json.checkoutUrl) {
+      if (json.requiresApproval || json.status === "pending_approval") {
+        setSubmitted(true);
+      } else if (json.checkoutUrl) {
         window.location.href = json.checkoutUrl;
       } else if (json.reservationId) {
         router.push(`/tickets/${json.reservationId}`);
@@ -70,6 +73,26 @@ export function CheckoutFlow({ event }: { event: Event }) {
       return;
     }
     setStep(2);
+  }
+
+  if (submitted) {
+    return (
+      <div className="mobile-screen pb-10">
+        <div className="px-6 pt-20 text-center">
+          <div className="inline-flex w-16 h-16 rounded-full bg-gold/10 border border-gold/40 items-center justify-center mb-5 text-3xl">
+            ⏳
+          </div>
+          <h1 className="font-display text-2xl text-gold mb-3">בקשתך נשלחה לאישור</h1>
+          <p className="text-sm text-ink-muted leading-relaxed">
+            האירוע <span className="text-ink">{event.name}</span> דורש אישור של המארגן/ת
+            (סלקציה). ברגע שתאושר/י, יישלח אלייך לינק לתשלום במייל / וואטסאפ.
+          </p>
+          <button onClick={() => router.push("/")} className="btn-gold mt-8 px-6 h-12">
+            חזרה לעמוד הבית
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -181,9 +204,9 @@ export function CheckoutFlow({ event }: { event: Event }) {
             <div className="space-y-2">
               <PayMethod
                 emoji="💳"
-                label="כרטיס אשראי / Apple Pay / Google Pay"
-                desc="Visa · Mastercard · Amex · Bit local"
-                onClick={() => startPayment("STRIPE_CARD")}
+                label="כרטיס אשראי / Bit / Apple Pay / Google Pay"
+                desc="Visa · Mastercard · Amex · bit · PayBox"
+                onClick={() => startPayment("GROW")}
                 loading={loading}
                 primary
               />

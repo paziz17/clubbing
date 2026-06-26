@@ -309,22 +309,22 @@ async function main() {
 
   // Past reservations (PAID)
   const reservationData = [
-    { userIdx: 0, event: evSummer25, ticket: "STANDARD", qty: 2, price: 9000,  daysBack: 39, method: "STRIPE_CARD" },
+    { userIdx: 0, event: evSummer25, ticket: "STANDARD", qty: 2, price: 9000,  daysBack: 39, method: "GROW" },
     { userIdx: 1, event: evPurim,    ticket: "STANDARD", qty: 1, price: 6000,  daysBack: 74, method: "GOOGLE_PAY"  },
-    { userIdx: 2, event: evSummer25, ticket: "VIP",      qty: 2, price: 22000, daysBack: 39, method: "STRIPE_CARD" },
+    { userIdx: 2, event: evSummer25, ticket: "VIP",      qty: 2, price: 22000, daysBack: 39, method: "GROW" },
     { userIdx: 3, event: evPurim,    ticket: "EARLY_BIRD",qty: 1,price: 4500,  daysBack: 74, method: "CLUB_IT"    },
-    { userIdx: 4, event: evJazz25,   ticket: "STANDARD", qty: 2, price: 18000, daysBack: 14, method: "STRIPE_CARD" },
+    { userIdx: 4, event: evJazz25,   ticket: "STANDARD", qty: 2, price: 18000, daysBack: 14, method: "GROW" },
     { userIdx: 5, event: evSummer25, ticket: "STANDARD", qty: 1, price: 9000,  daysBack: 38, method: "APPLE_PAY"  },
-    { userIdx: 6, event: evJazz25,   ticket: "VIP",      qty: 1, price: 42000, daysBack: 14, method: "STRIPE_CARD" },
-    { userIdx: 8, event: evPurim,    ticket: "STANDARD", qty: 3, price: 6000,  daysBack: 73, method: "STRIPE_CARD" },
+    { userIdx: 6, event: evJazz25,   ticket: "VIP",      qty: 1, price: 42000, daysBack: 14, method: "GROW" },
+    { userIdx: 8, event: evPurim,    ticket: "STANDARD", qty: 3, price: 6000,  daysBack: 73, method: "GROW" },
     { userIdx: 10, event: evSummer25,ticket: "VIP",      qty: 2, price: 22000, daysBack: 40, method: "CREDITS"    },
-    { userIdx: 11, event: evJazz25,  ticket: "STANDARD", qty: 2, price: 18000, daysBack: 15, method: "STRIPE_CARD" },
+    { userIdx: 11, event: evJazz25,  ticket: "STANDARD", qty: 2, price: 18000, daysBack: 15, method: "GROW" },
     // Upcoming reservations
-    { userIdx: 0, event: evNight,  ticket: "VIP",      qty: 2, price: 22000, daysBack: -6,  method: "STRIPE_CARD" },
+    { userIdx: 0, event: evNight,  ticket: "VIP",      qty: 2, price: 22000, daysBack: -6,  method: "GROW" },
     { userIdx: 1, event: evNight,  ticket: "STANDARD", qty: 1, price: 9000,  daysBack: -3,  method: "GOOGLE_PAY"  },
-    { userIdx: 2, event: evJazz,   ticket: "VIP",      qty: 1, price: 42000, daysBack: -2,  method: "STRIPE_CARD" },
+    { userIdx: 2, event: evJazz,   ticket: "VIP",      qty: 1, price: 42000, daysBack: -2,  method: "GROW" },
     { userIdx: 4, event: evBrunch, ticket: "STANDARD", qty: 2, price: 9800,  daysBack: -1,  method: "APPLE_PAY"  },
-    { userIdx: 5, event: evJazz,   ticket: "STANDARD", qty: 2, price: 18000, daysBack: -4,  method: "STRIPE_CARD" },
+    { userIdx: 5, event: evJazz,   ticket: "STANDARD", qty: 2, price: 18000, daysBack: -4,  method: "GROW" },
     { userIdx: 9, event: evNight,  ticket: "STANDARD", qty: 3, price: 9000,  daysBack: -1,  method: "CLUB_IT"    },
   ];
 
@@ -498,7 +498,7 @@ async function main() {
         items: JSON.stringify(orderItems.map(i => ({ itemId: i.itemId, qty: i.qty, price: i.unitPriceAgorot }))),
         subtotalAgorot: subtotal,
         cardChargedAgorot: subtotal,
-        paymentMethod: "STRIPE_CARD",
+        paymentMethod: "GROW",
         status: fo.status,
         createdAt: fo.daysBack > 0 ? daysAgo(fo.daysBack) : new Date(),
         orderItems: { create: orderItems },

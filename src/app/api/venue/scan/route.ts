@@ -23,9 +23,55 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing code" }, { status: 400 });
   }
 
-  // Accept either the raw ticketCode or a tickets URL that ends with the code.
+  // Accept either the raw code or a URL that ends with the code.
   const code = raw.includes("/") ? raw.split("/").filter(Boolean).pop()! : raw;
 
+  // ---- Per-ticket instance (one QR per seat) — primary path ----
+  const instance = await db.ticketInstance.findFirst({
+    where: { code, venueId: session.venueId },
+    include: {
+      reservation: { include: { event: true, user: true, ticketType: true } },
+    },
+  });
+  if (instance) {
+    const r = instance.reservation;
+    const info = {
+      id: r.id,
+      name: r.user?.name ?? r.guestName ?? "אורח",
+      eventName: r.event.name,
+      ticketLabel: r.ticketType?.label ?? null,
+      quantity: r.quantity,
+      seat: `${instance.seat}/${r.quantity}`,
+      ticketCode: instance.code.slice(0, 8).toUpperCase(),
+    };
+    if (instance.status === "VOID" || r.status === "REFUNDED" || r.status === "CANCELLED") {
+      return NextResponse.json({ result: "invalid", reservation: info });
+    }
+    if (r.status !== "PAID") {
+      return NextResponse.json({ result: "not_paid", status: r.status, reservation: info });
+    }
+    if (instance.status === "CHECKED_IN") {
+      return NextResponse.json({
+        result: "already_used",
+        checkedInAt: instance.checkedInAt,
+        reservation: info,
+      });
+    }
+    await db.ticketInstance.update({
+      where: { id: instance.id },
+      data: { status: "CHECKED_IN", checkedInAt: new Date(), checkedInBy: session.username },
+    });
+    // Mark order-level summary once the first seat enters.
+    if (!r.checkedInAt) {
+      await db.reservation.update({
+        where: { id: r.id },
+        data: { checkedInAt: new Date(), checkedInBy: session.username },
+      });
+    }
+    return NextResponse.json({ result: "valid", reservation: info });
+  }
+
+  // ---- Legacy fallback: order-level ticketCode ----
   const reservation = await db.reservation.findFirst({
     where: { ticketCode: code, venueId: session.venueId },
     include: { event: true, user: true, ticketType: true },

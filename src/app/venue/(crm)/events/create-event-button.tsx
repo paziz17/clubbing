@@ -27,9 +27,10 @@ export function CreateEventButton() {
     basePrice: "110",
     capacity: "200",
     tags: "",
+    approvalPolicy: "AUTO" as "AUTO" | "MANUAL",
   });
 
-  function set<K extends keyof typeof form>(k: K, v: string) {
+  function set<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
     setForm((f) => ({ ...f, [k]: v }));
   }
 
@@ -46,6 +47,7 @@ export function CreateEventButton() {
         basePriceAgorot: Math.round(Number(form.basePrice) * 100),
         capacity: Number(form.capacity),
         tags: form.tags.split(",").map((s) => s.trim()).filter(Boolean),
+        approvalPolicy: form.approvalPolicy,
       }),
     });
     setLoading(false);
@@ -98,6 +100,35 @@ export function CreateEventButton() {
           <div className="col-span-2">
             <label className="block text-xs text-ink-muted mb-1">תגיות (מופרדות בפסיק)</label>
             <Input value={form.tags} onChange={(e) => set("tags", e.target.value)} placeholder="techno, +21, saturday" />
+          </div>
+          <div className="col-span-2">
+            <label className="block text-xs text-ink-muted mb-1">אישור כרטיסים</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => set("approvalPolicy", "AUTO")}
+                className={`rounded-xl border px-3 py-2 text-sm transition-colors ${
+                  form.approvalPolicy === "AUTO"
+                    ? "border-gold bg-gold/10 text-gold"
+                    : "border-line text-ink-muted hover:border-gold/40"
+                }`}
+              >
+                אוטומטי
+                <span className="block text-[11px] opacity-70">מעבר ישיר לתשלום</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => set("approvalPolicy", "MANUAL")}
+                className={`rounded-xl border px-3 py-2 text-sm transition-colors ${
+                  form.approvalPolicy === "MANUAL"
+                    ? "border-gold bg-gold/10 text-gold"
+                    : "border-line text-ink-muted hover:border-gold/40"
+                }`}
+              >
+                ידני (סלקציה)
+                <span className="block text-[11px] opacity-70">אישור לפני תשלום</span>
+              </button>
+            </div>
           </div>
         </div>
         <Button onClick={submit} disabled={loading || !form.name || !form.date} className="mt-2">

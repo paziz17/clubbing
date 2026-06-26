@@ -22,6 +22,8 @@ import {
   Boxes,
   ScanLine,
   UsersRound,
+  Megaphone,
+  Beer,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { can, normalizeRole, ROLE_LABELS, type Capability } from "@/lib/rbac";
@@ -75,6 +77,7 @@ export function VenueSidebar({
       title: "ניהול לקוחות",
       items: [
         { href: "/venue/reservations", label: "הזמנות", icon: Ticket, cap: "reservations" },
+        { href: "/venue/promoters", label: "יחצנים", icon: Megaphone, cap: "promoters" },
         { href: "/venue/customers", label: "לקוחות ודרגות", icon: Users, cap: "customers" },
         { href: "/venue/transactions", label: "תשלומים", icon: CreditCard, cap: "transactions" },
         { href: "/venue/campaigns", label: "Club Bot · WhatsApp", icon: MessageCircle, cap: "campaigns" },
@@ -86,6 +89,7 @@ export function VenueSidebar({
         { href: "/venue/reviews", label: "דירוגים וביקורות", icon: Star, cap: "reviews" },
         { href: "/venue/artists", label: "אומנים", icon: Music2, cap: "artists" },
         { href: "/venue/selection", label: "סלקציה · Exclusive", icon: ShieldCheck, cap: "selection" },
+        { href: "/venue/bar", label: "בר · מכירה מהירה", icon: Beer, cap: "bar" },
         ...(kitchenEnabled
           ? [{ href: "/venue/food", label: "מטבח וזמנות", icon: ChefHat, cap: "food" } as Item]
           : []),

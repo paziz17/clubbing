@@ -96,6 +96,10 @@ export default function AdminDashboard() {
             <button onClick={load} className="p-2 rounded-lg border border-line hover:border-gold/30 text-ink-muted hover:text-gold transition-colors">
               <RefreshCw className="w-4 h-4" />
             </button>
+            <a href="/venue/admin/payouts"
+              className="h-10 px-5 flex items-center gap-2 text-sm font-semibold rounded-xl border border-line text-ink-muted hover:text-gold hover:border-gold/30 transition-colors">
+              <TrendingUp className="w-4 h-4" /> תשלומים
+            </a>
             <button onClick={() => setShowVip(true)}
               className="h-10 px-5 flex items-center gap-2 text-sm font-semibold rounded-xl border border-gold/40 text-gold hover:bg-gold/10 transition-colors">
               <Crown className="w-4 h-4" /> הוסף חבר VIP

@@ -45,10 +45,13 @@ export function ReservationsFilter() {
         className="input h-11 w-44"
       >
         <option value="all">כל הסטטוסים</option>
+        <option value="PENDING_APPROVAL">ממתין לאישור</option>
+        <option value="PENDING_PAYMENT">ממתין לתשלום</option>
         <option value="PAID">שולם</option>
-        <option value="PENDING">ממתין</option>
-        <option value="FAILED">נכשל</option>
+        <option value="REJECTED">נדחה</option>
+        <option value="EXPIRED">פג תוקף</option>
         <option value="REFUNDED">הוחזר</option>
+        <option value="CANCELLED">בוטל</option>
       </select>
     </div>
   );

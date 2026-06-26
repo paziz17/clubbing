@@ -19,6 +19,7 @@ const ROLE_DESC: Record<Role, string> = {
   MANAGER: "גישה תפעולית מלאה כולל החזרים — ללא ניהול משתמשים",
   STAFF: "תפעול יומי: אירועים, הזמנות, לקוחות, מלאי, משמרות",
   DOOR: "כניסה בלבד — סריקת QR וערב חי",
+  BAR: "מכירה מהירה בבר בלבד — ללא חשיפת נתוני CRM",
 };
 
 const ROLE_COLORS: Record<string, string> = {
@@ -26,6 +27,7 @@ const ROLE_COLORS: Record<string, string> = {
   MANAGER: "bg-sky-500/15 text-sky-300 border-sky-500/30",
   STAFF: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
   DOOR: "bg-violet-500/15 text-violet-300 border-violet-500/30",
+  BAR: "bg-amber-500/15 text-amber-300 border-amber-500/30",
 };
 
 export function UsersManager({

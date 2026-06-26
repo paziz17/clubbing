@@ -1,11 +1,14 @@
 import { requireVenue } from "@/lib/venue-session";
 import { db } from "@/lib/db";
 import { formatILS, formatCredits, formatDateHe, formatTimeHe } from "@/lib/utils";
-import { CreditCard, TrendingUp, Coins, ArrowDownLeft } from "lucide-react";
+import { CreditCard, TrendingUp, Coins, ArrowDownLeft, Wallet, Scissors, Banknote } from "lucide-react";
+import { computeVenueBalance, listSettlements } from "@/lib/payouts";
 import { ExportCsvButton, type CsvRow } from "./export-csv-button";
 
 export default async function TransactionsPage() {
   const venue = await requireVenue();
+  const balance = await computeVenueBalance(venue.id);
+  const settlements = await listSettlements(venue.id);
   const txns = await db.transaction.findMany({
     where: { venueId: venue.id },
     include: { user: true, reservation: { include: { event: true } } },
@@ -19,8 +22,9 @@ export default async function TransactionsPage() {
   const avgTxn     = txns.length ? Math.round(revenue / txns.length) : 0;
 
   const methodLabel: Record<string, string> = {
-    STRIPE_CARD: "כרטיס אשראי", APPLE_PAY: "Apple Pay", GOOGLE_PAY: "Google Pay",
+    GROW: "כרטיס אשראי / Bit", APPLE_PAY: "Apple Pay", GOOGLE_PAY: "Google Pay",
     CLUB_IT: "Club-It", CREDITS: "קרדיטים", MIXED: "משולב", DEMO: "דמו",
+    STRIPE_CARD: "כרטיס אשראי",
   };
   const statusLabel: Record<string, string> = {
     PAID: "שולם", PENDING: "ממתין", FAILED: "נכשל", REFUNDED: "הוחזר",
@@ -78,6 +82,51 @@ export default async function TransactionsPage() {
             </div>
             <div className="font-display text-2xl text-purple-400">{formatCredits(credSpent)}</div>
           </div>
+        </div>
+
+        {/* Net Payout Balance (live ledger) */}
+        <div className="bg-bg-card border border-gold/25 rounded-xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-line flex items-center justify-between">
+            <h2 className="font-semibold text-ink flex items-center gap-2">
+              <Banknote className="w-4 h-4 text-gold" /> יתרה לזיכוי (Net Payout)
+            </h2>
+            <span className="text-xs text-ink-muted">{balance.txnCount} עסקאות פתוחות · עמלת Clubbing {balance.commissionPct}%</span>
+          </div>
+          <div className="grid grid-cols-3 divide-x divide-line rtl:divide-x-reverse">
+            <div className="p-5 text-center">
+              <div className="flex items-center justify-center gap-1.5 text-xs text-ink-muted mb-1">
+                <TrendingUp className="w-3.5 h-3.5" /> הכנסה ברוטו
+              </div>
+              <div className="font-display text-2xl text-ink">{formatILS(balance.gross)}</div>
+            </div>
+            <div className="p-5 text-center">
+              <div className="flex items-center justify-center gap-1.5 text-xs text-ink-muted mb-1">
+                <Scissors className="w-3.5 h-3.5" /> עמלת Clubbing
+              </div>
+              <div className="font-display text-2xl text-danger">−{formatILS(balance.commission)}</div>
+            </div>
+            <div className="p-5 text-center">
+              <div className="flex items-center justify-center gap-1.5 text-xs text-ink-muted mb-1">
+                <Wallet className="w-3.5 h-3.5" /> נטו לזיכוי
+              </div>
+              <div className="font-display text-2xl text-gold">{formatILS(balance.net)}</div>
+            </div>
+          </div>
+          {settlements.length > 0 && (
+            <div className="border-t border-line px-6 py-3">
+              <p className="text-xs text-ink-muted mb-2">היסטוריית זיכויים</p>
+              <div className="space-y-1.5">
+                {settlements.map((s) => (
+                  <div key={s.id} className="flex items-center justify-between text-xs">
+                    <span className="text-ink-muted">
+                      {formatDateHe(s.createdAt)} · {s.txnCount} עסקאות{s.bankRef ? ` · אסמכתא ${s.bankRef}` : ""}
+                    </span>
+                    <span className="text-gold font-medium">{formatILS(s.netAgorot)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Table */}

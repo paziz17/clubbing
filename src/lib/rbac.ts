@@ -8,15 +8,16 @@
  *  - DOOR    — entry only (scan + live view).
  */
 
-export type Role = "OWNER" | "MANAGER" | "STAFF" | "DOOR";
+export type Role = "OWNER" | "MANAGER" | "STAFF" | "DOOR" | "BAR";
 
-export const ROLES: Role[] = ["OWNER", "MANAGER", "STAFF", "DOOR"];
+export const ROLES: Role[] = ["OWNER", "MANAGER", "STAFF", "DOOR", "BAR"];
 
 export const ROLE_LABELS: Record<Role, string> = {
   OWNER: "בעלים",
   MANAGER: "מנהל/ת",
   STAFF: "צוות",
   DOOR: "כניסה/דלת",
+  BAR: "ברמן/ית",
 };
 
 /**
@@ -29,6 +30,7 @@ export type Capability =
   | "scan"
   | "events"
   | "reservations"
+  | "promoters"
   | "customers"
   | "transactions"
   | "campaigns"
@@ -36,6 +38,7 @@ export type Capability =
   | "artists"
   | "selection"
   | "food"
+  | "bar"
   | "staff"
   | "inventory"
   | "settings"
@@ -44,8 +47,8 @@ export type Capability =
   | "credit";
 
 const ALL: Capability[] = [
-  "dashboard", "live", "scan", "events", "reservations", "customers",
-  "transactions", "campaigns", "reviews", "artists", "selection", "food",
+  "dashboard", "live", "scan", "events", "reservations", "promoters", "customers",
+  "transactions", "campaigns", "reviews", "artists", "selection", "food", "bar",
   "staff", "inventory", "settings", "users", "refund", "credit",
 ];
 
@@ -53,9 +56,11 @@ export const ROLE_CAPS: Record<Role, Capability[]> = {
   OWNER: ALL,
   MANAGER: ALL.filter((c) => c !== "users"),
   STAFF: [
-    "dashboard", "live", "scan", "events", "reservations", "customers",
-    "reviews", "artists", "selection", "food", "staff", "inventory",
+    "dashboard", "live", "scan", "events", "reservations", "promoters", "customers",
+    "reviews", "artists", "selection", "food", "bar", "staff", "inventory",
   ],
+  // Bartender session: fast-sale interface only (no CRM data exposure).
+  BAR: ["bar"],
   DOOR: ["live", "scan"],
 };
 
@@ -69,9 +74,12 @@ export function can(role: string | null | undefined, cap: Capability): boolean {
   return caps.includes(cap);
 }
 
-/** Landing page per role after login (used to bounce DOOR users to the scanner). */
+/** Landing page per role after login (bounces DOOR → scanner, BAR → bar POS). */
 export function defaultLandingFor(role: string | null | undefined): string {
-  return normalizeRole(role) === "DOOR" ? "/venue/scan" : "/venue";
+  const r = normalizeRole(role);
+  if (r === "DOOR") return "/venue/scan";
+  if (r === "BAR") return "/venue/bar";
+  return "/venue";
 }
 
 /**
@@ -88,6 +96,7 @@ export function capabilityForPath(pathname: string): Capability | null {
     scan: "scan",
     events: "events",
     reservations: "reservations",
+    promoters: "promoters",
     customers: "customers",
     transactions: "transactions",
     campaigns: "campaigns",
@@ -95,6 +104,7 @@ export function capabilityForPath(pathname: string): Capability | null {
     artists: "artists",
     selection: "selection",
     food: "food",
+    bar: "bar",
     staff: "staff",
     inventory: "inventory",
     settings: "settings",

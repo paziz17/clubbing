@@ -48,6 +48,7 @@ model User {
   exclusiveApps     ExclusiveApplication[]
   artistFollows     ArtistFollow[]
   foodOrders        FoodOrder[]
+  barOrders         BarOrder[] @relation("BarOrderUser")
   venuesOwned       Venue[]    @relation("VenueOwner")
   campaignsSent     Campaign[] @relation("CampaignAuthor")
 
@@ -136,6 +137,9 @@ model Venue {
   inventory     InventoryItem[]
   stockMovements StockMovement[]
   crmUsers      VenueUser[]
+  promoters     Promoter[]
+  barOrders     BarOrder[]
+  settlements   Settlement[]
 
   @@index([city])
   @@index([slug])
@@ -170,6 +174,8 @@ model VenueSettings {
   silverThresholdAgorot    Int      @default(50000)
   goldThresholdAgorot      Int      @default(200000)
   platinumThresholdAgorot  Int      @default(500000)
+  // Clubbing platform commission on gross revenue (percent, e.g. 10 = 10%)
+  clubbingCommissionPct    Float    @default(10)
   updatedAt                DateTime @updatedAt
 }
 
@@ -201,6 +207,8 @@ model Event {
   capacity          Int         @default(0)
   // status: DRAFT | PUBLISHED | ENDED
   status            String      @default("DRAFT")
+  // approvalPolicy: AUTO (straight to payment) | MANUAL (selection — organizer approves orders)
+  approvalPolicy    String      @default("AUTO")
   exclusive         Boolean     @default(false)
   // CSV
   tags              String      @default("")
@@ -237,6 +245,9 @@ model TicketType {
   stock           Int?
   sold            Int      @default(0)
   active          Boolean  @default(true)
+  // Sales validity window (null = always open while active)
+  salesStartAt    DateTime?
+  salesEndAt      DateTime?
 
   reservations    Reservation[]
 }
@@ -265,26 +276,89 @@ model Reservation {
   feeAgorot       Int         @default(0)
   vatAgorot       Int         @default(0)
   totalAgorot     Int
-  // status: PENDING | PAID | FAILED | REFUNDED | CANCELLED
+  // status: PENDING_APPROVAL | PENDING_PAYMENT | PAID | REJECTED | EXPIRED | REFUNDED | CANCELLED
+  // (legacy: PENDING | FAILED)
   status          String      @default("PENDING")
-  // paymentMethod: STRIPE_CARD | APPLE_PAY | GOOGLE_PAY | CLUB_IT | CREDITS | MIXED | DEMO
+  // paymentMethod: GROW | APPLE_PAY | GOOGLE_PAY | CLUB_IT | CREDITS | MIXED | DEMO
   paymentMethod   String?
   paymentRef      String?
+  // Promoter (יחצן) attribution + commission
+  promoterId      String?
+  promoter        Promoter?   @relation(fields: [promoterId], references: [id])
+  promoterCommissionAgorot Int @default(0)
+  // Manual-approval (selection) workflow
+  approvedAt      DateTime?
+  approvedBy      String?
+  rejectedAt      DateTime?
+  rejectionReason String?
+  // Payment link issued to the bliner after manual approval
+  paymentToken    String?     @unique
+  paymentExpiresAt DateTime?
   creditsEarned   Int         @default(0)
   creditsSpent    Int         @default(0)
   skippedAuth     Boolean     @default(false)
-  // Event entry / QR scan check-in
+  // Event entry / QR scan check-in (order-level legacy summary)
   checkedInAt     DateTime?
   checkedInBy     String?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
   transaction     Transaction?
+  ticketInstances TicketInstance[]
 
   @@index([userId])
   @@index([eventId])
   @@index([status])
   @@index([venueId, checkedInAt])
+}
+
+// One physical ticket per seat — a unique UUID encoded into its own QR code.
+// Issued when a reservation is PAID; scanned/redeemed individually at the door.
+model TicketInstance {
+  id            String      @id @default(cuid())
+  // code = the UUID embedded in the QR (kept distinct from id for opacity)
+  code          String      @unique @default(uuid())
+  reservationId String
+  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  eventId       String
+  venueId       String
+  seat          Int         @default(1)
+  // status: VALID | CHECKED_IN | VOID
+  status        String      @default("VALID")
+  checkedInAt   DateTime?
+  checkedInBy   String?
+  createdAt     DateTime    @default(now())
+
+  @@index([reservationId])
+  @@index([eventId, status])
+  @@index([venueId])
+}
+
+// ============================================================
+//  PROMOTERS  (יחצנים)
+// ============================================================
+
+// A promoter belongs to an organizer/club. Tracking links cross the
+// Promoter code with an Event id so sales + commission are attributed.
+model Promoter {
+  id            String        @id @default(cuid())
+  venueId       String
+  venue         Venue         @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  userId        String?
+  name          String
+  // code: short slug used in tracking links (/r/<code>?e=<eventId>)
+  code          String        @unique
+  phone         String?
+  email         String?
+  // commission percent of the ticket subtotal (e.g. 10 = 10%)
+  commissionPct Float         @default(0)
+  active        Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  reservations  Reservation[]
+
+  @@index([venueId, active])
 }
 
 // ============================================================
@@ -296,7 +370,7 @@ model ClubItCard {
   userId          String      @unique
   user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   cardNumberLast4 String
-  stripeCardId    String?
+  virtualCardId   String?  @map("stripeCardId")
   displayName     String
   // tier: REGULAR | SILVER | GOLD | PLATINUM
   tier            String      @default("REGULAR")
@@ -391,7 +465,39 @@ model Transaction {
   paymentProvider    String?
   externalRef        String?
   status             String       @default("PAID")
+  // Payout settlement this transaction was included in (null = still on balance)
+  settlementId       String?
+  settlement         Settlement?  @relation(fields: [settlementId], references: [id])
   createdAt          DateTime     @default(now())
+
+  @@index([venueId, createdAt])
+  @@index([venueId, settlementId])
+}
+
+// ============================================================
+//  PAYOUTS / SETTLEMENT  (Clubbing → venue bank transfer)
+// ============================================================
+
+// A settlement snapshots the venue's Net Payout Balance at the moment the
+// platform admin marks it paid (manual bank transfer). It resets the balance
+// by stamping all included transactions with its id.
+model Settlement {
+  id               String        @id @default(cuid())
+  venueId          String
+  venue            Venue         @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  grossAgorot      Int
+  commissionAgorot Int
+  netAgorot        Int
+  commissionPct    Float
+  txnCount         Int
+  // status: SETTLED (created at settle time)
+  status           String        @default("SETTLED")
+  bankRef          String?
+  note             String?
+  settledBy        String?
+  createdAt        DateTime      @default(now())
+
+  transactions     Transaction[]
 
   @@index([venueId, createdAt])
 }
@@ -583,6 +689,38 @@ model FoodOrderItem {
   item            FoodMenuItem   @relation(fields: [itemId], references: [id])
   qty             Int
   unitPriceAgorot Int
+}
+
+// ============================================================
+//  IN-VENUE BAR POS  (dynamic-QR pay-at-bar)
+// ============================================================
+
+// A bar tab opened by a bartender. Shows a one-time dynamic QR the bliner
+// scans to pay on their own phone (card / wallet credits). Real-time status.
+model BarOrder {
+  id                String   @id @default(cuid())
+  venueId           String
+  venue             Venue    @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  // VenueUser id (bartender) — kept loose to support legacy owner sessions
+  bartenderId       String?
+  bartenderName     String?
+  // items snapshot JSON: [{ id, name, qty, priceAgorot }]
+  items             String
+  subtotalAgorot    Int
+  creditsApplied    Int      @default(0)
+  cardChargedAgorot Int      @default(0)
+  // status: PENDING_PAYMENT | PAID | CANCELLED | EXPIRED
+  status            String   @default("PENDING_PAYMENT")
+  paymentMethod     String?
+  paymentRef        String?
+  // the bliner who paid (if logged in)
+  userId            String?
+  user              User?    @relation("BarOrderUser", fields: [userId], references: [id])
+  paidAt            DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([venueId, status])
 }
 
 // ============================================================

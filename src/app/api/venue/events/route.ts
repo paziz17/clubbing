@@ -12,6 +12,7 @@ const schema = z.object({
   capacity: z.number().int().min(1),
   tags: z.array(z.string()).default([]),
   genres: z.array(z.string()).default([]),
+  approvalPolicy: z.enum(["AUTO", "MANUAL"]).default("AUTO"),
 });
 
 export async function POST(req: NextRequest) {
@@ -30,6 +31,7 @@ export async function POST(req: NextRequest) {
         capacity: parsed.data.capacity,
         tags: stringifyCsv(parsed.data.tags),
         genres: stringifyCsv(parsed.data.genres),
+        approvalPolicy: parsed.data.approvalPolicy,
         status: "DRAFT",
         tickets: {
           create: [

@@ -3,7 +3,15 @@
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
-export function EventActions({ eventId, status }: { eventId: string; status: string }) {
+export function EventActions({
+  eventId,
+  status,
+  approvalPolicy,
+}: {
+  eventId: string;
+  status: string;
+  approvalPolicy?: string;
+}) {
   const router = useRouter();
 
   async function patch(payload: any) {
@@ -23,6 +31,16 @@ export function EventActions({ eventId, status }: { eventId: string; status: str
 
   return (
     <div className="flex gap-2">
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={() =>
+          patch({ approvalPolicy: approvalPolicy === "MANUAL" ? "AUTO" : "MANUAL" })
+        }
+        title="החלפה בין אישור אוטומטי לאישור ידני (סלקציה)"
+      >
+        {approvalPolicy === "MANUAL" ? "אישור: ידני ✓" : "אישור: אוטומטי"}
+      </Button>
       {status !== "PUBLISHED" && (
         <Button size="sm" onClick={() => patch({ status: "PUBLISHED" })}>
           פרסם

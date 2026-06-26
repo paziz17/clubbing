@@ -80,19 +80,14 @@ node -e "console.log(require('bcryptjs').hashSync(process.argv[1], 10))" "your-p
 
 ערוך את `.env` והוסף את המפתחות הרלוונטיים. הפעל מחדש (`npm run dev`).
 
-### Stripe (סליקה)
+### Grow / Meshulam (סליקה)
 ```env
-STRIPE_SECRET_KEY="sk_live_..."
-STRIPE_PUBLISHABLE_KEY="pk_live_..."
-STRIPE_WEBHOOK_SECRET="whsec_..."
+GROW_ENV="production"
+GROW_PAGE_CODE="..."
+GROW_USER_ID="..."
 ```
-ב-Stripe Dashboard, הוסף webhook ל-`http://<your-domain>/api/stripe/webhook` (אם תחשוף לרשת).
-
-### Stripe Issuing (כרטיסי Club-it אמיתיים)
-```env
-STRIPE_ISSUING_ENABLED=1
-```
-דורש אישור חשבון Stripe Issuing.
+בלוח הבקרה של Grow, הגדר את כתובת ה-notify ל-`https://app.clubbing.co.il/api/grow/webhook`.
+ללא המפתחות — מצב Demo מאשר רכישות אוטומטית. Club-it מנפיק כרטיס נאמנות וירטואלי מקומי (לא כרטיס תשלום אמיתי).
 
 ### WhatsApp Business Cloud API
 1. הקם אפליקציה ב-[Meta for Developers](https://developers.facebook.com)
@@ -251,7 +246,7 @@ HOSTNAME=0.0.0.0 PORT=3000 npm run start
 | כל הנתונים נעלמו | בדוק שלא נמחק `prisma/dev.db`. שחזר מ-backup |
 | OAuth שגיאת Redirect | ודא ש-`NEXTAUTH_URL` תואם ל-URL הקליינט |
 | WhatsApp לא נשלח | במצב Demo (ללא token) מחזיר קישור wa.me. הוסף `WHATSAPP_ACCESS_TOKEN` |
-| Stripe לא מחייב | מצב Demo מאשר אוטומטית. הוסף `STRIPE_SECRET_KEY` |
+| Grow לא מחייב | מצב Demo מאשר אוטומטית. הוסף `GROW_PAGE_CODE` + `GROW_USER_ID` |
 
 ---
 

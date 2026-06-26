@@ -6,6 +6,7 @@ import { parseCsv } from "@/lib/enums";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EventActions } from "./event-actions";
+import { TicketTypesManager } from "./ticket-types-manager";
 
 export default async function VenueEventDetail({
   params,
@@ -17,6 +18,7 @@ export default async function VenueEventDetail({
   const event = await db.event.findFirst({
     where: { id, venueId: venue.id },
     include: {
+      tickets: { orderBy: { priceAgorot: "asc" } },
       reservations: {
         include: { user: true },
         orderBy: { createdAt: "desc" },
@@ -25,6 +27,18 @@ export default async function VenueEventDetail({
     },
   });
   if (!event) notFound();
+
+  const ticketTypes = event.tickets.map((t) => ({
+    id: t.id,
+    kind: t.kind,
+    label: t.label,
+    priceAgorot: t.priceAgorot,
+    stock: t.stock,
+    sold: t.sold,
+    active: t.active,
+    salesStartAt: t.salesStartAt ? t.salesStartAt.toISOString() : null,
+    salesEndAt: t.salesEndAt ? t.salesEndAt.toISOString() : null,
+  }));
 
   const paid = event.reservations.filter((r) => r.status === "PAID");
   const totalRevenue = paid.reduce((s, r) => s + r.totalAgorot, 0);
@@ -43,6 +57,7 @@ export default async function VenueEventDetail({
         <EventActions
           eventId={event.id}
           status={event.status}
+          approvalPolicy={event.approvalPolicy}
         />
       </div>
 
@@ -54,6 +69,10 @@ export default async function VenueEventDetail({
         <Kpi label="ניצול תפוסה" value={`${occupancy}%`} ring={occupancy} />
       </div>
 
+      <Card className="p-5">
+        <TicketTypesManager eventId={event.id} tickets={ticketTypes} />
+      </Card>
+
       <div className="grid grid-cols-3 gap-6">
         {/* Details panel */}
         <Card className="p-5 col-span-1">
@@ -61,6 +80,10 @@ export default async function VenueEventDetail({
           <dl className="space-y-3 text-sm">
             <DefRow label="מחיר בסיס" value={formatILS(event.basePriceAgorot)} />
             <DefRow label="תפוסה משוערת" value={event.capacity.toString()} />
+            <DefRow
+              label="אישור כרטיסים"
+              value={event.approvalPolicy === "MANUAL" ? "ידני (סלקציה)" : "אוטומטי"}
+            />
             <DefRow label="ז'אנרים" value={parseCsv(event.genres).join(", ") || "—"} />
             <DefRow label="תיאור">
               <p className="text-ink leading-relaxed">{event.description || "—"}</p>
@@ -97,8 +120,8 @@ export default async function VenueEventDetail({
                     <td className="py-3 text-ink">{formatILS(r.totalAgorot)}</td>
                     <td className="py-3 text-emerald-400">+{r.creditsEarned}</td>
                     <td className="py-3">
-                      <Badge variant={r.status === "PAID" ? "success" : "default"}>
-                        {r.status}
+                      <Badge variant={resStatusVariant(r.status)}>
+                        {resStatusLabel(r.status)}
                       </Badge>
                     </td>
                     <td className="py-3 text-ink-muted text-xs text-left">
@@ -158,6 +181,29 @@ function Kpi({
         {value}
       </div>
     </div>
+  );
+}
+
+function resStatusVariant(s: string): "success" | "warn" | "danger" | "default" {
+  if (s === "PAID") return "success";
+  if (s === "PENDING_APPROVAL" || s === "PENDING_PAYMENT" || s === "PENDING") return "warn";
+  if (s === "FAILED" || s === "REJECTED" || s === "EXPIRED") return "danger";
+  return "default";
+}
+
+function resStatusLabel(s: string) {
+  return (
+    {
+      PENDING_APPROVAL: "ממתין לאישור",
+      PENDING_PAYMENT: "ממתין לתשלום",
+      PAID: "שולם",
+      PENDING: "ממתין",
+      FAILED: "נכשל",
+      REJECTED: "נדחה",
+      EXPIRED: "פג תוקף",
+      REFUNDED: "הוחזר",
+      CANCELLED: "בוטל",
+    }[s] ?? s
   );
 }
 

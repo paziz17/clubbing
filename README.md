@@ -53,7 +53,7 @@ npm run dev       # http://localhost:3000
 - **גילוי:** Wizard עם 4 שלבים — ז'אנר · סוג ערב · גיל · אזור
 - **תוצאות:** רשימת אירועים מסוננת
 - **דף אירוע:** מידע, אמן, באנר Club-it, פעולות מונית (Gett/Yango)
-- **רכישה:** סוג כרטיס, כמות, אישור גיל, אמצעי תשלום (Stripe / Club-it / Demo)
+- **רכישה:** סוג כרטיס, כמות, אישור גיל, אמצעי תשלום (Grow / Club-it / Demo)
 - **כרטיס דיגיטלי:** QR + Wallet/Email shortcut
 - **Club-it:** הצטרפות, כרטיס וירטואלי, ארנק לפי מועדון, היסטוריה
 - **Bump (אני כאן):** Check-in גאוגרפי + צבירת קרדיט
@@ -80,8 +80,8 @@ npm run dev       # http://localhost:3000
 
 | שירות | משתנה סביבה | התנהגות ללא מפתח |
 | --- | --- | --- |
-| Stripe (סליקה) | `STRIPE_SECRET_KEY` | מצב Demo — מאשר רכישה אוטומטית |
-| Stripe Issuing (כרטיס Club-it) | `STRIPE_ISSUING_ENABLED=1` | מנפיק כרטיס דמה מקומי |
+| Grow / Meshulam (סליקה) | `GROW_PAGE_CODE` + `GROW_USER_ID` | מצב Demo — מאשר רכישה אוטומטית |
+| Club-it (כרטיס נאמנות) | — | מנפיק כרטיס וירטואלי מקומי |
 | WhatsApp Business | `WHATSAPP_ACCESS_TOKEN` + `WHATSAPP_PHONE_ID` | מחזיר קישורי `wa.me` ידניים |
 | Resend (אימייל) | `RESEND_API_KEY` | מדפיס למסוף הפיתוח |
 | Google OAuth | `GOOGLE_CLIENT_ID/SECRET` | משתמש בכניסת אורח/אימייל |

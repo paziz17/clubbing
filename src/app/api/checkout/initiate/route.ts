@@ -9,7 +9,7 @@ const schema = z.object({
   ticketTypeId: z.string().optional(),
   quantity: z.number().int().min(1).max(10),
   paymentMethod: z.enum([
-    "STRIPE_CARD",
+    "GROW",
     "APPLE_PAY",
     "GOOGLE_PAY",
     "CLUB_IT",
@@ -38,10 +38,20 @@ export async function POST(req: NextRequest) {
   const userId = (session?.user as any)?.id;
   const origin = req.headers.get("origin") ?? new URL(req.url).origin;
 
+  // Promoter attribution from the tracking cookie (set by /r/<code>?e=<eventId>).
+  // Only honoured when the cookie's eventId matches the event being purchased.
+  let promoterCode: string | undefined;
+  const ref = req.cookies.get("clubbing_ref")?.value;
+  if (ref) {
+    const [refEventId, code] = ref.split(":");
+    if (refEventId === parsed.data.eventId && code) promoterCode = code;
+  }
+
   try {
     const result = await initiate({
       ...parsed.data,
       userId,
+      promoterCode,
       origin,
     });
     return NextResponse.json(result);

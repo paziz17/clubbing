@@ -1,11 +1,13 @@
-import { requireCapability } from "@/lib/venue-session";
+import { requireVenueSession } from "@/lib/venue-session";
+import { can } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { BarPOS } from "./bar-pos";
 
 export default async function BarPosPage() {
-  const ctx = await requireCapability("bar");
-  // Bartender POS shows the BAR menu on top and the full RESTAURANT menu below,
-  // so staff can sell food through the same dynamic-QR pay flow.
+  // Unified bar + kitchen POS — accessible to bar OR kitchen staff.
+  const ctx = await requireVenueSession();
+  if (!can(ctx.role, "bar") && !can(ctx.role, "food")) throw new Error("FORBIDDEN");
+  // One screen with the full menu: בר on top, מסעדה below — sold via dynamic-QR.
   const menu = await db.foodMenuItem.findMany({
     where: { venueId: ctx.venue.id, active: true },
     orderBy: [{ section: "asc" }, { category: "asc" }, { name: "asc" }],
@@ -15,9 +17,9 @@ export default async function BarPosPage() {
   return (
     <div className="crm-page-body">
       <div>
-        <h1 className="font-display text-3xl text-ink">בר · מכירה מהירה</h1>
+        <h1 className="font-display text-3xl text-ink">בר ומטבח</h1>
         <p className="text-sm text-ink-muted">
-          בחר/י פריטים → צור הזמנה → הבליין סורק ומשלם מהטלפון
+          בחר/י פריטים → צור הזמנה → הלקוח סורק ומשלם מהטלפון
         </p>
       </div>
       <BarPOS menu={menu} />

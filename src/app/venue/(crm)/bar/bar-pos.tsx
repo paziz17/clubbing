@@ -215,7 +215,7 @@ export function BarPOS({ menu }: { menu: MenuItem[] }) {
           );
         })}
         {menu.length === 0 && (
-          <p className="text-ink-muted">אין פריטים בתפריט — הוסף/י דרך "מטבח וזמנות".</p>
+          <p className="text-ink-muted">אין פריטים פעילים בתפריט.</p>
         )}
       </div>
 

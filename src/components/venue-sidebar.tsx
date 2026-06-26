@@ -13,7 +13,6 @@ import {
   MessageCircle,
   Star,
   Music2,
-  ChefHat,
   ShieldCheck,
   LogOut,
   TrendingUp,
@@ -89,9 +88,9 @@ export function VenueSidebar({
         { href: "/venue/reviews", label: "דירוגים וביקורות", icon: Star, cap: "reviews" },
         { href: "/venue/artists", label: "אומנים", icon: Music2, cap: "artists" },
         { href: "/venue/selection", label: "סלקציה · Exclusive", icon: ShieldCheck, cap: "selection" },
-        { href: "/venue/bar", label: "בר · מכירה מהירה", icon: Beer, cap: "bar" },
-        ...(kitchenEnabled
-          ? [{ href: "/venue/food", label: "מטבח · מכירה מהירה", icon: ChefHat, cap: "food" } as Item]
+        // Unified bar + kitchen fast-sale POS (one screen, all items).
+        ...(can(roleNorm, "bar") || (kitchenEnabled && can(roleNorm, "food"))
+          ? [{ href: "/venue/bar", label: "בר ומטבח", icon: Beer } as Item]
           : []),
       ],
     },

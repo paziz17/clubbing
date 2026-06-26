@@ -16,7 +16,7 @@ export default async function FoodPage() {
   return (
     <div className="crm-page-body">
       <div>
-        <h1 className="font-display text-3xl text-ink">מטבח · מכירה מהירה</h1>
+        <h1 className="font-display text-3xl text-ink">בר ומטבח</h1>
         <p className="text-sm text-ink-muted">
           בחר/י פריטים → צור הזמנה → הלקוח סורק ומשלם מהטלפון
         </p>

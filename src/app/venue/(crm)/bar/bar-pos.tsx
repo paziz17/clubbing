@@ -36,6 +36,18 @@ const SECTIONS: { key: string; label: string }[] = [
   { key: "RESTAURANT", label: "מסעדה" },
 ];
 
+/**
+ * The QR a customer scans must open the CONSUMER app, not the CRM host the POS
+ * runs on (the CRM gates /bar/pay → login). Prefer NEXT_PUBLIC_CONSUMER_URL;
+ * otherwise swap the `crm.` subdomain for `app.` so prod works out of the box.
+ */
+function consumerOrigin(): string {
+  const env = process.env.NEXT_PUBLIC_CONSUMER_URL;
+  if (env) return env.replace(/\/$/, "");
+  if (typeof window === "undefined") return "";
+  return window.location.origin.replace(/:\/\/crm\./, "://app.");
+}
+
 export function BarPOS({ menu }: { menu: MenuItem[] }) {
   const [cart, setCart] = useState<Record<string, number>>({});
   // Multiple tabs can be open at once — each scans/pays independently.
@@ -76,7 +88,7 @@ export function BarPOS({ menu }: { menu: MenuItem[] }) {
         alert(data?.error ?? "יצירת ההזמנה נכשלה");
         return;
       }
-      const url = `${window.location.origin}/bar/pay/${data.orderId}`;
+      const url = `${consumerOrigin()}/bar/pay/${data.orderId}`;
       const qr = await QRCode.toDataURL(url, {
         width: 480,
         margin: 1,

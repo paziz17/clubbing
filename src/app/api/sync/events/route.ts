@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { scrapeGoOut } from "@/lib/goout-scraper";
 import { scrapeZygo } from "@/lib/zygo-scraper";
 import { scrapeAirdrop } from "@/lib/airdrop-scraper";
+import { scrapeEventer } from "@/lib/eventer-scraper";
 import { type ScrapedEvent, clusterEvents, isPrideText, withPrideTag } from "@/lib/scraped-event";
 
 // All aggregated sources share one neutral "national index" venue.
@@ -12,11 +13,11 @@ const VENUE_USERNAME = "goout-import";
 const VENUE_NAME = "אינדקס אירועים ארצי";
 const VENUE_DESC = "אירועים מתעדכנים אוטומטית מרחבי הארץ. מוצגים לצפייה בלבד.";
 
-const SOURCES = ["go-out", "zygo", "airdrop"] as const;
+const SOURCES = ["go-out", "zygo", "airdrop", "eventer"] as const;
 type Source = (typeof SOURCES)[number];
 
 // Tiebreaker when two sources describe the same event — higher wins.
-const SOURCE_PRIORITY: Record<Source, number> = { "go-out": 3, zygo: 2, airdrop: 1 };
+const SOURCE_PRIORITY: Record<Source, number> = { "go-out": 3, eventer: 3, zygo: 2, airdrop: 1 };
 
 async function ensureVenue(): Promise<string> {
   const venue = await db.venue.findUnique({ where: { slug: VENUE_SLUG } });
@@ -150,6 +151,7 @@ export async function POST(req: NextRequest) {
     "go-out": scrapeGoOut,
     zygo: scrapeZygo,
     airdrop: scrapeAirdrop,
+    eventer: scrapeEventer,
   };
 
   // 1) Scrape all sources.

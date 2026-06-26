@@ -4,10 +4,12 @@ import { BarPOS } from "./bar-pos";
 
 export default async function BarPosPage() {
   const ctx = await requireCapability("bar");
+  // Bartender POS shows the BAR menu on top and the full RESTAURANT menu below,
+  // so staff can sell food through the same dynamic-QR pay flow.
   const menu = await db.foodMenuItem.findMany({
-    where: { venueId: ctx.venue.id, active: true, section: "BAR" },
-    orderBy: [{ category: "asc" }, { name: "asc" }],
-    select: { id: true, name: true, category: true, priceAgorot: true },
+    where: { venueId: ctx.venue.id, active: true },
+    orderBy: [{ section: "asc" }, { category: "asc" }, { name: "asc" }],
+    select: { id: true, name: true, category: true, priceAgorot: true, section: true },
   });
 
   return (

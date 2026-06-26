@@ -11,6 +11,7 @@ interface MenuItem {
   name: string;
   category: string;
   priceAgorot: number;
+  section?: string;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -20,6 +21,12 @@ const CATEGORY_LABELS: Record<string, string> = {
   PIZZA: "פיצות",
   DESSERT: "קינוחים",
 };
+
+// Bar on top, restaurant below — both feed the same cart / QR-pay flow.
+const SECTIONS: { key: string; label: string }[] = [
+  { key: "BAR", label: "בר" },
+  { key: "RESTAURANT", label: "מסעדה" },
+];
 
 type Phase = "build" | "awaiting" | "paid";
 
@@ -34,8 +41,6 @@ export function BarPOS({ menu }: { menu: MenuItem[] }) {
   const items = menu.map((m) => ({ ...m, qty: cart[m.id] ?? 0 }));
   const subtotal = items.reduce((s, m) => s + m.priceAgorot * m.qty, 0);
   const count = items.reduce((s, m) => s + m.qty, 0);
-
-  const categories = Array.from(new Set(menu.map((m) => m.category)));
 
   function add(id: string) {
     setCart((c) => ({ ...c, [id]: (c[id] ?? 0) + 1 }));
@@ -168,34 +173,47 @@ export function BarPOS({ menu }: { menu: MenuItem[] }) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-      <div className="lg:col-span-2 space-y-5">
-        {categories.map((cat) => (
-          <div key={cat}>
-            <div className="text-xs text-ink-dim uppercase tracking-widest mb-2">
-              {CATEGORY_LABELS[cat] ?? cat}
+      <div className="lg:col-span-2 space-y-8">
+        {SECTIONS.map((sec) => {
+          const secItems = menu.filter((m) => (m.section ?? "RESTAURANT") === sec.key);
+          if (secItems.length === 0) return null;
+          const cats = Array.from(new Set(secItems.map((m) => m.category)));
+          return (
+            <div key={sec.key} className="space-y-4">
+              <div className="flex items-center gap-3">
+                <h2 className="font-display text-xl text-gold whitespace-nowrap">{sec.label}</h2>
+                <span className="h-px flex-1 bg-line" />
+              </div>
+              {cats.map((cat) => (
+                <div key={cat}>
+                  <div className="text-xs text-ink-dim uppercase tracking-widest mb-2">
+                    {CATEGORY_LABELS[cat] ?? cat}
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {secItems
+                      .filter((m) => m.category === cat)
+                      .map((m) => {
+                        const qty = cart[m.id] ?? 0;
+                        return (
+                          <button
+                            key={m.id}
+                            onClick={() => add(m.id)}
+                            className={`rounded-xl border p-3 text-right transition-all ${
+                              qty > 0 ? "border-gold bg-gold/10" : "border-line bg-bg-card hover:border-gold/40"
+                            }`}
+                          >
+                            <div className="font-semibold text-ink text-sm">{m.name}</div>
+                            <div className="text-gold text-sm">{formatILS(m.priceAgorot)}</div>
+                            {qty > 0 && <div className="text-xs text-gold mt-1">× {qty}</div>}
+                          </button>
+                        );
+                      })}
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {menu
-                .filter((m) => m.category === cat)
-                .map((m) => {
-                  const qty = cart[m.id] ?? 0;
-                  return (
-                    <button
-                      key={m.id}
-                      onClick={() => add(m.id)}
-                      className={`rounded-xl border p-3 text-right transition-all ${
-                        qty > 0 ? "border-gold bg-gold/10" : "border-line bg-bg-card hover:border-gold/40"
-                      }`}
-                    >
-                      <div className="font-semibold text-ink text-sm">{m.name}</div>
-                      <div className="text-gold text-sm">{formatILS(m.priceAgorot)}</div>
-                      {qty > 0 && <div className="text-xs text-gold mt-1">× {qty}</div>}
-                    </button>
-                  );
-                })}
-            </div>
-          </div>
-        ))}
+          );
+        })}
         {menu.length === 0 && (
           <p className="text-ink-muted">אין פריטים בתפריט — הוסף/י דרך "מטבח וזמנות".</p>
         )}

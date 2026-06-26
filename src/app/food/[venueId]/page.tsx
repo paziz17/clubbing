@@ -11,7 +11,7 @@ export default async function FoodOrderPage({
   const venue = await db.venue.findUnique({ where: { id: venueId } });
   if (!venue || !venue.kitchenEnabled) notFound();
   const menu = await db.foodMenuItem.findMany({
-    where: { venueId, active: true },
+    where: { venueId, active: true, section: "RESTAURANT" },
     orderBy: [{ category: "asc" }, { priceAgorot: "asc" }],
   });
   return <FoodOrderFlow venue={JSON.parse(JSON.stringify(venue))} menu={JSON.parse(JSON.stringify(menu))} />;

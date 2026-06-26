@@ -22,26 +22,25 @@ interface Props {
   venueId: string;
 }
 
-const CATEGORIES = [
-  { id: "PIZZA", label: "פיצה", emoji: "🍕" },
-  { id: "STARTER", label: "מנות פתיחה", emoji: "🥗" },
-  { id: "MAIN", label: "עיקרי", emoji: "🍝" },
-  { id: "DRINK", label: "שתייה", emoji: "🥤" },
-  { id: "DESSERT", label: "קינוח", emoji: "🍰" },
-];
+// Suggested category labels per section (free-form — owner can type any).
+const CATEGORY_SUGGESTIONS: Record<"RESTAURANT" | "BAR", string[]> = {
+  RESTAURANT: ["מנות פתיחה", "יפני", "רולים", "גריל", "קינוחים", "קפה"],
+  BAR: ["בירות", "קוקטיילים", "וויסקי", "וודקה", "ג'ין", "רום", "טקילה", "ליקרים וערק", "יין", "נישנושים"],
+};
 
 export function FoodTabs({ menu: initialMenu, orders: initialOrders, venueId }: Props) {
   const router = useRouter();
-  const [tab, setTab] = useState<"orders" | "menu">("orders");
+  const [tab, setTab] = useState<"orders" | "RESTAURANT" | "BAR">("orders");
   const [orders, setOrders] = useState(initialOrders);
   const [menu, setMenu] = useState(initialMenu);
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState({
     name: "",
-    category: "PIZZA",
-    priceShekels: "60",
+    category: "",
+    priceShekels: "",
     prepMinutes: "15",
   });
+  const section: "RESTAURANT" | "BAR" = tab === "BAR" ? "BAR" : "RESTAURANT";
 
   async function updateOrder(id: string, status: string) {
     await fetch(`/api/venue/food/orders/${id}`, {
@@ -59,7 +58,8 @@ export function FoodTabs({ menu: initialMenu, orders: initialOrders, venueId }: 
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         name: draft.name,
-        category: draft.category,
+        section,
+        category: draft.category || (section === "BAR" ? "כללי" : "כללי"),
         priceAgorot: Math.round(Number(draft.priceShekels) * 100),
         prepMinutes: Number(draft.prepMinutes),
       }),
@@ -67,7 +67,7 @@ export function FoodTabs({ menu: initialMenu, orders: initialOrders, venueId }: 
     if (res.ok) {
       const data = await res.json();
       setMenu([data.item, ...menu]);
-      setDraft({ name: "", category: "PIZZA", priceShekels: "60", prepMinutes: "15" });
+      setDraft({ name: "", category: "", priceShekels: "", prepMinutes: "15" });
     }
     setAdding(false);
   }
@@ -83,7 +83,7 @@ export function FoodTabs({ menu: initialMenu, orders: initialOrders, venueId }: 
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <button
           onClick={() => setTab("orders")}
           className={`px-4 py-2 rounded-full text-sm ${
@@ -95,14 +95,24 @@ export function FoodTabs({ menu: initialMenu, orders: initialOrders, venueId }: 
           הזמנות ({orders.filter((o: any) => o.status !== "COLLECTED").length})
         </button>
         <button
-          onClick={() => setTab("menu")}
+          onClick={() => setTab("RESTAURANT")}
           className={`px-4 py-2 rounded-full text-sm ${
-            tab === "menu"
+            tab === "RESTAURANT"
               ? "bg-gold/15 text-gold border border-gold/40"
               : "bg-bg-soft text-ink-muted border border-line"
           }`}
         >
-          תפריט ({menu.length})
+          🍽 מסעדה ({menu.filter((m: any) => (m.section ?? "RESTAURANT") === "RESTAURANT").length})
+        </button>
+        <button
+          onClick={() => setTab("BAR")}
+          className={`px-4 py-2 rounded-full text-sm ${
+            tab === "BAR"
+              ? "bg-gold/15 text-gold border border-gold/40"
+              : "bg-bg-soft text-ink-muted border border-line"
+          }`}
+        >
+          🍸 בר ({menu.filter((m: any) => m.section === "BAR").length})
         </button>
       </div>
 
@@ -166,71 +176,91 @@ export function FoodTabs({ menu: initialMenu, orders: initialOrders, venueId }: 
         </div>
       )}
 
-      {tab === "menu" && (
-        <>
-          <Card className="p-4">
-            <div className="grid grid-cols-5 gap-2">
-              <Input
-                placeholder="שם פריט"
-                value={draft.name}
-                onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-              />
-              <select
-                className="input"
-                value={draft.category}
-                onChange={(e) => setDraft({ ...draft, category: e.target.value })}
-              >
-                {CATEGORIES.map((c) => (
-                  <option key={c.id} value={c.id}>{c.emoji} {c.label}</option>
-                ))}
-              </select>
-              <Input
-                placeholder="מחיר ₪"
-                type="number"
-                value={draft.priceShekels}
-                onChange={(e) => setDraft({ ...draft, priceShekels: e.target.value })}
-              />
-              <Input
-                placeholder="זמן הכנה"
-                type="number"
-                value={draft.prepMinutes}
-                onChange={(e) => setDraft({ ...draft, prepMinutes: e.target.value })}
-              />
-              <Button onClick={addMenuItem} disabled={adding || !draft.name}>
-                + הוסף
-              </Button>
-            </div>
-          </Card>
-
-          {CATEGORIES.map((cat) => {
-            const items = menu.filter((m: any) => m.category === cat.id);
-            if (items.length === 0) return null;
-            return (
-              <Card key={cat.id} className="p-4">
-                <h3 className="font-semibold text-ink mb-3">{cat.emoji} {cat.label}</h3>
-                <div className="space-y-2">
-                  {items.map((m: any) => (
-                    <div key={m.id} className="flex items-center justify-between p-3 bg-bg-soft rounded-lg">
-                      <div className="flex-1">
-                        <div className="text-ink">{m.name}</div>
-                        <div className="text-xs text-ink-muted">{m.prepMinutes} דקות הכנה</div>
-                      </div>
-                      <div className="text-gold mr-3 font-semibold">{formatILS(m.priceAgorot)}</div>
-                      <Button
-                        size="sm"
-                        variant={m.active ? "ghost" : "outline"}
-                        onClick={() => toggleActive(m.id, !m.active)}
-                      >
-                        {m.active ? "השבת" : "הפעל"}
-                      </Button>
-                    </div>
+      {(tab === "RESTAURANT" || tab === "BAR") && (() => {
+        const sectionItems = menu.filter(
+          (m: any) => (m.section ?? "RESTAURANT") === section
+        );
+        // Distinct categories present, suggestions first then any extras.
+        const present = Array.from(new Set(sectionItems.map((m: any) => m.category)));
+        const ordered = [
+          ...CATEGORY_SUGGESTIONS[section].filter((c) => present.includes(c)),
+          ...present.filter((c) => !CATEGORY_SUGGESTIONS[section].includes(c as string)),
+        ];
+        return (
+          <>
+            <Card className="p-4">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                <Input
+                  placeholder={section === "BAR" ? "שם משקה / נישנוש" : "שם מנה"}
+                  value={draft.name}
+                  onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                />
+                <Input
+                  placeholder="קטגוריה"
+                  list="cat-suggestions"
+                  value={draft.category}
+                  onChange={(e) => setDraft({ ...draft, category: e.target.value })}
+                />
+                <datalist id="cat-suggestions">
+                  {CATEGORY_SUGGESTIONS[section].map((c) => (
+                    <option key={c} value={c} />
                   ))}
-                </div>
+                </datalist>
+                <Input
+                  placeholder="מחיר ₪"
+                  type="number"
+                  value={draft.priceShekels}
+                  onChange={(e) => setDraft({ ...draft, priceShekels: e.target.value })}
+                />
+                <Input
+                  placeholder="זמן הכנה"
+                  type="number"
+                  value={draft.prepMinutes}
+                  onChange={(e) => setDraft({ ...draft, prepMinutes: e.target.value })}
+                />
+                <Button onClick={addMenuItem} disabled={adding || !draft.name || !draft.priceShekels}>
+                  + הוסף
+                </Button>
+              </div>
+            </Card>
+
+            {ordered.map((cat) => {
+              const items = sectionItems.filter((m: any) => m.category === cat);
+              if (items.length === 0) return null;
+              return (
+                <Card key={cat} className="p-4">
+                  <h3 className="font-semibold text-ink mb-3">{cat}</h3>
+                  <div className="space-y-2">
+                    {items.map((m: any) => (
+                      <div key={m.id} className="flex items-center justify-between p-3 bg-bg-soft rounded-lg">
+                        <div className="flex-1">
+                          <div className="text-ink">{m.name}</div>
+                          {m.description && (
+                            <div className="text-xs text-ink-muted line-clamp-1">{m.description}</div>
+                          )}
+                        </div>
+                        <div className="text-gold mr-3 font-semibold">{formatILS(m.priceAgorot)}</div>
+                        <Button
+                          size="sm"
+                          variant={m.active ? "ghost" : "outline"}
+                          onClick={() => toggleActive(m.id, !m.active)}
+                        >
+                          {m.active ? "השבת" : "הפעל"}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              );
+            })}
+            {sectionItems.length === 0 && (
+              <Card className="p-12 text-center text-ink-muted">
+                אין פריטים ב{section === "BAR" ? "בר" : "מסעדה"} עדיין — הוסף/י למעלה
               </Card>
-            );
-          })}
-        </>
-      )}
+            )}
+          </>
+        );
+      })()}
     </div>
   );
 }

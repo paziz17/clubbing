@@ -643,7 +643,9 @@ model FoodMenuItem {
   venue           Venue    @relation(fields: [venueId], references: [id], onDelete: Cascade)
   name            String
   description     String?
-  // category: PIZZA | STARTER | MAIN | DRINK | DESSERT
+  // section: RESTAURANT (kitchen/dining) | BAR (bartender fast-sale POS)
+  section         String   @default("RESTAURANT")
+  // category: free-form group label within a section (e.g. "מנות פתיחה", "קוקטיילים")
   category        String
   priceAgorot     Int
   prepMinutes     Int      @default(15)
@@ -656,6 +658,7 @@ model FoodMenuItem {
   ingredients     MenuItemIngredient[]
 
   @@index([venueId, active])
+  @@index([venueId, section, active])
 }
 
 model FoodOrder {

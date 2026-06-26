@@ -9,9 +9,19 @@ export async function PATCH(
   const { id } = await params;
   const venue = await requireVenue();
   const body = await req.json();
+  // Whitelist editable fields (avoid mass-assignment of venueId/id/etc).
+  const data: Record<string, unknown> = {};
+  if (typeof body.name === "string") data.name = body.name;
+  if (body.section === "BAR" || body.section === "RESTAURANT") data.section = body.section;
+  if (typeof body.category === "string") data.category = body.category;
+  if (typeof body.priceAgorot === "number") data.priceAgorot = body.priceAgorot;
+  if (typeof body.prepMinutes === "number") data.prepMinutes = body.prepMinutes;
+  if (typeof body.description === "string" || body.description === null) data.description = body.description;
+  if (typeof body.imageUrl === "string" || body.imageUrl === null) data.imageUrl = body.imageUrl;
+  if (typeof body.active === "boolean") data.active = body.active;
   const item = await db.foodMenuItem.update({
     where: { id, venueId: venue.id },
-    data: body,
+    data,
   });
   return NextResponse.json({ item });
 }

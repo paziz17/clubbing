@@ -5,7 +5,7 @@ import { BarPOS } from "./bar-pos";
 export default async function BarPosPage() {
   const ctx = await requireCapability("bar");
   const menu = await db.foodMenuItem.findMany({
-    where: { venueId: ctx.venue.id, active: true },
+    where: { venueId: ctx.venue.id, active: true, section: "BAR" },
     orderBy: [{ category: "asc" }, { name: "asc" }],
     select: { id: true, name: true, category: true, priceAgorot: true },
   });

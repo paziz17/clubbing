@@ -9,6 +9,7 @@ export async function POST(req: NextRequest) {
     data: {
       venueId: venue.id,
       name: body.name,
+      section: body.section === "BAR" ? "BAR" : "RESTAURANT",
       category: body.category,
       priceAgorot: body.priceAgorot,
       prepMinutes: body.prepMinutes ?? 15,

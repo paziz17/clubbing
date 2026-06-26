@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { Plus, Minus, X, CheckCircle2, Loader2 } from "lucide-react";
 import { formatILS } from "@/lib/utils";
@@ -30,7 +30,6 @@ export function BarPOS({ menu }: { menu: MenuItem[] }) {
   const [qr, setQr] = useState<string>("");
   const [payUrl, setPayUrl] = useState<string>("");
   const [creating, setCreating] = useState(false);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const items = menu.map((m) => ({ ...m, qty: cart[m.id] ?? 0 }));
   const subtotal = items.reduce((s, m) => s + m.priceAgorot * m.qty, 0);
@@ -77,25 +76,39 @@ export function BarPOS({ menu }: { menu: MenuItem[] }) {
   }
 
   // Poll for payment confirmation while awaiting (near real-time).
+  // Self-scheduling loop (~1s) so a slow response never stacks requests.
   useEffect(() => {
     if (phase !== "awaiting" || !orderId) return;
-    pollRef.current = setInterval(async () => {
-      const res = await fetch(`/api/venue/bar/orders/${orderId}`);
-      if (!res.ok) return;
-      const data = await res.json();
-      if (data.status === "PAID") {
-        setPhase("paid");
-      } else if (data.status === "CANCELLED" || data.status === "EXPIRED") {
-        reset();
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = async () => {
+      try {
+        const res = await fetch(`/api/venue/bar/orders/${orderId}`, { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          if (cancelled) return;
+          if (data.status === "PAID") {
+            setPhase("paid");
+            return;
+          }
+          if (data.status === "CANCELLED" || data.status === "EXPIRED") {
+            reset();
+            return;
+          }
+        }
+      } catch {
+        /* transient network hiccup — keep polling */
       }
-    }, 1500);
+      if (!cancelled) timer = setTimeout(tick, 1000);
+    };
+    timer = setTimeout(tick, 1000);
     return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
+      cancelled = true;
+      clearTimeout(timer);
     };
   }, [phase, orderId]);
 
   function reset() {
-    if (pollRef.current) clearInterval(pollRef.current);
     setCart({});
     setOrderId(null);
     setQr("");
@@ -129,13 +142,18 @@ export function BarPOS({ menu }: { menu: MenuItem[] }) {
         </div>
         <p className="text-sm text-ink-muted mb-4">הבליין סורק את הקוד ומשלם מהטלפון</p>
         {qr && (
-          <img
-            src={qr}
-            alt="QR לתשלום"
-            width={260}
-            height={260}
-            className="mx-auto rounded-xl border border-line bg-white p-3"
-          />
+          <div className="relative mx-auto w-[260px] h-[260px]">
+            {/* Pulsing ring — visual heartbeat while we poll for confirmation */}
+            <span className="absolute inset-0 rounded-xl border-2 border-gold/60 animate-ping" />
+            <span className="absolute inset-0 rounded-xl ring-1 ring-gold/30" />
+            <img
+              src={qr}
+              alt="QR לתשלום"
+              width={260}
+              height={260}
+              className="relative rounded-xl border border-line bg-white p-3"
+            />
+          </div>
         )}
         <div className="font-display text-3xl text-gold mt-4">{formatILS(subtotal)}</div>
         <a href={payUrl} target="_blank" className="text-xs text-ink-muted underline block mt-2">

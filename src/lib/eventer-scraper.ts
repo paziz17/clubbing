@@ -1,23 +1,27 @@
 /**
  * eventer.co.il scraper — Israel's largest event ticketing platform.
  *
- * eventer.co.il is an AngularJS SPA, so there is no server-rendered HTML or
- * __NEXT_DATA__ to parse. It does expose plain-HTTP JSON endpoints that the app
- * itself calls:
+ * eventer.co.il is an AngularJS SPA, so there is no server-rendered HTML to
+ * parse. It does expose plain-HTTP JSON endpoints that the app itself calls;
+ * we crawl three of them to gather as many events as possible:
  *
  *   1. GET /sliders/list.js
- *        → the home-page sliders. Event slides live in `sliderType === 1`
- *          sliders, each slide having { slideType: 5, linkName, url, title,
- *          subTitle }. We collect every unique event `linkName`.
- *   2. GET /events/explainNames/<linkName>.js
- *        → the full event object: { event: { name, status, schedule.start/end,
- *          location {latitude, longitude, addressLocality, streetAddress},
- *          locationDescription, eventDesc, ticketPlatform.images } }.
- *   3. GET /events/<eventId>/ticketTypes.js
- *        → ticket types with `price` (ILS); we take the cheapest available one.
+ *        Home-page sliders. Event slides (sliderType 1, slideType 5) give us a
+ *        seed list of event linkNames + their objectRef (= event _id), plus the
+ *        club handles under the "search by club" slider (url /venues/<handle>).
+ *   2. GET /Venue/<handle>/byLink.js
+ *        A club's full upcoming event list, each event carrying its ticketTypes
+ *        and the club's location — so no extra requests are needed per event.
+ *   3. GET /user/<handle>/getData?hideExcludedEvents=true&lang=he_IL
+ *        A producer's full event list (e.g. "hapark" = The Park Summer House,
+ *        northern open-air raves). Prices are fetched per event.
+ *   4. GET /events/explainNames/<linkName>.js   (fallback for seed events that
+ *        aren't covered by a club/producer crawl) → the full event object.
+ *   5. GET /events/<eventId>/ticketTypes.js     (price when not embedded).
  *
- * Schedule times come as naive "YYYY-MM-DD HH:mm" wall-clock in Asia/Jerusalem,
- * so we resolve the correct UTC offset (handles IST/IDT) before building Dates.
+ * Schedule times come either as ISO with a zone (…Z) or as naive
+ * "YYYY-MM-DD HH:mm" wall-clock in Asia/Jerusalem, which we resolve to UTC
+ * (DST-aware) before building Dates.
  */
 
 import {
@@ -28,22 +32,39 @@ import {
 } from "./scraped-event";
 
 const EVENTER_BASE = "https://www.eventer.co.il";
-// Cap how many events we resolve per run to keep the sync fast and polite.
-const MAX_EVENTS = 250;
-// Concurrency for the per-event detail fetches.
+const MAX_EVENTS = 400;
 const CONCURRENCY = 8;
+
+// Producers (eventer "user" pages) we crawl in full — open-air / northern raves
+// and other promoters whose events don't always reach the home page.
+const PRODUCER_HANDLES = ["hapark"];
+// Clubs we always crawl, on top of those discovered from the home-page sliders.
+const EXTRA_VENUE_HANDLES: string[] = [];
+
+// "מחוז הצפון" → "הצפון" etc. Used when an event/venue has no city, so the
+// resulting location string still matches the region filters on the site.
+const REGION_LABEL: Record<string, string> = {
+  "מחוז הצפון": "הצפון",
+  "מחוז חיפה": "חיפה",
+  "מחוז תל אביב": "תל אביב-יפו",
+  "מחוז המרכז": "המרכז",
+  "מחוז הדרום": "הדרום",
+  "מחוז ירושלים": "ירושלים",
+  "מחוז יהודה ושומרון": "יהודה ושומרון",
+};
 
 interface Slide {
   slideType?: number;
   linkName?: string;
+  objectRef?: string;
   url?: string;
-  title?: string;
-  subTitle?: string;
 }
 interface Slider {
   sliderType?: number;
   slides?: Slide[];
 }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Loc = Record<string, any>;
 
 async function getJson<T>(path: string, timeoutMs = 15_000): Promise<T | null> {
   try {
@@ -86,14 +107,24 @@ function tzOffsetMinutes(tz: string, date: Date): number {
 }
 
 /** Parse a naive "YYYY-MM-DD HH:mm" Israel wall-clock string into a UTC Date. */
-function parseIsraelLocal(local: string | undefined | null): Date | null {
-  if (!local) return null;
-  const m = String(local).match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{1,2}):(\d{2})/);
+function parseIsraelLocal(local: string): Date | null {
+  const m = local.match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{1,2}):(\d{2})/);
   if (!m) return null;
   const guessUTC = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]);
   const off = tzOffsetMinutes("Asia/Jerusalem", new Date(guessUTC));
   const d = new Date(guessUTC - off * 60_000);
   return isNaN(d.getTime()) ? null : d;
+}
+
+/** Handle both ISO-with-zone ("…Z"/"+03:00") and naive Israel-local strings. */
+function parseSchedule(s: string | undefined | null): Date | null {
+  if (!s) return null;
+  const str = String(s).trim();
+  if (/[zZ]$|[+-]\d{2}:?\d{2}$/.test(str)) {
+    const d = new Date(str);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  return parseIsraelLocal(str);
 }
 
 function stripHtml(s: string | undefined | null): string | null {
@@ -115,24 +146,12 @@ function stripHtml(s: string | undefined | null): string | null {
   return text.length > 1500 ? text.slice(0, 1500) + "…" : text;
 }
 
-/** Collect every unique event linkName from the home-page sliders. */
-async function collectLinkNames(): Promise<string[]> {
-  const sliders = await getJson<Slider[]>("/sliders/list.js");
-  if (!Array.isArray(sliders)) return [];
-  const seen = new Set<string>();
-  for (const slider of sliders) {
-    if (slider?.sliderType !== 1) continue;
-    for (const slide of slider.slides ?? []) {
-      // slideType 5 = event slide; url like "/<linkName>" (skip /tickets/... links).
-      const url = slide?.url ?? "";
-      const link = slide?.linkName;
-      if (slide?.slideType !== 5 || !link) continue;
-      if (url.startsWith("/tickets") || !/^\/[^/]+$/.test(url)) continue;
-      if (!seen.has(link)) seen.add(link);
-      if (seen.size >= MAX_EVENTS) return Array.from(seen);
-    }
-  }
-  return Array.from(seen);
+function resolveCity(loc: Loc, locDesc: string, fb?: Loc): string {
+  const al = loc?.addressLocality || fb?.addressLocality;
+  if (al) return String(al);
+  const region = loc?.addressRegion || fb?.addressRegion;
+  if (region) return REGION_LABEL[region] || String(region);
+  return parseCity(locDesc || "");
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -145,35 +164,33 @@ function minTicketPriceAgorot(ticketTypes: any): number {
   return prices.length ? Math.round(Math.min(...prices) * 100) : 0;
 }
 
-async function resolveEvent(linkName: string, now: number): Promise<ScrapedEvent | null> {
-  const data = await getJson<{ event?: Record<string, unknown> }>(
-    `/events/explainNames/${encodeURIComponent(linkName)}.js`,
-  );
-  const ev = data?.event as Record<string, any> | undefined; // eslint-disable-line @typescript-eslint/no-explicit-any
-  if (!ev || !ev._id) return null;
+interface Fallback {
+  loc?: Loc;
+  locDesc?: string;
+  image?: string | null;
+}
 
-  // status 1 = live/published. Anything else (draft, archived) is skipped.
+/** Normalize a raw eventer event object (any source) into a ScrapedEvent. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function normalize(ev: any, fb: Fallback | null, now: number): Promise<ScrapedEvent | null> {
+  if (!ev || !ev._id) return null;
   if (ev.status !== 1 && ev.status !== undefined) return null;
 
   const title = String(ev.name ?? "").trim();
   if (!title) return null;
 
-  const startsAt = parseIsraelLocal(ev.schedule?.start);
+  const startsAt = parseSchedule(ev.schedule?.start);
   if (!startsAt) return null;
-  // Skip clearly-past events (allow up to 6h after start for ongoing nights).
   if (startsAt.getTime() < now - 6 * 3600_000) return null;
-  const endsAt = parseIsraelLocal(ev.schedule?.end);
+  const endsAt = parseSchedule(ev.schedule?.end);
 
-  const loc = (ev.location ?? {}) as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
-  const address =
-    String(ev.locationDescription ?? "") ||
-    [loc.streetAddress, loc.addressLocality].filter(Boolean).join(", ");
-  const city = String(loc.addressLocality ?? "") || parseCity(address);
+  const loc: Loc = ev.location ?? {};
+  const country = loc.addressCountry || fb?.loc?.addressCountry;
+  if (country && String(country).toUpperCase() !== "IL") return null;
 
-  // Foreign events occasionally appear (Eventer also sells abroad) — drop them.
-  if (loc.addressCountry && String(loc.addressCountry).toUpperCase() !== "IL") {
-    return null;
-  }
+  const locDesc = String(ev.locationDescription ?? "") || fb?.locDesc || "";
+  const city = resolveCity(loc, locDesc, fb?.loc);
+  const address = locDesc || city;
   if (!isIsraeli(`${address} ${city}`)) return null;
 
   const images = (ev.ticketPlatform?.images ?? {}) as Record<string, string>;
@@ -182,21 +199,34 @@ async function resolveEvent(linkName: string, now: number): Promise<ScrapedEvent
     images.imageWide ||
     images.imageSquare ||
     (typeof ev.background === "string" ? ev.background : null) ||
-    (typeof ev.thumbnail === "string" ? ev.thumbnail : null) ||
+    fb?.image ||
     null;
 
-  // Ticket price (cheapest available). Best-effort — events with no public
-  // pricing just report 0, exactly like the other scrapers.
   let minPriceAgorot = 0;
-  const tt = await getJson<{ ticketTypes?: unknown }>(`/events/${ev._id}/ticketTypes.js`);
-  if (tt?.ticketTypes) minPriceAgorot = minTicketPriceAgorot(tt.ticketTypes);
+  if (Array.isArray(ev.ticketTypes)) {
+    minPriceAgorot = minTicketPriceAgorot(ev.ticketTypes);
+  } else {
+    const tt = await getJson<{ ticketTypes?: unknown }>(`/events/${ev._id}/ticketTypes.js`);
+    if (tt?.ticketTypes) minPriceAgorot = minTicketPriceAgorot(tt.ticketTypes);
+  }
 
-  const lat = typeof loc.latitude === "number" ? loc.latitude : null;
-  const lng = typeof loc.longitude === "number" ? loc.longitude : null;
+  const lat =
+    typeof loc.latitude === "number" ? loc.latitude
+    : typeof fb?.loc?.latitude === "number" ? fb.loc.latitude
+    : null;
+  const lng =
+    typeof loc.longitude === "number" ? loc.longitude
+    : typeof fb?.loc?.longitude === "number" ? fb.loc.longitude
+    : null;
+
+  const linkName = String(ev.linkName ?? "");
+  const externalUrl = linkName.includes("/")
+    ? `${EVENTER_BASE}/${linkName}`
+    : `${EVENTER_BASE}/events/${linkName || ev._id}`;
 
   return {
-    externalId: linkName,
-    externalUrl: `${EVENTER_BASE}/events/${linkName}`,
+    externalId: String(ev._id),
+    externalUrl,
     title,
     description: stripHtml(ev.eventDesc),
     startsAt,
@@ -213,58 +243,107 @@ async function resolveEvent(linkName: string, now: number): Promise<ScrapedEvent
 }
 
 /** Run an async mapper over items with bounded concurrency. */
-async function mapLimit<I, O>(
-  items: I[],
-  limit: number,
-  fn: (item: I) => Promise<O>,
-): Promise<O[]> {
-  const out: O[] = new Array(items.length);
+async function mapLimit<I>(items: I[], limit: number, fn: (item: I) => Promise<void>): Promise<void> {
   let cursor = 0;
   async function worker() {
     while (cursor < items.length) {
       const i = cursor++;
-      out[i] = await fn(items[i]);
+      await fn(items[i]);
     }
   }
-  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
-  return out;
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) || 1 }, worker));
 }
 
 export async function scrapeEventer(): Promise<{ events: ScrapedEvent[]; errors: string[] }> {
   const errors: string[] = [];
   const now = Date.now();
 
-  let linkNames: string[] = [];
-  try {
-    linkNames = await collectLinkNames();
-  } catch (err) {
-    errors.push(`sliders: ${(err as Error).message}`);
-  }
-  if (!linkNames.length) {
-    errors.push("no event slides found in /sliders/list.js");
-    return { events: [], errors };
+  // 1) Home-page sliders → seed events (+ their _id) and club handles.
+  const seeds: { link: string; id?: string }[] = [];
+  const venueHandles = new Set<string>(EXTRA_VENUE_HANDLES);
+  const sliders = await getJson<Slider[]>("/sliders/list.js");
+  if (Array.isArray(sliders)) {
+    const seen = new Set<string>();
+    for (const slider of sliders) {
+      for (const slide of slider.slides ?? []) {
+        const u = (slide.url ?? "").split("?")[0];
+        if (slide.slideType === 5 && slide.linkName && /^\/[^/]+$/.test(u) && !u.startsWith("/tickets")) {
+          if (!seen.has(slide.linkName)) {
+            seen.add(slide.linkName);
+            seeds.push({ link: slide.linkName, id: slide.objectRef });
+          }
+        }
+        const vm = u.match(/^\/venues\/([^/]+)$/);
+        if (vm) venueHandles.add(vm[1]);
+      }
+    }
+  } else {
+    errors.push("sliders fetch failed");
   }
 
-  const resolved = await mapLimit(linkNames, CONCURRENCY, async (link) => {
-    try {
-      return await resolveEvent(link, now);
-    } catch (err) {
-      errors.push(`event ${link}: ${(err as Error).message}`);
-      return null;
+  const byId = new Map<string, ScrapedEvent>();
+  const add = (ev: ScrapedEvent | null) => {
+    if (ev && !byId.has(ev.externalId)) byId.set(ev.externalId, ev);
+  };
+
+  // 2) Clubs — full event lists with embedded prices + location.
+  await mapLimit([...venueHandles], 4, async (h) => {
+    const v = await getJson<{ events?: unknown[]; location?: Loc; locationDescription?: string; images?: Record<string, string> }>(
+      `/Venue/${encodeURIComponent(h)}/byLink.js`,
+    );
+    if (!v || !Array.isArray(v.events)) return;
+    const fb: Fallback = { loc: v.location, locDesc: v.locationDescription, image: v.images?.imageDefault ?? null };
+    for (const ev of v.events) {
+      try {
+        add(await normalize(ev, fb, now));
+      } catch (err) {
+        errors.push(`venue ${h}: ${(err as Error).message}`);
+      }
     }
   });
 
-  // Dedupe by externalId and by title|day (a party can sit in several sliders).
-  const all = new Map<string, ScrapedEvent>();
+  // 3) Producers — full event lists (prices fetched per event).
+  await mapLimit(PRODUCER_HANDLES, 4, async (h) => {
+    const p = await getJson<{ events?: unknown[]; location?: Loc; locationDescription?: string }>(
+      `/user/${encodeURIComponent(h)}/getData?hideExcludedEvents=true&lang=he_IL`,
+    );
+    if (!p || !Array.isArray(p.events)) return;
+    const fb: Fallback = { loc: p.location, locDesc: p.locationDescription };
+    for (const ev of p.events) {
+      try {
+        add(await normalize(ev, fb, now));
+      } catch (err) {
+        errors.push(`producer ${h}: ${(err as Error).message}`);
+      }
+    }
+  });
+
+  // 4) Seed events not already covered by a club/producer crawl → explainNames.
+  const remaining = seeds.filter((s) => !(s.id && byId.has(s.id)));
+  await mapLimit(remaining, CONCURRENCY, async (s) => {
+    try {
+      const d = await getJson<{ event?: unknown }>(
+        `/events/explainNames/${encodeURIComponent(s.link)}.js`,
+      );
+      if (d?.event) add(await normalize(d.event, null, now));
+    } catch (err) {
+      errors.push(`event ${s.link}: ${(err as Error).message}`);
+    }
+  });
+
+  // Final title|day dedup (a party can sit in several lists with different ids).
+  const out: ScrapedEvent[] = [];
   const byTitleDay = new Set<string>();
-  for (const ev of resolved) {
-    if (!ev) continue;
-    const dayKey = `${ev.title.toLowerCase()}|${ev.startsAt.toISOString().slice(0, 10)}`;
-    if (all.has(ev.externalId) || byTitleDay.has(dayKey)) continue;
-    all.set(ev.externalId, ev);
-    byTitleDay.add(dayKey);
+  for (const ev of byId.values()) {
+    const k = `${ev.title.toLowerCase()}|${ev.startsAt.toISOString().slice(0, 10)}`;
+    if (byTitleDay.has(k)) continue;
+    byTitleDay.add(k);
+    out.push(ev);
+    if (out.length >= MAX_EVENTS) break;
   }
 
-  console.log(`[eventer] ${linkNames.length} links → ${all.size} events`);
-  return { events: Array.from(all.values()), errors };
+  console.log(
+    `[eventer] venues=${venueHandles.size} producers=${PRODUCER_HANDLES.length} seeds=${seeds.length} → ${out.length} events`,
+  );
+  return { events: out, errors };
 }

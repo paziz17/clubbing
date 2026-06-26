@@ -67,7 +67,7 @@ const AREAS: Area[] = [
   { id: "gush-dan",   label: "גוש דן",          sub: "פרברים עם ויב עירוני",      emoji: "🏙️", accent: "#94a3b8", image: "/cards/city-gushdan.jpg" },
   { id: "rishon",     label: "ראשון לציון",     sub: "עיר צעירה ורוחשת חיים",     emoji: "🌆", accent: "#fbbf24", image: "/cards/city-rishon.jpg" },
   { id: "jerusalem",  label: "ירושלים",         sub: "עיר בין הרים עם נשמה",      emoji: "🕌", accent: "#f59e0b", image: "/cards/city-jerusalem.jpg" },
-  { id: "haifa",      label: "חיפה",            sub: "עיר בין ים להר",            emoji: "⛰️", accent: "#a78bfa", image: "/cards/city-haifa.jpg" },
+  { id: "haifa",      label: "חיפה והצפון",     sub: "מהכרמל ועד הגליל והעמקים",  emoji: "⛰️", accent: "#a78bfa", image: "/cards/city-haifa.jpg" },
   { id: "sharon",     label: "השרון / נתניה",   sub: "תרבות ואמנות ליד הים",      emoji: "🌿", accent: "#4ade80", image: "/cards/city-netanya.jpg" },
   { id: "south",      label: "דרום",            sub: "אופקים פתוחים ושמים",       emoji: "🌅", accent: "#fb923c", image: "/cards/city-south.jpg" },
   { id: "beersheva",  label: "באר שבע",         sub: "עיר הנגב שלא ישנה",         emoji: "🏜️", accent: "#d97706", image: "/cards/city-beersheva.jpg" },
